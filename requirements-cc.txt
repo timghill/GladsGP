@@ -1,0 +1,28 @@
+blosc2 @ file:///tmp/ebuser/avx2/HDF5/1.14.2/gompi-2023a-mpi/blosc2/blosc2-2.2.9
+cached-property @ file:///tmp/ebuser/avx2/HDF5/1.14.2/gompi-2023a-mpi/cachedproperty/cached-property-1.5.2
+certifi==2024.6.2
+cftime==1.6.3+computecanada
+cmocean==4.0.3
+contourpy==1.2.1+computecanada
+cycler==0.12.1+computecanada
+fonttools==4.53.0+computecanada
+-e git+https://github.com/timghill/GladsGP.git@da48586ebc30f8533ba5879bba7bf526b536ca15#egg=GladsGP
+h5py @ file:///tmp/ebuser/avx2/HDF5/1.14.2/gompi-2023a-mpi/h5py/h5py-3.10.0
+kiwisolver==1.4.5+computecanada
+matlabengine==23.2
+matplotlib==3.9.0+computecanada
+mpi4py @ file:///tmp/ebuser/avx2/mpi4py/3.1.6/gompi-2023a/mpi4py-3.1.6
+ndindex @ file:///tmp/ebuser/avx2/HDF5/1.14.2/gompi-2023a-mpi/ndindex/ndindex-1.7
+netCDF4==1.7.1+computecanada
+numexpr @ file:///tmp/ebuser/avx2/HDF5/1.14.2/gompi-2023a-mpi/numexpr/numexpr-2.8.7
+numpy==1.25.2+computecanada
+packaging==24.1+computecanada
+petsc4py @ file:///tmp/ebuser/avx2/PETSc/3.20.0/foss-2023a/petsc4py/petsc4py-3.20.0
+pillow==10.3.0+computecanada
+py-cpuinfo @ file:///tmp/ebuser/avx2/HDF5/1.14.2/gompi-2023a-mpi/pycpuinfo/py-cpuinfo-9.0.0
+pyparsing==3.1.2+computecanada
+python_dateutil==2.9.0.post0+computecanada
+scipy==1.13.1+computecanada
+shapely==2.0.4+computecanada
+six==1.16.0+computecanada
+tables @ file:///tmp/ebuser/avx2/HDF5/1.14.2/gompi-2023a-mpi/tables/tables-3.9.1

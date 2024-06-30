@@ -3,9 +3,10 @@ OSGeo/GDAL for Python not installed, overlay plots are not enabled
 Ice-sheet and Sea-level System Model (ISSM) Version 4.24
 (website: http://issm.jpl.nasa.gov contact: https://issm.ess.uci.edu/forum/)
  
-Build date: Thu Jun  6 21:23:23 PDT 2024
+Build date: Mon Jun 10 17:59:16 EDT 2024
 Copyright (c) 2009-2024 California Institute of Technology
  
     to get started type: issmdoc
  
-Made mesh with numberofvertices: 3693
+could not import shapefile, PyShp has not been installed, no shapefile reading capabilities enabled
+Made mesh with numberofvertices: 3640
