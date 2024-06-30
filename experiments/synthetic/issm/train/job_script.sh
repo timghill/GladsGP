@@ -12,5 +12,4 @@
 # Don't change this line:
 
 source ../setenv.sh
-source $PYENV/bin/activate
 task.run
