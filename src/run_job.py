@@ -23,9 +23,7 @@ from solve import solve
 from setmask import setmask
 from parameterize import parameterize
 
-import netCDF4 as nc
 from src.utils import import_config
-from src.issm_nc import read_nc
 
 def run_job(config, jobid):
     """Execute seasonal ISSM-GlaDS simulation number 'jobid'
@@ -68,7 +66,10 @@ def run_job(config, jobid):
     # md.mesh.elements = elements
     # md = meshconvert(md, md.mesh.elements, md.mesh.x, md.mesh.y)
 
-    md = read_nc(config.mesh)  
+    # md = read_nc(config.mesh)
+    with open(config.mesh, 'rb') as meshin:
+        mesh = pickle.load(meshin)
+    md = meshconvert(md, mesh['elements'], mesh['x'], mesh['y'])
     md = setmask(md, '', '')
     md = parameterize(md, '../defaults.py')
     md.miscellaneous.name = 'ensemble_{:03d}'.format(jobid)

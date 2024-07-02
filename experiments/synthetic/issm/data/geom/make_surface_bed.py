@@ -2,19 +2,15 @@
 
 import os
 import sys
+import pickle
 
 import numpy as np
 
-# Import ISSM paths
-ISSM_DIR = os.getenv('ISSM_DIR')
-sys.path.append(os.path.join(ISSM_DIR, 'src/m/dev/'))
-import devpath
-from read_netCDF import read_netCDF
+with open('synthetic_mesh.pkl', 'rb') as meshin:
+    mesh = pickle.load(meshin)
 
-md = read_netCDF('synthetic_mesh.nc')
-
-surf = 6*( np.sqrt(md.mesh.x + 5e3) - np.sqrt(5e3)) + 390
-bed = 350*np.ones_like(md.mesh.x)
+surf = 6*( np.sqrt(mesh['x'] + 5e3) - np.sqrt(5e3)) + 390
+bed = 350*np.ones_like(mesh['x'])
 
 np.save('synthetic_surface.npy', surf)
 np.save('synthetic_bed.npy', bed)

@@ -3,10 +3,37 @@ OSGeo/GDAL for Python not installed, overlay plots are not enabled
 Ice-sheet and Sea-level System Model (ISSM) Version 4.24
 (website: http://issm.jpl.nasa.gov contact: https://issm.ess.uci.edu/forum/)
  
-Build date: Mon Jun 10 17:59:16 EDT 2024
+Build date: Tue Apr  2 14:23:11 PDT 2024
 Copyright (c) 2009-2024 California Institute of Technology
  
     to get started type: issmdoc
  
-could not import shapefile, PyShp has not been installed, no shapefile reading capabilities enabled
-Made mesh with numberofvertices: 3640
+Made mesh with numberofvertices: 3693
+   2D tria Mesh (horizontal):
+      Elements and vertices:
+         numberofelements       : 7103            -- number of elements
+         numberofvertices       : 3693            -- number of vertices
+         elements               : (7103, 3)       -- vertex indices of the mesh elements
+         x                      : (3693,)         -- vertices x coordinate [m]
+         y                      : (3693,)         -- vertices y coordinate [m]
+         edges                  : N/A             -- edges of the 2d mesh (vertex1 vertex2 element1 element2)
+         numberofedges          : 0               -- number of edges of the 2d mesh
+
+      Properties:
+         vertexonboundary       : (3693,)         -- vertices on the boundary of the domain flag list
+         segments               : (281, 3)        -- edges on domain boundary (vertex1 vertex2 element)
+         segmentmarkers         : (281,)          -- number associated to each segment
+         vertexconnectivity     : (3693, 101)     -- list of elements connected to vertex_i
+         elementconnectivity    : (7103, 3)       -- list of elements adjacent to element_i
+         average_vertex_conne...: 25              -- average number of vertices connected to one vertex
+
+      Extracted model:
+         extractedvertices      : N/A             -- vertices extracted from the model
+         extractedelements      : N/A             -- elements extracted from the model
+
+      Projection:
+         lat                    : N/A             -- vertices latitude [degrees]
+         long                   : N/A             -- vertices longitude [degrees]
+         epsg                   : 0               -- EPSG code (ex: 3413 for UPS Greenland, 3031 for UPS Antarctica)
+         scale_factor           : N/A             -- Projection correction for volume, area, etc. computation
+

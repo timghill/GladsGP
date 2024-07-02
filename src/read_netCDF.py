@@ -5,7 +5,8 @@ sys.path.append(os.getenv('ISSM_DIR') + '/bin')
 sys.path.append(os.getenv('ISSM_DIR') + '/lib')
 from issmversion import issmversion
 
-from netCDF4 import Dataset
+# from netCDF4 import Dataset
+from h5netcdf.legacyapi import Dataset
 import numpy as np
 import numpy.ma as ma
 from os import path, remove
@@ -50,8 +51,9 @@ def read_netCDF(filename, verbose = False):
     
             # open the given netCDF4 file
             NCData = Dataset(filename, 'r')
+            print(NCData)
             # remove masks from numpy arrays for easy conversion
-            NCData.set_auto_mask(False)
+            # NCData.set_auto_mask(False)
         else:
             return 'The file you entered does not exist or cannot be found in the current directory'
         
@@ -78,6 +80,7 @@ def read_netCDF(filename, verbose = False):
             else:
                 # have to send a custom name to this function: filename.groups['group']
                 name = "NCData.groups['" + str(group) + "']"
+                print('name:', name)
                 walk_nested_groups(name, NCData, verbose)
         
         if verbose:
@@ -138,7 +141,10 @@ def walk_nested_groups(group_location_in_file, NCData, verbose = False):
     # at this step we check for multidimensional structure arrays/ arrays of objects and filter them out
     # third we get nested group keys by: filename.groups['group_name'].groups.keys()
     # if a nested groups exist, repeat all
-
+    print('Doing nested groups')
+    print('For location:', group_location_in_file)
+    print('Looking in:', group_location_in_file + '.variables.keys()')
+    print(list(eval(group_location_in_file + '.variables.keys()')))
     for variable in eval(group_location_in_file + '.variables.keys()'):
         if 'is_object' not in locals():
             if variable == 'this_is_a_nested' and 'results' in group_location_in_file and 'qmu' not in group_location_in_file:
@@ -163,6 +169,7 @@ def walk_nested_groups(group_location_in_file, NCData, verbose = False):
         
             else:
                 location_of_variable_in_file = group_location_in_file + ".variables['" + str(variable) + "']"
+                print('location of variable in file:', location_of_variable_in_file)
                 # group_location_in_file is like filename.groups['group1'].groups['group1.1'].groups['group1.1.1']
                 # Define the regex pattern to match the groups within brackets
                 pattern = r"\['(.*?)'\]"
@@ -170,6 +177,9 @@ def walk_nested_groups(group_location_in_file, NCData, verbose = False):
                 matches = re.findall(pattern, location_of_variable_in_file)
                 variable_name = matches[-1]
                 location_of_variable_in_model = '.'.join(matches[:-1])
+                print(location_of_variable_in_file)
+                print(location_of_variable_in_model)
+                print(variable_name)
                 deserialize_data(location_of_variable_in_file, location_of_variable_in_model, variable_name, NCData, verbose=verbose)
 
     # if one of the variables above was an object, further subclasses will be taken care of when reconstructing it
@@ -177,7 +187,7 @@ def walk_nested_groups(group_location_in_file, NCData, verbose = False):
         pass
     else:
         for nested_group in eval(group_location_in_file + '.groups.keys()'):
-            new_nested_group = group_location_in_file + ".groups['" + str(nested_group) + "']"
+            new_nested_group = group_location_in_file + "['" + str(nested_group) + "']"
             walk_nested_groups(new_nested_group, NCData, verbose=verbose)
 
 
@@ -414,6 +424,9 @@ def deserialize_data(location_of_variable_in_file, location_of_variable_in_model
     # as simple as navigating to the location_of_variable_in_model and setting it equal to the location_of_variable_in_file
     # NetCDF4 has a property called "_FillValue" that sometimes saves empty lists, so we have to catch those
     FillValue = -9223372036854775806
+    print(location_of_variable_in_file)
+    print(eval(location_of_variable_in_file))
+    print(eval(location_of_variable_in_file + '.__dir__()'))
     try:
         # results band-aid...
         if str(location_of_variable_in_model + '.' + variable_name) in ['results.solutionstep', 'results.solution', 'results.resultsdakota']:

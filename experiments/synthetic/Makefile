@@ -1,4 +1,4 @@
-mesh := issm/data/geom/synthetic_mesh.nc
+mesh := issm/data/geom/synthetic_mesh.pkl
 geom := issm/data/geom/synthetic_surface.npy
 train_exp := expdesign/synthetic_train_standard.csv
 test_exp := expdesign/synthetic_test_standard.csv
