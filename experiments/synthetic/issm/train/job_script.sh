@@ -6,5 +6,5 @@
 #SBATCH --mail-user=tha111@sfu.ca
 #SBATCH --mail-type=FAIL,END
 
-source ~/SFU-code/issmenv.sh
+source ../setenv.sh
 task.run
