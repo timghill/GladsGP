@@ -9,12 +9,6 @@ import pickle
 import numpy as np
 
 
-ISSM_DIR = os.getenv('ISSM_DIR')
-sys.path.append(os.path.join(ISSM_DIR, 'src/m/dev/'))
-import devpath
-from read_netCDF import read_netCDF
-from GetAreas import GetAreas
-
 import cmocean
 from matplotlib import pyplot as plt
 import matplotlib
@@ -32,8 +26,9 @@ temp = temparr[:, 1]
 
 # Read elevation
 elev = np.load('../geom/IS_surface.npy')
-md = read_netCDF('../geom/IS_bamg.nc')
-elev_els = np.mean(elev[md.mesh.elements-1], axis=1)
+with open('../geom/IS_mesh.pkl', 'rb') as meshin:
+    mesh = pickle.load(meshin)
+elev_els = np.mean(elev[mesh['elements']-1], axis=1)
 
 T_distributed = temp + lapse_rate*np.vstack(elev_els)
 melt_distributed = DDF*T_distributed
@@ -44,7 +39,7 @@ print(melt_distributed.shape)
 with open('../moulins/moulins_catchments.pkl', 'rb') as fid:
     basins = pickle.load(fid)
 
-area_ele = GetAreas(md.mesh.elements, md.mesh.x, md.mesh.y)
+area_ele = mesh['area']
 
 n_basins = len(basins)
 surf_inputs = np.zeros((n_basins, len(temp)))

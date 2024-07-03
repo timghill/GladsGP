@@ -2,30 +2,11 @@
 Interpolate topography onto the triangular mesh
 """
 
+import pickle
 import numpy as np
 from scipy import interpolate
 from scipy import signal
 import rasterio as rs
-
-import os
-import sys
-ISSM_DIR = os.getenv('ISSM_DIR')
-# sys.path.append(os.path.join(ISSM_DIR, 'bin/'))
-# sys.path.append(os.path.join(ISSM_DIR, 'lib/'))
-sys.path.append(os.path.join(ISSM_DIR, 'src/m/dev/'))
-import devpath
-# from issmversion import issmversion
-# from model import model
-# from meshconvert import meshconvert
-# from solve import solve
-# from setmask import setmask
-# from parameterize import parameterize
-# from triangle import *
-# from bamg import *
-from write_netCDF import write_netCDF
-from read_netCDF import read_netCDF
-# from plotmodel import *
-# from matplotlib import pyplot as plt
 
 def interp_surf_bed(xy, 
     surface_file='BedMachineGreenland_StudyArea_surface.tif',
@@ -58,8 +39,9 @@ def interp_surf_bed(xy,
     return surf_interp, bed_interp
 
 if __name__=='__main__':
-    md = read_netCDF('IS_mesh.nc')
-    xi = np.array([md.mesh.x, md.mesh.y]).T
+    with open('IS_mesh.pkl', 'rb') as meshin:
+        mesh = pickle.load(meshin)
+    xi = np.array([mesh['x'], mesh['y']]).T
     surf,bed = interp_surf_bed(xi)
     np.save('IS_surface.npy', surf)
     np.save('IS_bed.npy', bed)

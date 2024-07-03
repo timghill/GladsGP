@@ -16,23 +16,6 @@ from shapely.geometry.polygon import Polygon
 
 import pickle
 
-# Import ISSM paths
-ISSM_DIR = os.getenv('ISSM_DIR')
-sys.path.append(os.path.join(ISSM_DIR, 'src/m/dev/'))
-import devpath
-# Import ISSM modules. These follow the pattern of
-# from X import X because they are structured like a
-# matlab project
-# from model import model
-# from meshconvert import meshconvert
-# from solve import solve
-# from setmask import setmask
-# from parameterize import parameterize
-import netCDF4 as nc
-from GetAreas import GetAreas
-# from BamgConvertMesh import BamgConvertMesh
-from read_netCDF import read_netCDF
-
 # Specify moulin distribution parameters
 # Density parameters are computed from Yang et al. (2016) 
 # supraglacial drainage map,
@@ -52,18 +35,19 @@ dz = 100
 zz = np.arange(0, 3000+dz, dz)
 zc = 0.5*(zz[:-1] + zz[1:])
 
-md = read_netCDF('../geom/IS_bamg.nc')
 # Mesh
-meshx = md.mesh.x
-meshy = md.mesh.y
-elements = md.mesh.elements-1
-vonboundary = md.mesh.vertexonboundary
+with open('../geom/IS_mesh.pkl', 'rb') as meshin:
+    mesh = pickle.load(meshin)
+meshx = mesh['x']
+meshy = mesh['y']
+elements = mesh['elements']-1
+vonboundary = mesh['vertexonboundary']
 
 mtri = Triangulation(meshx/1e3, meshy/1e3, elements)
 
 polys = [Polygon([(meshx[el[i]], meshy[el[i]]) for i in range(3)]) for el in elements]
 # areas = np.array([pol.area for pol in polys])/1e6
-area_ele = GetAreas(elements+1, meshx, meshy)/1e6
+area_ele = mesh['area']/1e6
 print('Total catchment area (km2):', area_ele.sum())
 
 surf_ele = np.mean(surf[elements], axis=1)

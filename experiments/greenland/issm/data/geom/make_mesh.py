@@ -3,11 +3,10 @@ Make ISSM meshes
 """
 import os
 import sys
+import pickle
 ISSM_DIR = os.getenv('ISSM_DIR')
-# sys.path.append(os.path.join(ISSM_DIR, 'bin/'))
-# sys.path.append(os.path.join(ISSM_DIR, 'lib/'))
-sys.path.append(os.path.join(ISSM_DIR, 'src/m/dev/'))
-import devpath
+sys.path.append(os.path.join(ISSM_DIR, 'bin/'))
+sys.path.append(os.path.join(ISSM_DIR, 'lib/'))
 from issmversion import issmversion
 from model import model
 from meshconvert import meshconvert
@@ -16,7 +15,7 @@ from setmask import setmask
 from parameterize import parameterize
 from triangle import *
 from bamg import *
-from write_netCDF import write_netCDF
+from GetAreas import GetAreas
 from plotmodel import *
 import matplotlib
 # matplotlib.use('QtAgg')
@@ -30,7 +29,7 @@ from make_surface_bed import interp_surf_bed
 
 ## Point to domain outline file
 outline = 'IS_outline.exp'
-meshfile = 'IS_mesh.nc'
+meshfile = 'IS_mesh.pkl'
 min_length = 500
 max_length = 5e3
 
@@ -55,4 +54,16 @@ md = bamg(md, 'hVertices', area, 'anisomax', 1.1)
 print('Refined mesh to have numberofvertices:', md.mesh.numberofvertices)
 if os.path.exists(meshfile):
     os.remove(meshfile)
-write_netCDF(md, meshfile)
+
+meshdict = {}
+meshdict['x'] = md.mesh.x
+meshdict['y'] = md.mesh.y
+meshdict['elements'] = md.mesh.elements
+meshdict['area'] = GetAreas(md.mesh.elements, md.mesh.x, md.mesh.y)
+meshdict['vertexonboundary'] = md.mesh.vertexonboundary
+meshdict['numberofelements'] = md.mesh.numberofelements
+meshdict['numberofvertices'] = md.mesh.numberofvertices
+with open(meshfile, 'wb') as mesh:
+    pickle.dump(meshdict, mesh)
+
+
