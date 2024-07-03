@@ -37,7 +37,7 @@ echo "Case $ID:"
 # Executing the command (a line from table.dat)
 # It's allowed to use more than one shell command (separated by semi-columns) on a single line
 
-eval "python run_job.py $COMM"
+eval "python3 -m src.run_job ../../train_config.py $COMM"
 
 # Exit status of the code:
 STATUS=$?
