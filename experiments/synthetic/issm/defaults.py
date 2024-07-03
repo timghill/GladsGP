@@ -5,8 +5,9 @@ import numpy as np
 import os
 import sys
 ISSM_DIR = os.getenv('ISSM_DIR')
-sys.path.append(os.path.join(ISSM_DIR, 'src/m/dev/'))
-import devpath
+sys.path.append(os.path.join(ISSM_DIR, '/bin'))
+sys.path.append(os.path.join(ISSM_DIR, '/lib'))
+from issmversion import issmversion
 from hydrologyglads import hydrologyglads
 from generic import generic
 
