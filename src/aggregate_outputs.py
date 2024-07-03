@@ -40,12 +40,12 @@ def collect_issm_results(config, njobs, dtype=np.float32):
 
     resdir = 'RUN/output_{:03d}/'
     respattern = os.path.join(resdir, '{}.npy')
-    aggpattern = '{exp}_{}.npy'.format('{}', exp=exp)
+    aggpattern = '{exp}_{}.npy'.format('{}', exp=config.exp)
 
-    all_ff = np.zeros((len(nodes)*365, njobs))
-    all_channel_frac = np.zeros((len(fluxgate_positions), njobs))
-    all_channel_length = np.zeros((len(R_thresholds), njobs))
-    all_transit_time = np.zeros((len(fluxgate_positions), njobs))
+    all_ff = np.zeros((len(nodes)*365, njobs), dtype=dtype)
+    all_channel_frac = np.zeros((len(fluxgate_positions), njobs), dtype=dtype)
+    all_channel_length = np.zeros((len(R_thresholds), njobs), dtype=dtype)
+    all_transit_time = np.zeros((len(fluxgate_positions), njobs), dtype=dtype)
     for i,jobid in enumerate(jobids):
         print('Job %d' % jobid)
         ff = np.load(respattern.format(jobid, 'ff'))
@@ -119,7 +119,7 @@ def main():
     module, ext = os.path.splitext(name)
     config = importlib.import_module(module)
     if args.version=='issm':
-        collect_issm_results(config, args.njobs, mesh=config.mesh)
+        collect_issm_results(config, args.njobs)
     return
 
 if __name__=='__main__':
