@@ -6,38 +6,34 @@ import os
 import sys
 import importlib
 import argparse
+import pickle
 
-issm_dir = os.getenv('ISSM_DIR')
-print(issm_dir)
-sys.path.append(issm_dir + '/bin')
-sys.path.append(issm_dir + '/lib')
-from issmversion import issmversion
-sys.path.append(issm_dir + '/src/m/dev')
-import devpath
-from read_netCDF import read_netCDF
+# issm_dir = os.getenv('ISSM_DIR')
+# print(issm_dir)
+# sys.path.append(issm_dir + '/bin')
+# sys.path.append(issm_dir + '/lib')
+# from issmversion import issmversion
+# sys.path.append(issm_dir + '/src/m/dev')
+# import devpath
+# from read_netCDF import read_netCDF
 
 import numpy as np
 import netCDF4 as nc
 
 from . import definitions
 
-def collect_issm_results(njobs, exp, mesh='../data/mesh/mesh_04.nc'):
+def collect_issm_results(config, njobs, dtype=np.float32):
 
     # Definitions for special quantities of interest
     fluxgate_positions = np.arange(5e3, 35e3, 5e3)
     R_thresholds = np.array([0.5, 1.])
     S_thresholds = 0.5*np.pi*R_thresholds**2
-
-    md = read_netCDF('data/geom/IS_bamg.nc')
-    nodes = np.array([md.mesh.x, md.mesh.y]).T
-    connect = md.mesh.elements.astype(int)-1
-
-#    with nc.Dataset(mesh, 'r') as dmesh:
-#        nodes = dmesh['tri/nodes'][:].data.T
-#        edges = dmesh['tri/edge_midpoints'][:].data.T
-#        connect = dmesh['tri/connect'][:].data.T.astype(int) - 1
-#        connect_edge = dmesh['tri/connect_edge'][:].data.T.astype(int) - 1
-#        edge_length = dmesh['tri/edge_length'][:].data.T
+    
+    with open(config.mesh, 'rb') as meshin:
+        mesh = pickle.load(meshin)
+    
+    nodes = np.array([mesh['x'], mesh['y']]).T
+    connect = mesh['elements'].astype(int)-1
 
     # Construct file patterns
     jobids = np.arange(1, njobs+1)
@@ -123,7 +119,7 @@ def main():
     module, ext = os.path.splitext(name)
     config = importlib.import_module(module)
     if args.version=='issm':
-        collect_issm_results(args.njobs, config.exp, mesh=config.mesh)
+        collect_issm_results(config, args.njobs, mesh=config.mesh)
     return
 
 if __name__=='__main__':
