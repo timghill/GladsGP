@@ -1,18 +1,18 @@
-import pickle
-
 import numpy as np
+import pickle
 
 import os
 import sys
 ISSM_DIR = os.getenv('ISSM_DIR')
-sys.path.append(os.path.join(ISSM_DIR, '/bin'))
-sys.path.append(os.path.join(ISSM_DIR, '/lib'))
+sys.path.append(os.path.join(ISSM_DIR, 'bin/'))
+sys.path.append(os.path.join(ISSM_DIR, 'lib/'))
 from issmversion import issmversion
 from hydrologyglads import hydrologyglads
 from generic import generic
+from timesteppingadaptive import timesteppingadaptive
 
 # Vectors for convenience
-xvec = md.mesh.x
+xvec = md.mesh.x - np.min(md.mesh.x)
 onevec = 0*xvec + 1
 
 # Calving
@@ -24,12 +24,14 @@ md.friction.p = np.ones((md.mesh.numberofelements, 1))
 md.friction.q = np.ones((md.mesh.numberofelements, 1))
 
 # Geometry
-md.geometry.base = np.load('../data/geom/IS_bed.npy')
-md.geometry.bed = np.load('../data/geom/IS_bed.npy')
-md.geometry.surface = np.load('../data/geom/IS_surface.npy')
-thick = md.geometry.surface - md.geometry.bed
+bed = np.load('../data/geom/IS_bed.npy')
+surf = np.load('../data/geom/IS_surface.npy')
+thick = surf - bed
 thick[thick<10] = 10
-md.geometry.surface = md.geometry.bed + thick
+surf = bed + thick
+md.geometry.base = bed
+md.geometry.bed = bed
+md.geometry.surface = surf
 md.geometry.thickness = thick
 
 # Constants
@@ -49,7 +51,7 @@ md.hydrology.sheet_alpha = 3./2.
 md.hydrology.sheet_beta = 2.0
 md.hydrology.cavity_spacing = 10
 md.hydrology.bump_height = 0.5*onevec
-md.hydrology.channel_sheet_width = md.hydrology.cavity_spacing
+md.hydrology.channel_sheet_width = 50
 md.hydrology.omega = 1/2000
 md.hydrology.englacial_void_ratio = 1e-4
 md.hydrology.rheology_B_base = (2.4e-24)**(-1./3.)*onevec
@@ -59,7 +61,7 @@ md.hydrology.channel_conductivity = 0.5*onevec
 md.hydrology.channel_alpha = 5./4.
 md.hydrology.channel_beta = 3./2.
 md.hydrology.creep_open_flag = 0
-# md.hydrology.requested_outputs = ['default']
+md.hydrology.isincludesheetthickness = 1
 md.hydrology.requested_outputs = [
         'HydraulicPotential',
         'EffectivePressure',
@@ -79,28 +81,49 @@ phi_bed = md.constants.g*md.materials.rho_freshwater*md.geometry.base
 p_ice = md.constants.g*md.materials.rho_ice*md.geometry.thickness
 md.initialization.hydraulic_potential = phi_bed + p_ice
 
-md.initialization.ve = 30*onevec
-md.initialization.vx = -30*onevec
+vv = np.load('../data/velocity/IS_vel.npy')
+md.initialization.ve = vv
+md.initialization.vx = -md.initialization.ve*onevec
 md.initialization.vy = 0*onevec
 
 # BOUNDARY CONDITIONS
 md.hydrology.spcphi = np.nan*onevec
-pos = np.where(np.logical_and(
-    md.mesh.vertexonboundary,
-    md.mesh.x==np.min(md.mesh.x, axis=-1)))
-md.hydrology.spcphi[pos] = phi_bed[pos]
+pos = np.array([296, 34, 38])
+md.hydrology.spcphi[pos] = phi_bed[pos] + 0*p_ice[pos]
 md.hydrology.neumannflux = np.zeros((md.mesh.numberofelements, 1))
 
 # FORCING
+md.hydrology.melt_flag = 1
+
+# Sliding friction
+# Set max friction melt to 4 cm/year (Harper et al., 2021)
+# https://doi.org/10.5194/tc-15-5409-2021
+# Scale friction melt with squared velocity, assuming basal drag
+# is linear with respect to velocity (Sommers et al., 2023)
+max_drag_melt = 0.04
+basal_drag_melt = max_drag_melt/np.max(vv**2) * vv**2
+
+# Geothermal
+geo_flux_min = 27e-3
+geo_flux_max = 49e-3
+z_score = (md.geometry.surface - np.min(md.geometry.surface))/np.ptp(md.geometry.surface)
+geo_flux = geo_flux_min + (geo_flux_max-geo_flux_min)*z_score
+geo_melt = geo_flux/1e3/3.34e5 * md.constants.yts # Geothermal heat flux melt rate (m/a)
+print('Min geo melt:', np.min(geo_melt))
+print('Max geo melt:', np.max(geo_melt))
+md.basalforcings.groundedice_melting_rate = basal_drag_melt + geo_melt
+md.basalforcings.geothermalflux = 0
+# Read one year of moulin inputs from file and repeat as many times as necessary
+# moulin_input = np.loadtxt('../data/kan_l_melt/moulin_input.txt',
+#     delimiter=',')
+# assert moulin_input.shape[0]==md.mesh.numberofvertices+1
+# n_time = moulin_input.shape[1]
+# n_reps = 2
 
 with open('../data/moulins/moulins_catchments.pkl', 'rb') as moulins_file:
     basins = pickle.load(moulins_file)
 moulin_indices = np.array([basin['moulin'] for basin in basins])
 
-md.hydrology.melt_flag = 1
-md.basalforcings.groundedice_melting_rate = 0.05*onevec
-md.basalforcings.geothermalflux = 0
-# Read one year of moulin inputs from file and repeat as many times as necessary
 moulin_inputs = np.loadtxt('../data/melt/basin_integrated_inputs.csv', delimiter=',')
 tt_days = moulin_inputs[-1, :].astype(int)
 moulin_input_rate = moulin_inputs[:-1, :]
@@ -125,19 +148,14 @@ md.stressbalance.reltol = np.nan
 md.stressbalance.abstol = np.nan
 md.stressbalance.maxiter = 100
 
-# TIMESTEPPING
+# # TIMESTEPPING
 hour = 3600
 day = 86400
-dt_hours = 2
+dt_hours = 1
 out_freq = 24*1/dt_hours
-# out_freq = 1
 md.timestepping.time_step = dt_hours*hour/md.constants.yts
 md.timestepping.final_time = 2
-
 md.settings.output_frequency = out_freq
-
-#md.settings.interp_forcing = True
-md.settings.cycle_forcing = True
 
 md.transient.deactivateall()
 md.transient.ishydrology = True
