@@ -13,7 +13,7 @@ Top-level blurb, links, images, and code go here
    :caption: Contents:
 
    quickstart
-   project
+   src
    notebooks
 
 

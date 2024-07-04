@@ -1,34 +1,42 @@
 Package documentation
 =====================
 
-project.run_job
+src.run_job
 ---------------
 
-.. automodule:: project.run_job
+.. automodule:: src.run_job
    :members:
    :show-inheritance:
 
-project.expdesign
+src.expdesign
 -----------------
 
-.. automodule:: project.expdesign
+.. automodule:: src.expdesign
    :members:
    :undoc-members:
    :show-inheritance:
 
-project.definitions
+src.definitions
 -------------------
 
-.. automodule:: project.definitions
+.. automodule:: src.definitions
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-project.utils
+src.utils
 -------------------
 
-.. automodule:: project.utils
+.. automodule:: src.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.model
+---------------
+
+.. automodule:: src.model
    :members:
    :undoc-members:
    :show-inheritance:
