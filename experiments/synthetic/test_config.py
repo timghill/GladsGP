@@ -40,7 +40,7 @@ theta_bounds = np.array([
 theta_sampler = None
 
 ## PATHS
-base = os.path.expanduser('~/scratch/GladsGP/experiments/synthetic')
+base = pathlib.Path(__file__).parent.resolve()
 sim_dir = os.path.join(base, 'issm/test/')
 analysis_dir = os.path.join(base, 'analysis/')
 exp_dir = os.path.join(base, 'expdesign/')

@@ -18,6 +18,7 @@ from sepia.SepiaPredict import SepiaEmulatorPrediction
 from sepia.SepiaPredict import SepiaXvalEmulatorPrediction
 
 from src.utils import import_config
+from src import svd
 
 def init_model(t_std, y_sim, exp, p, data_dir='data/', 
     sd_threshold=1e-6, recompute=False):
@@ -82,7 +83,8 @@ def init_model(t_std, y_sim, exp, p, data_dir='data/',
     pca_fstat = np.array([os.path.exists(pca_fpattern.format(exp, arr)) for arr in ['U', 'S', 'Vh']])
     pmax = 25
     if recompute or not pca_fstat.all():
-        U,S,Vh = linalg.svd(y_std, full_matrices=False)
+        # U,S,Vh = linalg.svd(y_std, full_matrices=False)
+        U,S,Vh = svd.randomized_svd(y_std, pmax, k=0, q=1)
         U = U[:, :pmax]
         Vh = Vh[:pmax, :]
         np.save(pca_fpattern.format(exp, 'U'), U)
