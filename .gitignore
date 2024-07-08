@@ -38,5 +38,9 @@ GP_*
 *.outlog
 *.queue
 *.toolkits
+*.err
+*.out
 
 scratch/
+
+performance*.csv
