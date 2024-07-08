@@ -230,3 +230,14 @@ def PCA_saltelli_sensitivity_indices(func, n_dim, m, pcvar, bootstrap=True):
     gen_total = np.sum(total_index.T*pcvar, axis=1)
     return (first_order, total_index, gen_first, gen_total, res)
 
+
+def width_average(mesh, x, dx=2):
+    """Width-average (nx, nt) array x"""
+    xedge = np.arange(0, 100+dx, dx)
+    xmid = 0.5*(xedge[1:] + xedge[:-1])
+    xavg = np.zeros((len(xmid), x.shape[1]))
+    for i in range(len(xavg)):
+        xi = xmid[i]
+        mask = np.abs(mesh['x']/1e3 - xi)<dx/2
+        xavg[i] = np.nanmean(x[mask,:],axis=0)
+    return xavg, xedge
