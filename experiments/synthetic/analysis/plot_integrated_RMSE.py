@@ -109,10 +109,10 @@ def main(config, test_config, n_pcs, recompute=False, dtype=np.float32):
         ax2.set_yticks([0, 12.5, 25])
         # ax2.set_ylabel('Distance across (km)')
         # ax2.set_xlabel('Distance from terminus (km)')
-        ax2.text(0.025, 0.95, alphabet[i], transform=ax2.transAxes,
-            fontweight='bold', ha='left', va='top')
-        ax2.text(0.95, 0.95, 'p={}'.format(p), transform=ax2.transAxes,
-            ha='right', va='top')
+        ax2.text(0.95, 0.95, alphabet[i], transform=ax2.transAxes,
+            fontweight='bold', ha='right', va='top')
+        ax2.text(0.95, 0.05, 'p={}'.format(p), transform=ax2.transAxes,
+            ha='right', va='bottom')
 
         t_month = np.arange(365) * 12/365
         ax1 = tsax
