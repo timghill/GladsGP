@@ -140,7 +140,7 @@ def main(config, test_config, n_pcs, recompute=False, dtype=np.float32):
     ax1.set_ylim([0.0, ylim[1]])
     ax1.legend(loc='upper right', frameon=False)
     fig.savefig(os.path.join(config.figures, 
-        'cv_rmse_timeseries_spatial.png'), dpi=400)
+        'rmse_timeseries_spatial.png'), dpi=400)
 
 
 if __name__=='__main__':
