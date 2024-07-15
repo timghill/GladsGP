@@ -29,11 +29,9 @@ def plot_PC_RMSE_variance(recompute=False):
     ## Part 1: plot RMSE and cumulative proportion of variance
     config = import_config('../train_config.py')
     y_fname = config.Y_physical
-    nsims = [16, 32, 64, 128, 256]
-    # nsims = [64, 128]
-
-    npcs = (np.linspace(1, 10, 19)**2).astype(int)
-    # npcs = np.array([1, 25, 50])
+    nsims = [16, 32, 64, 128, 256, 512]
+    npcs = list(np.arange(1, 12)) + list((np.linspace(1, 10, 21)**2).astype(int))
+    npcs = np.unique(npcs)
     pmax = 100
 
     # colors = cmocean.cm.haline(np.linspace(0.2, 0.85, len(nsims)))
@@ -169,5 +167,5 @@ def plot_PC_RMSE_variance(recompute=False):
     
 
 if __name__=='__main__':
-    plot_PC_RMSE_variance(recompute=False)
+    plot_PC_RMSE_variance(recompute=True)
 

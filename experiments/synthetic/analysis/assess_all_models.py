@@ -30,12 +30,75 @@ from src.model import load_model
 
 flierprops = {'marker':'+', 'markersize':4}
 
-def plot_nsim_loss(path, n_sims, n_pcs, p):
+def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
     """
     Plot GP prediction RMSE, std residuals for n_sims and n_pcs
     """
-    fig, axs = plt.subplots(figsize=(10, 4), ncols=4)
-    ax1,ax2,ax3,ax4 = axs
+    fig, axs = plt.subplots(figsize=(10, 6), ncols=4, nrows=2)
+
+    # 1 For number of PCs
+    ax1,ax2,ax3,ax4 = axs[0]
+    RMSE = None
+    MAPE = None
+    CI = None
+    full_cis = np.zeros(len(n_pcs))
+    coverage = np.zeros(len(n_pcs))
+    # p_index = n_pcs==p
+    for i in range(len(n_pcs)):
+        p = n_pcs[i]
+        performance = np.loadtxt(path.format(m_ref, p), delimiter=',')
+        if RMSE is None:
+            n_train = performance.shape[0]
+            RMSE = np.zeros((len(n_pcs), n_train))
+            MAPE = np.zeros((len(n_pcs), n_train))
+            CI = np.zeros((len(n_pcs), n_train))
+            cov = np.zeros((len(n_pcs), n_train))
+        RMSE[i,:] = performance[:,0]
+        MAPE[i,:] = performance[:,1]
+        lower = performance[:, 2]
+        upper = performance[:, 3]
+        CI[i,:] = upper - lower
+        full_cis[i] = performance[0, 4]
+        cov[i,:] = performance[:,5]
+        coverage[i] = np.mean(cov[i])
+
+    metrics = (RMSE.T, 100*MAPE.T, CI.T, 100*cov.T)
+    labels = ('RMSE', 'MAPE (%)', '95% prediction interval width', 'Coverage (%)')
+    alphabet = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h')
+    dys = (0.05, 2, 0.1, 5)
+    # cbars = [0, 0, 0]
+    # colors = cmocean.cm.amp(np.linspace(0.25, 1, len(n_sims)))
+    medianprops = {'color':'#000000'}
+    boxprops = {'edgecolor':'none'}
+    fc = ['#356575', '#6295A2', '#80B9AD', '#B3E2A7']
+    for i in range(len(metrics)):
+        ax = axs[0,i]
+        ax.grid(linestyle=':', linewidth=0.5)
+        boxprops['facecolor'] = fc[i]
+        boxes = ax.boxplot(metrics[i], labels=n_pcs, patch_artist=True,
+            medianprops=medianprops, boxprops=boxprops, showcaps=False, showfliers=True,
+            flierprops=flierprops)
+        ax.set_ylabel(labels[i])
+        ymax = np.max(metrics[i])
+        dy = dys[i]
+        upper = dy*np.ceil(ymax/dy)
+        ylim = ax.get_ylim()
+        ax.set_ylim([0, upper])
+        ax.text(0.15, 0.9, alphabet[i], transform=ax.transAxes,
+            ha='right', va='bottom', fontweight='bold')
+        ax.spines[['right', 'top']].set_visible(False)
+    
+    axs[0,2].plot(np.arange(1, len(n_pcs)+1), full_cis, 
+        linestyle='', marker='.', color='#000000', markersize=10, zorder=10)
+
+    axs[0,-1].plot(np.arange(1, len(n_pcs)+1), 100*coverage, 
+        linestyle='', marker='.', color='#000000', markersize=10, zorder=10)
+    axs[0,-1].set_ylim([0, 100])
+    
+    fig.text(0.5, 0.52, 'Number of PCs', ha='center')
+
+    # 2 Number of simulations
+    ax1,ax2,ax3,ax4 = axs[1]
     RMSE = None
     MAPE = None
     CI = None
@@ -43,7 +106,7 @@ def plot_nsim_loss(path, n_sims, n_pcs, p):
     coverage = np.zeros(len(n_sims))
     for i in range(len(n_sims)):
         m = n_sims[i]
-        performance = np.loadtxt(path, delimiter=',')
+        performance = np.loadtxt(path.format(m,p_ref), delimiter=',')
         if RMSE is None:
             n_train = performance.shape[0]
             RMSE = np.zeros((len(n_sims), n_train))
@@ -60,16 +123,14 @@ def plot_nsim_loss(path, n_sims, n_pcs, p):
         coverage[i] = np.mean(cov[i])
 
     metrics = (RMSE.T, 100*MAPE.T, CI.T, 100*cov.T)
-    labels = ('RMSE', 'MAPE (%)', '95% prediction interval width', 'Coverage (%)')
-    alphabet = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h')
-    dys = (0.05, 5, 0.05, 5)
-    medianprops = {'color':'#000000'}
-    boxprops = {'edgecolor':'none'}
-    # fc = ['#8a0A0A', '#BF3131', '#DA6262']
-    # fc = cmocean.cm.balance([0.85, 0.75, 0.15, 0.25])
-    fc = ['#356575', '#6295A2', '#80B9AD', '#B3E2A7']
+    # labels = ('RMSE', 'MAPE (%)', '95% prediction interval width', 'Coverage (%)')
+    # medianprops = {'color':'#000000'}
+    # boxprops = {'edgecolor':'none'}
+    # # fc = ['#8a0A0A', '#BF3131', '#DA6262']
+    # # fc = cmocean.cm.balance([0.85, 0.75, 0.15, 0.25])
+    # fc = ['#356575', '#6295A2', '#80B9AD', '#B3E2A7']
     for i in range(len(metrics)):
-        ax = axs[i]
+        ax = axs[1,i]
         ax.grid(linestyle=':', linewidth=0.5)
         boxprops['facecolor'] = fc[i]
         boxes = ax.boxplot(metrics[i], labels=n_sims, patch_artist=True,
@@ -81,26 +142,26 @@ def plot_nsim_loss(path, n_sims, n_pcs, p):
         upper = dy*np.ceil(ymax/dy)
         ylim = ax.get_ylim()
         ax.set_ylim([0, upper])
-        ax.text(-0.25, 1.025, alphabet[i+4], transform=ax.transAxes,
+        ax.text(0.15, 0.9, alphabet[i+4], transform=ax.transAxes,
             ha='right', va='bottom', fontweight='bold')
         
         ax.spines[['right', 'top']].set_visible(False)
         
-    axs[2].plot(np.arange(1, len(n_sims)+1), full_cis, 
+    axs[1,2].plot(np.arange(1, len(n_sims)+1), full_cis, 
         linestyle='', marker='.', color='#000000', markersize=10, zorder=10)
-    axs[-1].plot(np.arange(1, len(n_sims)+1), 100*coverage, 
+    axs[1,-1].plot(np.arange(1, len(n_sims)+1), 100*coverage, 
         linestyle='', marker='.', color='#000000', markersize=10, zorder=10)
 
-    ax2 = axs[-1].twinx()
+    ax2 = axs[1,-1].twinx()
     ax2.spines['top'].set_visible(False)
     cputime = 0.5*n_sims
     ax2.plot(np.arange(1, len(n_sims)+1), cputime,
         color='#000000', marker='.', markersize=5)
-    ax2.set_ylabel('CPU-hours', rotation=-90)
-    axs[-1].set_ylim([0, 100])
+    ax2.set_ylabel('CPU-hours', rotation=-90, labelpad=16)
+    axs[1,-1].set_ylim([0, 100])
     
     fig.text(0.5, 0.025, 'Number of Simulations', ha='center')
-    fig.subplots_adjust(left=0.08, bottom=0.15, right=0.92, top=0.925, wspace=0.5)
+    fig.subplots_adjust(left=0.08, bottom=0.1, right=0.92, top=0.975, wspace=0.4, hspace=0.3)
     return fig
 
 
@@ -118,7 +179,7 @@ def plot_npc_loss(path, n_sims, n_pcs, m):
     # p_index = n_pcs==p
     for i in range(len(n_pcs)):
         p = n_pcs[i]
-        performance = np.loadtxt(paths, delimiter=',')
+        performance = np.loadtxt(path.format(m, p), delimiter=',')
         if RMSE is None:
             n_train = performance.shape[0]
             RMSE = np.zeros((len(n_pcs), n_train))
@@ -172,7 +233,7 @@ def plot_npc_loss(path, n_sims, n_pcs, m):
     return fig
 
 
-def plot_nsim_npc_loss(path, n_sims, n_pcs, linestyle='solid'):
+def plot_joint_loss(path, n_sims, n_pcs, linestyle='solid'):
     """
     Plot GP prediction RMSE, std residuals for n_sims and n_pcs
     """
@@ -347,28 +408,29 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
             batch_indices = np.array_split(np.arange(len(x_pred)), n_batches)
             print('Using {} batches of ~{}'.format(n_batches, n_per_batch))
             for j in range(n_batches):
-                print('Batch {}/{}'.format(j+1, n_batches))
+                print('Test Batch {}/{}'.format(j+1, n_batches))
                 tj_pred = x_pred[batch_indices[j],:]
                 preds = SepiaEmulatorPrediction(t_pred=tj_pred, 
                     samples=samples, model=model)
-                preds.w = preds.w.astype(model.data.sim_data.y.dtype)
+                preds.w = preds.w.astype(np.float32)
                 ypreds = preds.get_y()
                 ypred_mean[batch_indices[j]] = np.mean(ypreds, axis=0)
                 ypred_lq[batch_indices[j]] = np.quantile(ypreds, quantile, axis=0)
                 ypred_uq[batch_indices[j]] = np.quantile(ypreds, 1-quantile, axis=0)
 
-            integrated_ci = 0
+            test_confint = np.zeros(test_config.m, dtype=dtype)
             n_batches = int(np.ceil(len(t_integrate)/n_per_batch))
             batch_indices = np.array_split(np.arange(len(t_integrate)), n_batches)
             for j in range(n_batches):
+                print('Integrate Batch {}/{}'.format(j+1, n_batches))
                 tj_integrate = t_integrate[batch_indices[j], :]
                 preds = SepiaEmulatorPrediction(t_pred=tj_integrate, 
                     samples=samples, model=model)
-                preds.w = preds.w.astype(model.data.sim_data.y.dtype)
+                preds.w = preds.w.astype(np.float32)
                 ypreds = preds.get_y()
                 yint_lq = np.quantile(ypreds, quantile, axis=0)
                 yint_uq = np.quantile(ypreds, 1-quantile, axis=0)
-                integrated_ci += np.mean(yint_uq - yint_lq)/len(t_integrate)
+                test_confint[batch_indices[j]] = np.mean(yint_uq - yint_lq)
 
             pred_resid = ypred_mean - y_test
             pred_rmse = np.sqrt(np.mean(pred_resid**2, axis=1))
@@ -384,6 +446,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
 
             pred_lq = np.mean(ypred_lq, axis=1)
             pred_uq = np.mean(ypred_uq, axis=1)
+            integrated_ci = np.mean(test_confint)
             confint = integrated_ci*np.ones(pred_rmse.shape)
 
             pred_arr = np.array([
@@ -407,11 +470,15 @@ def main(train_config, test_config, n_sims, n_pcs,
         compute_test_error(train_config, test_config, n_sims, n_pcs, test=test)
 
     path = os.path.join(train_config.data_dir, 'architecture/performance_n{:03d}_p{:02d}.csv')
-    fig1, fig2 = plot_nsim_npc_loss(path, n_sims, n_pcs)
+    print('path:', path)
+    fig1, fig2 = plot_joint_loss(path, n_sims, n_pcs)
     if not os.path.exists(train_config.figures):
         os.makedirs(train_config.figures)
     fig1.savefig(os.path.join(train_config.figures, 'nsim_npcs_error.png'),
         dpi=400)
+    
+    fig3 = plot_marginal_loss(path, np.array(n_sims), np.array(n_pcs), train_config.m, train_config.p)
+    fig3.savefig(os.path.join(train_config.figures, 'nsim_boxplot.png'), dpi=400)
         
 
 if __name__=='__main__':
