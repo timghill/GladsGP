@@ -310,7 +310,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
     if test:
         t_integrate = sampler.random(n=2)
     else:
-        t_integrate = sampler.random(n=100)
+        t_integrate = sampler.random(n=200)
 
     for i in range(len(n_sims)):
         for k in range(len(n_pcs)):
