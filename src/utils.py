@@ -241,3 +241,52 @@ def width_average(mesh, x, dx=2):
         mask = np.abs(mesh['x']/1e3 - xi)<dx/2
         xavg[i] = np.nanmean(x[mask,:],axis=0)
     return xavg, xedge
+
+def reorder_edges(md):
+    maxnbf = 3*md.mesh.numberofelements
+    edges = np.zeros((maxnbf, 3)).astype(int)
+    exchange = np.zeros(maxnbf).astype(int)
+
+    head_minv = -1*np.ones(md.mesh.numberofvertices).astype(int)
+    next_face = np.zeros(maxnbf).astype(int)
+    nbf = 0
+    for i in range(md.mesh.numberofelements):
+        for j in range(3):
+            v1 = md.mesh.elements[i,j]-1
+            if j==2:
+                v2 = md.mesh.elements[i,0]-1
+            else:
+                v2 = md.mesh.elements[i,j+1]-1
+            
+            if v2<v1:
+                v3 = v2
+                v2 = v1
+                v1 = v3
+            
+            exists = False
+            e = head_minv[v1]
+            while e!=-1:
+                if edges[e, 1]==v2:
+                    exists=True
+                    break
+                e = next_face[e]
+            
+            if not exists:
+                edges[nbf,0] = v1
+                edges[nbf,1] = v2
+                edges[nbf,2] = i
+                if v1!=md.mesh.elements[i,j]-1:
+                    exchange[nbf] = 1
+                
+                next_face[nbf] = head_minv[v1]
+                head_minv[v1] = nbf
+                nbf = nbf+1
+
+    edges = edges[:nbf]
+    pos = np.where(exchange==1)[0]
+    v3 = edges[pos, 0]
+    edges[pos, 0] = edges[pos, 1]
+    edges[pos, 1] = v3
+
+    edges = edges[:, :2]
+    return edges

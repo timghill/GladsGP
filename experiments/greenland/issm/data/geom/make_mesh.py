@@ -27,6 +27,8 @@ import cmocean
 
 from make_surface_bed import interp_surf_bed
 
+from src.utils import reorder_edges
+
 ## Point to domain outline file
 outline = 'IS_outline.exp'
 meshfile = 'IS_mesh.pkl'
@@ -52,6 +54,19 @@ area[elev>ELA_elev] = max_length
 ## Make the refined mesh
 md = bamg(md, 'hVertices', area, 'anisomax', 1.1)
 print('Refined mesh to have numberofvertices:', md.mesh.numberofvertices)
+
+# Compute the nodes connected to each edge
+connect_edge = reorder_edges(md)
+
+# Compute edge lengths
+x0 = md.mesh.x[connect_edge[:,0]]
+x1 = md.mesh.x[connect_edge[:,1]]
+dx = x1 - x0
+y0 = md.mesh.y[connect_edge[:,0]]
+y1 = md.mesh.y[connect_edge[:,1]]
+dy = y1 - y0
+edge_length = np.sqrt(dx**2 + dy**2)
+
 if os.path.exists(meshfile):
     os.remove(meshfile)
 
@@ -60,6 +75,8 @@ meshdict['x'] = md.mesh.x
 meshdict['y'] = md.mesh.y
 meshdict['elements'] = md.mesh.elements
 meshdict['area'] = GetAreas(md.mesh.elements, md.mesh.x, md.mesh.y)
+meshdict['connect_edge'] = connect_edge
+meshdict['edge_length'] = edge_length
 meshdict['vertexonboundary'] = md.mesh.vertexonboundary
 meshdict['numberofelements'] = md.mesh.numberofelements
 meshdict['numberofvertices'] = md.mesh.numberofvertices

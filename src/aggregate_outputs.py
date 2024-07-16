@@ -34,6 +34,8 @@ def collect_issm_results(config, njobs, dtype=np.float32):
     
     nodes = np.array([mesh['x'], mesh['y']]).T
     connect = mesh['elements'].astype(int)-1
+    connect_edge = mesh['connect_edge'].astype(int)
+    edge_length = mesh['edge_length']
 
     # Construct file patterns
     jobids = np.arange(1, njobs+1)
@@ -57,7 +59,6 @@ def collect_issm_results(config, njobs, dtype=np.float32):
         hs = np.load(respattern.format((jobid), 'h_s'))
         q = np.abs(vx*hs)
         
-        """
         # Fraction of channelized discharge
         channel_discharge_timeseries = definitions.channel_discharge(nodes, connect_edge, 
             np.abs(Q), fluxgate_positions)
@@ -86,11 +87,11 @@ def collect_issm_results(config, njobs, dtype=np.float32):
         T_winter = np.mean(T[:, melt_start-30:melt_start-15], axis=1)/365/86400
         T_mean = np.mean(T, axis=1)/365/86400
         all_transit_time[:, i] = T_mean
-    """
+
     np.save(aggpattern.format('ff'), all_ff)
-    #np.save(aggpattern.format('channel_frac'), all_channel_frac)
-    #np.save(aggpattern.format('channel_length'), all_channel_length)
-    #np.save(aggpattern.format('transit_time'), all_transit_time)
+    np.save(aggpattern.format('channel_frac'), all_channel_frac)
+    np.save(aggpattern.format('channel_length'), all_channel_length)
+    np.save(aggpattern.format('transit_time'), all_transit_time)
 
 
 def main():
