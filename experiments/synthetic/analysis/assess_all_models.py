@@ -348,7 +348,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
                 ypred_lq[batch_indices[j]] = np.quantile(ypreds, quantile, axis=0)
                 ypred_uq[batch_indices[j]] = np.quantile(ypreds, 1-quantile, axis=0)
 
-            test_confint = np.zeros(test_config.m, dtype=dtype)
+            test_confint = np.zeros(len(t_integrate), dtype=dtype)
             n_batches = int(np.ceil(len(t_integrate)/n_per_batch))
             batch_indices = np.array_split(np.arange(len(t_integrate)), n_batches)
             for j in range(n_batches):
