@@ -18,7 +18,6 @@ import pickle
 # from read_netCDF import read_netCDF
 
 import numpy as np
-import netCDF4 as nc
 
 from . import definitions
 
