@@ -46,7 +46,7 @@ md = bamg(md, 'domain', 'IS_outline.exp', 'hmin', max_length, 'hmax', max_length
 print('Made draft mesh with numberofvertices:', md.mesh.numberofvertices)
 
 ## Elevation-dependent refinement
-elev, bed = interp_surf_bed(np.array([md.mesh.x, md.mesh.y]).T)
+elev, bed, _ = interp_surf_bed(np.array([md.mesh.x, md.mesh.y]).T)
 area = min_length + (max_length - min_length)*(elev-min_elev)/(ELA_elev-min_elev)
 area[elev<min_elev] = min_length
 area[elev>ELA_elev] = max_length

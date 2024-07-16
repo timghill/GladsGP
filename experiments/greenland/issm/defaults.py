@@ -101,7 +101,7 @@ md.hydrology.melt_flag = 1
 # Scale friction melt with squared velocity, assuming basal drag
 # is linear with respect to velocity (Sommers et al., 2023)
 max_drag_melt = 0.04
-basal_drag_melt = max_drag_melt/np.max(vv**2) * vv**2
+basal_drag_melt = np.load('../data/melt/IS_friction_melt.npy')
 
 # Geothermal
 geo_flux_min = 27e-3

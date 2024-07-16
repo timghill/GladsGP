@@ -29,20 +29,36 @@ def interp_surf_bed(xy,
 
     x = np.linspace(xmin, xmax, ncols+1)[:-1]
     y = np.linspace(ymin, ymax, nrows+1)[0:-1][::-1]
-
-    # [xx,yy] = np.meshgrid(x,y)
     points = (x, y)
 
     surf_interp = interpolate.interpn(points, surf.T, xy, bounds_error=False, fill_value=-9999)
     bed_interp = interpolate.interpn(points, bed.T, xy, bounds_error=False, fill_value=-9999)
 
-    return surf_interp, bed_interp
+    # Extra step: compute surface gradient. We can 'cheat' by doing this on the regular grid
+    # then interpolating
+    dx = x[1] - x[0]
+    dy = y[1] - y[0]
+    dsurf_dx = np.zeros(surf.shape)
+    dsurf_dy = np.zeros(surf.shape)
+    dsurf_dx[:, 1:-1] = (surf[:, 2:] - surf[:, :-2])/2/dx
+    dsurf_dy[1:-1,: ] = (surf[2:, :] - surf[:-2, :])/2/dy
+    slope = np.sqrt(dsurf_dx**2 + dsurf_dy**2)
+
+    # Smooth the slope
+    size = 11
+    window = np.ones((size, size))/size**2
+    slope = signal.convolve2d(slope, window, mode='same')
+    slope_interp = interpolate.interpn(points, slope.T, xy, bounds_error=False, fill_value=-9999)
+
+    return surf_interp, bed_interp, slope_interp
 
 if __name__=='__main__':
     with open('IS_mesh.pkl', 'rb') as meshin:
         mesh = pickle.load(meshin)
     xi = np.array([mesh['x'], mesh['y']]).T
-    surf,bed = interp_surf_bed(xi)
+    surf,bed,slope = interp_surf_bed(xi)
     np.save('IS_surface.npy', surf)
     np.save('IS_bed.npy', bed)
+    np.save('IS_surface_slope.npy', slope)
+
     

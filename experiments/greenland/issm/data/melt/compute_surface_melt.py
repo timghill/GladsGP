@@ -12,7 +12,6 @@ import numpy as np
 import cmocean
 from matplotlib import pyplot as plt
 import matplotlib
-matplotlib.use('TkAgg')
 
 # Constants
 lapse_rate = -5e-3  # deg C m-1

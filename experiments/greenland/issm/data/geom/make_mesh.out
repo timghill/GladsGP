@@ -2,12 +2,11 @@
 Ice-sheet and Sea-level System Model (ISSM) Version 4.24
 (website: http://issm.jpl.nasa.gov contact: https://issm.ess.uci.edu/forum/)
  
-Build date: Tue Jul  2 13:06:04 EDT 2024
-Copyright (c) 2009-2024 California Institute of Technology
+Build date: Tue Apr  2 14:23:11 PDT 2024
+Copyright (c) 2009-2023 California Institute of Technology
  
     to get started type: issmdoc
  
-could not import shapefile, PyShp has not been installed, no shapefile reading capabilities enabled
 OSGeo/GDAL for Python not installed, overlay plots are not enabled
 At least one contour was not correctly oriented and has been re-oriented
 Made draft mesh with numberofvertices: 761
