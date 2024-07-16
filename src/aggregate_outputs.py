@@ -91,7 +91,7 @@ def collect_issm_results(config, njobs, dtype=np.float32):
     # Compute log of sheet transit times
 
     append_channel_frac = np.zeros((all_channel_frac.shape[0], all_channel_frac.shape[1]+1))
-    append_transit_time = n.zeros((all_transit_time.shape[0], all_transit_time.shape[1]+1))
+    append_transit_time = np.zeros((all_transit_time.shape[0], all_transit_time.shape[1]+1))
 
     append_channel_frac[:, :all_channel_frac.shape[1]] = all_channel_frac
     append_channel_frac[:, -1] = np.mean(all_channel_frac, axis=1)
