@@ -90,13 +90,13 @@ def collect_issm_results(config, njobs, dtype=np.float32):
     # Compute average of channel frac
     # Compute log of sheet transit times
 
-    append_channel_frac = np.zeros((all_channel_frac.shape[0], all_channel_frac.shape[1]+1))
-    append_transit_time = np.zeros((all_transit_time.shape[0], all_transit_time.shape[1]+1))
+    append_channel_frac = np.zeros((all_channel_frac.shape[0]+1, all_channel_frac.shape[1]))
+    append_transit_time = np.zeros((all_transit_time.shape[0]+1, all_transit_time.shape[1]))
 
-    append_channel_frac[:, :all_channel_frac.shape[1]] = all_channel_frac
-    append_channel_frac[:, -1] = np.mean(all_channel_frac, axis=1)
-    append_transit_time[:, :all_transit_time.shape[1]] = all_transit_time
-    append_transit_time[:, -1] = np.mean(all_transit_time, axis=1)
+    append_channel_frac[:all_channel_frac.shape[0], :] = all_channel_frac
+    append_channel_frac[-1,:] = np.mean(all_channel_frac, axis=0)
+    append_transit_time[:all_transit_time.shape[0], :] = all_transit_time
+    append_transit_time[-1, :] = np.mean(all_transit_time, axis=0)
 
     np.save(aggpattern.format('ff'), all_ff)
     np.save(aggpattern.format('channel_frac'), append_channel_frac)
