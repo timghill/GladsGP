@@ -85,12 +85,23 @@ def collect_issm_results(config, njobs, dtype=np.float32):
         T_meltseason = np.mean(T[:, melt_start:melt_end], axis=1)/365/86400
         T_winter = np.mean(T[:, melt_start-30:melt_start-15], axis=1)/365/86400
         T_mean = np.mean(T, axis=1)/365/86400
-        all_transit_time[:, i] = T_mean
+        all_transit_time[:, i] = np.log10(T_mean)
+    
+    # Compute average of channel frac
+    # Compute log of sheet transit times
+
+    append_channel_frac = np.zeros((all_channel_frac.shape[0], all_channel_frac.shape[1]+1))
+    append_transit_time = n.zeros((all_transit_time.shape[0], all_transit_time.shape[1]+1))
+
+    append_channel_frac[:, :all_channel_frac.shape[1]] = all_channel_frac
+    append_channel_frac[:, -1] = np.mean(all_channel_frac, axis=1)
+    append_transit_time[:, :all_transit_time.shape[1]] = all_transit_time
+    append_transit_time[:, -1] = np.mean(all_transit_time, axis=1)
 
     np.save(aggpattern.format('ff'), all_ff)
-    np.save(aggpattern.format('channel_frac'), all_channel_frac)
+    np.save(aggpattern.format('channel_frac'), append_channel_frac)
     np.save(aggpattern.format('channel_length'), all_channel_length)
-    np.save(aggpattern.format('transit_time'), all_transit_time)
+    np.save(aggpattern.format('log_transit_time'), append_transit_time)
 
 
 def main():
