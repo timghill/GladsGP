@@ -3,6 +3,8 @@ import sys
 import pickle
 
 import numpy as np
+import matplotlib
+matplotlib.rc('font', size=8)
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 from matplotlib.tri import Triangulation
@@ -14,18 +16,18 @@ from sepia.SepiaPredict import SepiaEmulatorPrediction
 from src.model import load_model
 
 
-def main(config, test_config, n_pcs, recompute=False, dtype=np.float32):
+def main(train_config, test_config, n_pcs, recompute=False, dtype=np.float32):
     # Load data and initialize model
-    t_std = np.loadtxt(config.X_standard, delimiter=',', skiprows=1,
+    t_std = np.loadtxt(train_config.X_standard, delimiter=',', skiprows=1,
         comments=None).astype(dtype)
-    t_names = np.loadtxt(config.X_physical, delimiter=',', max_rows=1,
+    t_names = np.loadtxt(train_config.X_physical, delimiter=',', max_rows=1,
         dtype=str, comments=None)
     t_names= [tn.strip('#') for tn in t_names]
-    t_phys = np.loadtxt(config.X_physical, delimiter=',', skiprows=1).astype(dtype)
-    t_std = t_std[:config.m, :]
-    t_phys = t_phys[:config.m, :]
-    y_sim = np.load(config.Y_physical).T[:config.m, :].astype(dtype)
-    exp_name = config.exp
+    t_phys = np.loadtxt(train_config.X_physical, delimiter=',', skiprows=1).astype(dtype)
+    t_std = t_std[:train_config.m, :]
+    t_phys = t_phys[:train_config.m, :]
+    y_sim = np.load(train_config.Y_physical).T[:train_config.m, :].astype(dtype)
+    exp_name = train_config.exp
 
     t_test_std = np.loadtxt(test_config.X_standard, delimiter=',', skiprows=1,
         comments=None).astype(dtype)[:test_config.m :]
@@ -33,7 +35,7 @@ def main(config, test_config, n_pcs, recompute=False, dtype=np.float32):
         skiprows=1).astype(dtype)[:test_config.m, :]
     y_test_sim = np.load(test_config.Y_physical).T[:test_config.m, :].astype(dtype)
 
-    fig = plt.figure(figsize=(8, 4))
+    fig = plt.figure(figsize=(6, 3))
     gs = GridSpec(len(n_pcs)+1, 2, height_ratios=[10] + len(n_pcs)*[100],
         width_ratios=(100, 100), left=0.1, bottom=0.125, 
         right=0.95, top=0.85, wspace=0.25, hspace=0.1)
@@ -44,10 +46,10 @@ def main(config, test_config, n_pcs, recompute=False, dtype=np.float32):
     colors = ['#000000', '#555555', '#aaaaaa']
 
     # Plot CV error: width-averaged, space, and time error
-    # with nc.Dataset(config.mesh, 'r') as dmesh:
+    # with nc.Dataset(train_config.mesh, 'r') as dmesh:
     #     nodexy = dmesh['tri/nodes'][:].data.T
     #     connect = dmesh['tri/connect'][:].data.T.astype(int)-1
-    with open(os.path.join(config.sim_dir, config.mesh), 'rb') as meshin:
+    with open(os.path.join(train_config.sim_dir, train_config.mesh), 'rb') as meshin:
         mesh = pickle.load(meshin)
     nodexy = np.array([mesh['x'], mesh['y']]).T
     connect = mesh['elements'] - 1
@@ -55,16 +57,16 @@ def main(config, test_config, n_pcs, recompute=False, dtype=np.float32):
     data_dir = 'data/architecture'
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
-    if not os.path.exists(config.figures):
-        os.makedirs(config.figures)
+    if not os.path.exists(train_config.figures):
+        os.makedirs(train_config.figures)
 
     for i,p in enumerate(n_pcs):
         timeseries_fname = os.path.join(data_dir, 
-            'rmse_timeseries_n{}_p{}.npy'.format(config.m, p))
+            'rmse_timeseries_n{}_p{}.npy'.format(train_config.m, p))
         spatial_fname = os.path.join(data_dir, 
-            'rmse_spatial_n{}_p{}.npy'.format(config.m, p))
+            'rmse_spatial_n{}_p{}.npy'.format(train_config.m, p))
         if not os.path.exists(timeseries_fname) or not os.path.exists(spatial_fname) or recompute:
-            data, model = load_model(config, config.m, p)
+            data, model = load_model(train_config, train_config.m, p)
 
             # Compute CV predictions and error
             samples = model.get_samples(numsamples=50)
@@ -102,7 +104,8 @@ def main(config, test_config, n_pcs, recompute=False, dtype=np.float32):
 
         mtri = Triangulation(nodexy[:, 0]/1e3, nodexy[:, 1]/1e3, connect)
         ax2 = pcaxs[i]
-        tpc = ax2.tripcolor(mtri, rmse_x, vmin=0, vmax=0.15, cmap=cmocean.cm.matter)
+        tpc = ax2.tripcolor(mtri, rmse_x, vmin=0, vmax=0.15, 
+            cmap=cmocean.cm.matter, rasterized=True)
         ax2.set_aspect('equal')
         ax2.set_xlim([0, 100])
         ax2.set_ylim([0, 25])
@@ -116,7 +119,7 @@ def main(config, test_config, n_pcs, recompute=False, dtype=np.float32):
 
         t_month = np.arange(365) * 12/365
         ax1 = tsax
-        ax1.plot(t_month, rmse_t, label='p={}'.format(p), color=colors[i])
+        ax1.plot(t_month, rmse_t, label='p={}'.format(p), color=colors[i], linewidth=1)
         ax1.set_xlabel('Month')
         ax1.set_ylabel('RMSE')
         # ax1.set_ylim([0, 0.20])
@@ -139,19 +142,21 @@ def main(config, test_config, n_pcs, recompute=False, dtype=np.float32):
     ylim = ax1.get_ylim()
     ax1.set_ylim([0.0, ylim[1]])
     ax1.legend(loc='upper right', frameon=False)
-    fig.savefig(os.path.join(config.figures, 
+    fig.savefig(os.path.join(train_config.figures, 
         'rmse_timeseries_spatial.png'), dpi=400)
+    fig.savefig(os.path.join(train_config.figures, 
+        'rmse_timeseries_spatial.pdf'), dpi=400)
 
 
 if __name__=='__main__':
     import argparse
     from src.utils import import_config
     parser = argparse.ArgumentParser()
-    parser.add_argument('conf_file')
+    parser.add_argument('train_config')
     parser.add_argument('test_config')
     parser.add_argument('--recompute', '-r', action='store_true')
     args = parser.parse_args()
-    config = import_config(args.conf_file)
+    train_config = import_config(args.train_config)
     test_config = import_config(args.test_config)
     npcs = [2, 5, 7]
-    main(config, test_config, npcs, recompute=args.recompute)
+    main(train_config, test_config, npcs, recompute=args.recompute)
