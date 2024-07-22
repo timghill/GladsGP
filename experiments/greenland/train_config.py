@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import stats
 import os
+import pathlib
 
 ## EXPERIMENTAL DESIGN
 
@@ -40,7 +41,7 @@ theta_bounds = np.array([
 theta_sampler = stats.qmc.Sobol(len(theta_names), seed=20240318, optimization=None)
 
 ## PATHS
-base = os.path.expanduser('~/SFU-code/GladsGP/experiments/greenland')
+base = pathlib.Path(__file__).parent.resolve()
 sim_dir = os.path.join(base, 'issm/train/')
 analysis_dir = os.path.join(base, 'analysis/')
 exp_dir = os.path.join(base, 'expdesign/')
