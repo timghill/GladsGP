@@ -4,18 +4,18 @@ import sys
 import pickle
 import numpy as np
 import os
-import sys
-ISSM_DIR = os.getenv('ISSM_DIR')
-sys.path.append(os.path.join(ISSM_DIR, 'bin/'))
-sys.path.append(os.path.join(ISSM_DIR, 'lib/'))
-from issmversion import issmversion
-sys.path.append(os.path.join(ISSM_DIR, 'src/m/dev/'))
-import devpath
-from model import model
-# from read_netCDF import read_netCDF
-from meshconvert import meshconvert
-from parameterize import parameterize
-from GetAreas import GetAreas
+# import sys
+# ISSM_DIR = os.getenv('ISSM_DIR')
+# sys.path.append(os.path.join(ISSM_DIR, 'bin/'))
+# sys.path.append(os.path.join(ISSM_DIR, 'lib/'))
+# from issmversion import issmversion
+# sys.path.append(os.path.join(ISSM_DIR, 'src/m/dev/'))
+# import devpath
+# from model import model
+# # from read_netCDF import read_netCDF
+# from meshconvert import meshconvert
+# from parameterize import parameterize
+# from GetAreas import GetAreas
 import matplotlib
 #matplotlib.use('QtAgg')
 from matplotlib import pyplot as plt
@@ -28,6 +28,57 @@ from matplotlib import colors as mpc
 import cmocean
 import rasterio as rs
 
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.path as mpath
+
+class TemperaturePlot():
+
+    @staticmethod
+    def get_hull():
+        verts1 = np.array([[0,-128],[70,-128],[128,-70],[128,0],
+                          [128,32.5],[115.8,61.5],[96,84.6],[96,288],
+                          [96,341],[53,384],[0,384]])
+        verts2 = verts1[:-1,:] * np.array([-1,1])
+        codes1 = [1,4,4,4,4,4,4,2,4,4,4]
+        verts3 = np.array([[0,-80],[44,-80],[80,-44],[80,0],
+                          [80,34.3],[60.7,52],[48,66.5],[48,288],
+                          [48,314],[26.5,336],[0,336]])
+        verts4 = verts3[:-1,:] * np.array([-1,1])
+        verts = np.concatenate((verts1, verts2[::-1], verts4, verts3[::-1]))
+        codes = codes1 + codes1[::-1][:-1]
+        return mpath.Path(verts/256., codes+codes)
+
+    @staticmethod
+    def get_mercury(s=1):
+        a = 0; b = 64; c = 35
+        d = 320 - b
+        e = (1-s)*d
+        verts1 = np.array([[a,-b],[c,-b],[b,-c],[b,a],[b,c],[c,b],[a,b]])
+        verts2 = verts1[:-1,:] * np.array([-1,1])
+        verts3 = np.array([[0,0],[32,0],[32,288-e],[32,305-e],
+                           [17.5,320-e],[0,320-e]])
+        verts4 = verts3[:-1,:] * np.array([-1,1])
+        codes = [1] + [4]*12 + [1,2,2,4,4,4,4,4,4,2,2]
+        verts = np.concatenate((verts1, verts2[::-1], verts3, verts4[::-1]))
+        return mpath.Path(verts/256., codes)
+
+    def scatter(self, x,y, temp=1, tempnorm=None, ax=None, **kwargs):
+        self.ax = ax or plt.gca()
+        temp = np.atleast_1d(temp)
+        ec = kwargs.pop("edgecolor", "black")
+        kwargs.update(linewidth=0)
+        self.inner = self.ax.scatter(x,y, **kwargs)
+        kwargs.update(c=None, facecolor=ec, edgecolor=None, color=None)
+        self.outer = self.ax.scatter(x,y, **kwargs)
+        self.outer.set_paths([self.get_hull()])
+        if not tempnorm:
+            mi, ma = np.nanmin(temp), np.nanmax(temp)
+            if mi == ma:
+                mi=0
+            tempnorm = plt.Normalize(mi,ma)
+        ipaths = [self.get_mercury(tempnorm(t)) for t in temp]
+        self.inner.set_paths(ipaths)
 
 # Geometry and compute misc fields
 bed = np.vstack(np.load('IS_bed.npy'))
@@ -36,13 +87,16 @@ thick = surf - bed
 bed[thick<50] = surf[thick<50] - 50
 thick = surf - bed
 
+aws_xy = [-217706.690013, -2504221.345267]
+
 # Compute triangulation
 # md = read_netCDF('IS_bamg.nc')
 with open('IS_mesh.pkl', 'rb') as meshin:
     mesh = pickle.load(meshin)
 
-md = model()
-md = meshconvert(md,mesh['elements'], mesh['x'], mesh['y'])
+# md = model()
+# md = meshconvert(md,mesh['elements'], mesh['x'], mesh['y'])
+# triangulation = tri.Triangulation(mesh['x']/1e3, mesh['y']/1e3, mesh['elements']-1)
 triangulation = tri.Triangulation(mesh['x']/1e3, mesh['y']/1e3, mesh['elements']-1)
 
 # Find interesting nodes
@@ -95,7 +149,7 @@ ax2 = ax1.inset_axes((-0.75, -0.95, 1.6, 1.3))
 h3 = 0.9
 ax3 = ax1.inset_axes((-0.65, 1-h3 + 0.05, 0.3, h3))
 cax = ax2.inset_axes((1.02, 0.1, 0.025, 0.63))
-
+pos = np.array([296, 34, 38])
 for ax in (ax1, ax2):
 
     sc = ax.tripcolor(triangulation, thick.flatten(), vmin=0, vmax=2500, cmap=cmocean.cm.ice_r,
@@ -105,27 +159,31 @@ for ax in (ax1, ax2):
         cbar.set_label('Ice thickness (m)')
         # cax.xaxis.tick_top()
         # cax.xaxis.set_label_position('top')
+    if ax is ax1:
+        ms = 5
+        mlw = 1
+    else:
+        ms = 10
+        mlw = 2
     ax.set_aspect('equal')
     ax.set_facecolor('none')
+    ax.plot(mesh['x'][moulin_indices]/1e3, mesh['y'][moulin_indices]/1e3,
+        marker='.', color='k', markersize=ms/2, linestyle='', label='Moulins')
     iii=0
     for node_index in plot_nodes:
-        if ax is ax1:
-            ms = 5
-            mlw = 1
-        else:
-            ms = 10
-            mlw = 2
         colors = cmocean.cm.algae([0.2, 0.45, 0.7])
         ax.plot(mesh['x'][node_index]/1e3, mesh['y'][node_index]/1e3, 
             marker='s', color=colors[iii], zorder=10, markeredgecolor='w',
-            markersize=ms, markeredgewidth=mlw)
-        ax.plot(mesh['x'][moulin_indices]/1e3, mesh['y'][moulin_indices]/1e3,
-            marker='.', color='k', markersize=ms/2, linestyle='')
+            markersize=ms, markeredgewidth=mlw, linestyle='',
+            label='{:.0f} m asl.'.format(surf[node_index][0]))
         iii+=1
     # ax.set_title('Flotation fraction and channel discharge')
     # ax.plot(mesh['x'][moulin_indices]/1e3, mesh['y'][moulin_indices]/1e3,
     #     linestyle='', marker='x', markersize=8, color='r')
     
+    ax.plot(mesh['x'][pos]/1e3, mesh['y'][pos]/1e3, linestyle='',
+        marker='*', color='k', markersize=ms/1.5, label=r'$p_{\rm{w}}=0$ outlets')
+    ax.plot(aws_xy[0]/1e3, aws_xy[1]/1e3, 'm^', markersize=ms/1.5, label='KAN_L AWS')
     ax.set_xticks([])
     ax.set_yticks([])
     ax.spines[['left', 'bottom', 'right', 'top']].set_visible(False)
@@ -146,13 +204,12 @@ xmax = np.max(mesh['x'][surf0<=zmax])/1e3
 ymax = np.max(mesh['y'][surf0<=zmax])/1e3
 xmin = np.min(mesh['x'][surf0<=zmax])/1e3
 ymin = np.min(mesh['y'][surf0<=zmax])/1e3
-ax2.set_xlim([xmin, xmax])
+ax2.set_xlim([xmin-1, xmax])
 ax2.set_ylim([ymin, ymax])
 
-ax1.set_xlim([xmin, np.max(mesh['x'])/1e3])
+ax1.set_xlim([xmin-2, np.max(mesh['x'])/1e3])
 
 print('Length of area below zmax:', xmax - xmin)
-
 
 rect = Rectangle(xy=(xmin, ymin), width=(xmax-xmin), height=(ymax-ymin))
 pc = PatchCollection([rect], facecolor='none', edgecolor='k',
@@ -160,10 +217,13 @@ pc = PatchCollection([rect], facecolor='none', edgecolor='k',
 ax1.add_collection(pc)
 
 
-scale = Rectangle(xy=(xmin+10, ymin+2), width=50, height=2.5, zorder=15)
+scale = Rectangle(xy=(xmin+0, ymin+2), width=50, height=1.5, zorder=15)
 spc = PatchCollection([scale], facecolor='k', clip_on=False)
 ax2.add_collection(spc)
-ax2.text(xmin+10+0.5*50, ymin+2+2.5, '50 km', ha='center', va='bottom')
+ax2.text(xmin+0+0.5*50, ymin+2+2.5, '50 km', ha='center', va='bottom')
+
+ax2.legend(bbox_to_anchor=(0, 0.15, 0.5, 0.8), 
+    frameon=False, loc='lower left', borderpad=0, borderaxespad=0)
 
 
 
@@ -171,6 +231,7 @@ scale2 = Rectangle(xy=(mesh['x'].max()/1e3-10-100, ymax-10), width=100, height=5
 spc2 = PatchCollection([scale2], facecolor='k', clip_on=False)
 ax1.add_collection(spc2)
 ax1.text(mesh['x'].max()/1e3-10-0.5*100, ymax-10+5+2, '100 km', ha='center', va='bottom')
+
 
 # fig.subplots_adjust(left=0.35, bottom=0.2, right=1.0, top=1.)
 # fig.subplots_adjust(left=0.31, bottom=0.325, right=1.05, top=1.)
@@ -204,6 +265,7 @@ ax3.tripcolor(triangulation, thick.flatten(), vmin=0, vmax=2500, cmap=cmocean.cm
 pg = Polygon(xy[::10]/1e3, closed=True, facecolor='none', edgecolor='b', linewidth=1)
 ax3.add_patch(pg)
 ax3.set_facecolor('none')
+ax3.plot(aws_xy[0]/1e3, aws_xy[1]/1e3, 'm^', markersize=3)
 
 fig.text(0.025, 0.975, 'a',
     fontweight='bold', va='top', ha='left')
