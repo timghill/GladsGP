@@ -324,7 +324,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
     sampler = stats.qmc.LatinHypercube(n_dim, 
         optimization='random-cd', scramble=True, seed=42186)
     if test:
-        t_integrate = sampler.random(n=2)
+        t_integrate = sampler.random(n=16)
     else:
         t_integrate = sampler.random(n=200)
 
@@ -337,6 +337,11 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
             yi_phys = y_sim[:m, :]
             sepia_data, model = load_model(train_config, m, p)
             print(sepia_data)
+
+            n = model.data.sim_data.y.shape[1]
+            mu_y = np.mean(model.data.sim_data.y, axis=0)
+            sd_y = np.std(model.data.sim_data.y, ddof=1, axis=0)
+            sd_y[sd_y<1e-6] = 1e-6
 
             if test:
                 samples = model.get_samples(6)
@@ -352,6 +357,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
             n_per_batch = 4
             n_batches = int(np.ceil(len(x_pred)/n_per_batch))
             batch_indices = np.array_split(np.arange(len(x_pred)), n_batches)
+            print(batch_indices)
             print('Using {} batches of ~{}'.format(n_batches, n_per_batch))
             for j in range(n_batches):
                 print('Test Batch {}/{}'.format(j+1, n_batches))
@@ -360,9 +366,14 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
                     samples=samples, model=model)
                 preds.w = preds.w.astype(np.float32)
                 ypreds = preds.get_y()
+                error_preds = np.zeros(ypreds.shape, dtype=np.float32)
+                for l_pred in range(len(batch_indices[j])):
+                    for l_sample in range(error_preds.shape[0]):
+                        err_sd = 1/np.sqrt(samples['lamWOs'][l_sample])
+                        error_preds[l_sample][l_pred] = sd_y*np.random.normal(scale=err_sd)
                 ypred_mean[batch_indices[j]] = np.mean(ypreds, axis=0)
-                ypred_lq[batch_indices[j]] = np.quantile(ypreds, quantile, axis=0)
-                ypred_uq[batch_indices[j]] = np.quantile(ypreds, 1-quantile, axis=0)
+                ypred_lq[batch_indices[j]] = np.quantile(ypreds + error_preds, quantile, axis=0)
+                ypred_uq[batch_indices[j]] = np.quantile(ypreds + error_preds, 1-quantile, axis=0)
 
             test_confint = np.zeros(len(t_integrate), dtype=dtype)
             n_batches = int(np.ceil(len(t_integrate)/n_per_batch))
@@ -374,8 +385,13 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
                     samples=samples, model=model)
                 preds.w = preds.w.astype(np.float32)
                 ypreds = preds.get_y()
-                yint_lq = np.quantile(ypreds, quantile, axis=0)
-                yint_uq = np.quantile(ypreds, 1-quantile, axis=0)
+                error_preds = np.zeros(ypreds.shape, dtype=np.float32)
+                for l_pred in range(len(batch_indices[j])):
+                    for l_sample in range(error_preds.shape[0]):
+                        err_sd = 1/np.sqrt(samples['lamWOs'][l_sample])
+                        error_preds[l_sample][l_pred] = sd_y*np.random.normal(scale=err_sd)
+                yint_lq = np.quantile(ypreds + error_preds, quantile, axis=0)
+                yint_uq = np.quantile(ypreds + error_preds, 1-quantile, axis=0)
                 test_confint[batch_indices[j]] = np.mean(yint_uq - yint_lq)
 
             pred_resid = ypred_mean - y_test

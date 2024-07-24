@@ -24,11 +24,7 @@ import cmocean
 
 from sepia.SepiaModel import SepiaModel
 from sepia.SepiaData import SepiaData
-from sepia import SepiaPlot
 from sepia.SepiaPredict import SepiaEmulatorPrediction
-from sepia.SepiaPredict import SepiaXvalEmulatorPrediction
-from sepia.SepiaLogLik import compute_log_lik
-from sepia.SepiaDistCov import SepiaDistCov
 
 
 def compute_test_predictions(model, samples, t_pred, n_folds=100, quantile=0.025):
@@ -58,9 +54,22 @@ def compute_test_predictions(model, samples, t_pred, n_folds=100, quantile=0.025
     mean, lower_quantile, upper_quantile : array
         (number of predictions, nx*nt) arrays
     """
+
+    print('mean simulator precision:')
+    print(np.mean(samples['lamWOs']))
+    print((samples['lamWOs']))
+
     m = model.data.sim_data.y.shape[0]
     m_pred = t_pred.shape[0]
     n = model.data.sim_data.y.shape[1]
+    mu_y = np.mean(model.data.sim_data.y, axis=0)
+    sd_y = np.std(model.data.sim_data.y, ddof=1, axis=0)
+    sd_y[sd_y<1e-6] = 1e-6
+
+    print('mean, median sd:')
+    print(np.mean(sd_y))
+    print(np.median(sd_y))
+
     pred_mean = np.zeros((m_pred, n), dtype=model.data.sim_data.y.dtype)
     pred_lower = np.zeros((m_pred, n), dtype=model.data.sim_data.y.dtype)
     pred_upper = np.zeros((m_pred, n), dtype=model.data.sim_data.y.dtype)
@@ -70,10 +79,14 @@ def compute_test_predictions(model, samples, t_pred, n_folds=100, quantile=0.025
         pred = SepiaEmulatorPrediction(samples=samples,
             model=model, t_pred=xi)
         pred.w = pred.w.astype(model.data.sim_data.y.dtype)
-        preds = pred.get_y()
-        pred_mean[i, :] = np.mean(preds, axis=0)
-        pred_lower[i, :] = np.quantile(preds, quantile, axis=0)
-        pred_upper[i, :] = np.quantile(preds, 1-quantile, axis=0)
+        emulator_preds = pred.get_y()
+        error_preds = np.zeros(emulator_preds.shape, dtype=np.float32)
+        for j in range(error_preds.shape[0]):
+            error_preds[j] = sd_y*np.random.normal(scale=1/np.sqrt(samples['lamWOs'][j]), size=n)
+
+        pred_mean[i, :] = np.mean(emulator_preds, axis=0)
+        pred_lower[i, :] = np.quantile(emulator_preds + error_preds, quantile, axis=0)
+        pred_upper[i, :] = np.quantile(emulator_preds + error_preds, 1-quantile, axis=0)
     return pred_mean, pred_lower, pred_upper
 
 def plot_rmse(config, cv_y, cv_error, cv_lq, cv_uq):
@@ -272,6 +285,7 @@ def plot_rmse(config, cv_y, cv_error, cv_lq, cv_uq):
         ylim_max = np.max(ylims)
         for ax in axs[i, :]:
             ax.set_ylim([0, ylim_max])
+            # ax.set_ylim([0.5, 1.25])
         
 
         axs[i,-1].text(0.975, 0.8, '$m_{{{}}}$ = {}'.format(qntls[i], ms[i]), transform=ax.transAxes,

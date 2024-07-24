@@ -9,13 +9,10 @@ import time
 
 import numpy as np
 from numpy import linalg
-import scipy.linalg.interpolative
 
 from sepia.SepiaModel import SepiaModel
 from sepia.SepiaData import SepiaData
-from sepia import SepiaPlot
-from sepia.SepiaPredict import SepiaEmulatorPrediction
-from sepia.SepiaPredict import SepiaXvalEmulatorPrediction
+from sepia import SepiaParam
 
 from src.utils import import_config
 from src import svd
@@ -217,8 +214,22 @@ def fit_models(train_config, n_sims, n_pcs,
             t1 = time.perf_counter()
             dts_pca.append(t1 - t0)
 
+            sim_data = sepia_data.sim_data
+            w = np.dot(np.linalg.pinv(sim_data.K).T, sim_data.y_std.T).T
+            y_sim_std_hat = np.dot(w, sim_data.K)
+            pc_resid = sim_data.y_std - y_sim_std_hat
+            pc_var = np.var(pc_resid)
+            pc_prec = 1/pc_var
+            gamma_a = 50
+            gamma_b = gamma_a/pc_prec
+            model.params.lamWOs = SepiaParam(val=55, name='lamWOs', 
+                val_shape=(1, 1), dist='Gamma', params=[gamma_a, gamma_b], 
+                bounds=[1., np.inf], mcmcStepParam=10, mcmcStepType='Uniform')
+            model.params.mcmcList = [model.params.betaU, 
+                model.params.lamUz, model.params.lamWs, model.params.lamWOs]
+
             t0 = time.perf_counter()
-            model.tune_step_sizes(100, 10)
+            model.tune_step_sizes(100, 5)
             model.do_mcmc(512)
             t1 = time.perf_counter()
             dts_mcmc.append(t1 - t0)
