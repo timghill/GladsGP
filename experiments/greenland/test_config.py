@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import stats
 import os
+import pathlib
 
 ## EXPERIMENTAL DESIGN
 
@@ -40,7 +41,7 @@ theta_bounds = np.array([
 theta_sampler = None
 
 ## PATHS
-base = os.path.expanduser('~/SFU-code/GladsGP/experiments/greenland')
+base = pathlib.Path(__file__).parent.resolve()
 sim_dir = os.path.join(base, 'issm/test/')
 analysis_dir = os.path.join(base, 'analysis/')
 exp_dir = os.path.join(base, 'expdesign/')
@@ -72,6 +73,6 @@ def parser(md, jobid):
 
 ## GP CONFIGURATION
 p = 5               # Number of PCs
-data_dir = os.path.join(analysis_dir, '/data/')
+data_dir = os.path.join(analysis_dir, 'data/')
 figures = os.path.join(analysis_dir, 'figures/')
 Y_physical = os.path.join(sim_dir, '{exp}_ff.npy'.format(exp=exp))

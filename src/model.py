@@ -220,9 +220,10 @@ def fit_models(train_config, n_sims, n_pcs,
             pc_resid = sim_data.y_std - y_sim_std_hat
             pc_var = np.var(pc_resid)
             pc_prec = 1/pc_var
+            print('PC PRECISION:', pc_prec)
             gamma_a = 50
             gamma_b = gamma_a/pc_prec
-            model.params.lamWOs = SepiaParam(val=55, name='lamWOs', 
+            model.params.lamWOs = SepiaParam(val=pc_prec, name='lamWOs', 
                 val_shape=(1, 1), dist='Gamma', params=[gamma_a, gamma_b], 
                 bounds=[1., np.inf], mcmcStepParam=10, mcmcStepType='Uniform')
             model.params.mcmcList = [model.params.betaU, 
