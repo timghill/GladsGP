@@ -102,7 +102,7 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
 
     axs[0,-1].plot(np.arange(1, len(n_pcs)+1), 100*coverage, 
         linestyle='', marker='.', color='#000000', markersize=4, zorder=10)
-    axs[0,-1].set_ylim([0, 100])
+    # axs[0,-1].set_ylim([0, 100])
     
     fig.text(0.5, 0.52, 'Number of PCs', ha='center')
 
@@ -173,11 +173,16 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
     ax2.set_ylabel('CPU-hours', rotation=-90, labelpad=8)
     ax2.tick_params(axis='both', labelsize=fs)
 
-    axs[0,-1].set_ylim([0, 110])
-    axs[1,-1].set_ylim([0, 110])
+    axs[0,-1].set_ylim([50, 108])
+    axs[1,-1].set_ylim([50, 108])
+    yt = np.array([50, 60, 70, 80, 90, 95, 100])
+    axs[0,-1].set_yticks(yt)
+    axs[1,-1].set_yticks(yt)
+    # axs[0, -1].axhline(95, color='k', linewidth=5/8, zorder=1, linestyle='dashed')
+    # axs[1, -1].axhline(95, color='k', linewidth=5/8, zorder=2, linestyle='dashed')
     
     fig.text(0.5, 0.025, 'Number of Simulations', ha='center')
-    fig.subplots_adjust(left=0.08, bottom=0.1, right=0.92, top=0.975, wspace=0.5, hspace=0.3)
+    fig.subplots_adjust(left=0.085, bottom=0.1, right=0.92, top=0.975, wspace=0.5, hspace=0.3)
     return fig
 
 def plot_joint_loss(path, n_sims, n_pcs, linestyle='solid'):

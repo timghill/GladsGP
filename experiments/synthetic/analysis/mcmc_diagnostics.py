@@ -36,24 +36,13 @@ def mcmc_diagnostics(train_config):
     pc_prec = 1/pc_var
     print('pc variance:', pc_var)
     print('pc precision:', pc_prec)
-
-    gamma_a = 50
-    gamma_b = gamma_a/pc_prec
-    model.params.lamWOs = SepiaParam(val=55, name='lamWOs', 
-        val_shape=(1, 1), dist='Gamma', params=[gamma_a, gamma_b], 
-        bounds=[1., np.inf], mcmcStepParam=10, mcmcStepType='Uniform')
-    model.params.lamUz.mcmc.stepParam /= 2
     
-    model.params.mcmcList = [model.params.betaU, model.params.lamUz, model.params.lamWs, model.params.lamWOs]
     model.print_value_info()
     model.print_mcmc_info()
 
 
     for repeat in range(n_repeats):
         model.clear_samples()
-        model.params.betaU.set_val(1*np.ones(model.params.betaU.val_shape))
-        model.params.lamUz.set_val(np.ones(model.params.lamUz.val_shape))
-        model.params.lamWOs.set_val(55.0)
         model.do_mcmc(n_samples + n_burn, no_init=False)
         samples = model.get_samples(n_samples, nburn=n_burn)
         chains.append(samples)
@@ -70,7 +59,7 @@ def mcmc_diagnostics(train_config):
     for j in range(train_config.p):
         col = (j+1)/(train_config.p+2)*np.ones(3)
         axs[0].plot(np.arange(n_samples), lambdas_GP[0, :, j], color=col)
-    axs[0].set_ylabel(r'$\lambda^{U_z}$')
+    axs[0].set_ylabel(r'$\lambda^{Uz}$')
     for i in range(d):
         for j in range(train_config.p):
             col = (j+1)/(train_config.p+2)*np.ones(3)
@@ -78,7 +67,7 @@ def mcmc_diagnostics(train_config):
         axs[i+1].set_ylabel(r'$\beta_{}$'.format(i+1))
     
     axs[-1].plot(np.arange(n_samples), lambdas_PC[0,:,0])
-    axs[-1].set_ylabel(r'$\lambda^{W_s}$')
+    axs[-1].set_ylabel(r'$\lambda^{WOs}$')
     fig.subplots_adjust(bottom=0.05, top=0.98, left=0.15, right=0.95)
     for ax in axs.flat:
         ax.grid()
