@@ -89,7 +89,7 @@ def compute_test_predictions(model, samples, t_pred, n_folds=100, quantile=0.025
         pred_upper[i, :] = np.quantile(emulator_preds + error_preds, 1-quantile, axis=0)
     return pred_mean, pred_lower, pred_upper
 
-def plot_rmse(config, cv_y, cv_error, cv_lq, cv_uq):
+def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     figs = []
 
     with open(os.path.join(config.sim_dir,config.mesh), 'rb') as meshin:
@@ -250,7 +250,7 @@ def plot_rmse(config, cv_y, cv_error, cv_lq, cv_uq):
     tt = np.arange(365)
     for j,node in enumerate(nodes[:3]):
         for i,mi in enumerate(ms):
-            yi_sim = cv_y[mi].reshape((nx, nt))[node, :] + cv_error[mi].reshape((nx, nt))[node, :]
+            yi_sim = sim_y[mi].reshape((nx, nt))[node, :]
             yi_pred = cv_y[mi].reshape((nx, nt))[node, :]
             yi_lq = cv_lq[mi].reshape((nx, nt))[node, :]
             yi_uq = cv_uq[mi].reshape((nx, nt))[node, :]
@@ -465,7 +465,7 @@ def main(config, test_config, recompute=False, dtype=np.float32):
         cv_lq = np.load(cv_lq_file).astype(dtype)[:config.m :]
         cv_uq = np.load(cv_uq_file).astype(dtype)[:config.m, :]
 
-    rmse_wavg, rmse_ts = plot_rmse(config, 
+    rmse_wavg, rmse_ts = plot_rmse(config, sim_y=y_test_sim,
         cv_y=cv_y, cv_error=cv_y-y_test_sim, cv_lq=cv_lq, cv_uq=cv_uq)
     rmse_wavg.savefig(os.path.join(
         config.figures, 'test_error_width_avg.png'), dpi=400)
