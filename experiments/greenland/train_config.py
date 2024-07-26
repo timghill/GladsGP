@@ -6,7 +6,7 @@ import pathlib
 ## EXPERIMENTAL DESIGN
 
 exp = 'greenland'                   # Experiment name, used for paths
-m = 64                             # Number of simulations
+m = 128                             # Number of simulations
 
 # Name the parameter
 theta_names = [  
@@ -72,7 +72,7 @@ def parser(md, jobid):
     
 
 ## GP CONFIGURATION
-p = 5               # Number of PCs
+p = 7               # Number of PCs
 data_dir = os.path.join(analysis_dir, 'data/')
 figures = os.path.join(analysis_dir, 'figures/')
 Y_physical = os.path.join(sim_dir, '{exp}_ff.npy'.format(exp=exp))

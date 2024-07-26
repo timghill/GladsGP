@@ -72,31 +72,38 @@ fig.text(0.085, 0.35, 'b',
     fontweight='bold', ha='left', va='top')
 
 # (c) Flotation fraction timeseries
-node = np.argmin((mesh['x']-30e3)**2 + (mesh['y']-12.5e3)**2)
+nodes = [-1, -1, -1]
+xpos = [15e3, 30e3, 50e3]
+ypos = [12.5e3, 12.5e3, 12.5e3]
+nodexy = np.array([mesh['x'], mesh['y']]).T
+nodes[0] = np.argmin( (nodexy[:, 0]-xpos[0])**2 + (nodexy[:, 1]-ypos[0])**2)
+nodes[1] = np.argmin( (nodexy[:, 0]-xpos[1])**2 + (nodexy[:, 1]-ypos[1])**2)
+nodes[2] = np.argmin( (nodexy[:, 0]-xpos[2])**2 + (nodexy[:, 1]-ypos[2])**2)
+colors = cmocean.cm.algae([0.25, 0.5, 0.75])
 tstep = 205
 m = 10
 nx = len(mesh['x'])
 nt = 365
 
-ax3d.plot(mesh['x'][node]/1e3, mesh['y'][node]/1e3, surf[node]+600,
-    'wo', markersize=4, zorder=4)
-ax3d.plot(mesh['x'][node]/1e3, mesh['y'][node]/1e3, surf[node]+600,
-    'ko', markersize=3, zorder=4)
-ax3d.plot([mesh['x'][node]/1e3, mesh['x'][node]/1e3],
-          [mesh['y'][node]/1e3, mesh['y'][node]/1e3],
-          [surf[node], surf[node]+500], color='k',
-          linewidth=1, zorder=4)
-        
-ax3d.plot([mesh['x'][node]/1e3, mesh['x'][node]/1e3],
-          [mesh['y'][node]/1e3, mesh['y'][node]/1e3],
-          [350, surf[node]], color='k',
-          linewidth=1, linestyle=':', zorder=1)
+for i in range(len(nodes)):
+    node = nodes[i]
+    ax3d.plot(mesh['x'][node]/1e3, mesh['y'][node]/1e3, surf[node]+600,
+        'o', markersize=5, zorder=5, color=colors[i], markeredgewidth=1, markeredgecolor='w')
+    ax3d.plot([mesh['x'][node]/1e3, mesh['x'][node]/1e3],
+            [mesh['y'][node]/1e3, mesh['y'][node]/1e3],
+            [surf[node], surf[node]+500], color='k',
+            linewidth=1, zorder=4)
+            
+    ax3d.plot([mesh['x'][node]/1e3, mesh['x'][node]/1e3],
+            [mesh['y'][node]/1e3, mesh['y'][node]/1e3],
+            [350, surf[node]], color='k',
+            linewidth=1, linestyle=':', zorder=1)
 ax3d.grid(linestyle=':')
 ax3d.xaxis._axinfo['grid'].update({'linestyle':':', 'linewidth':0.5})
 ax3d.yaxis._axinfo['grid'].update({'linestyle':':', 'linewidth':0.5})
 ax3d.zaxis._axinfo['grid'].update({'linestyle':':', 'linewidth':0.5})
 
-axs[0,1].plot(np.arange(nt)*12/365, ff[:, 10].reshape((nx, nt))[node,:])
+axs[0,1].plot(np.arange(nt)*12/365, ff[:, 10].reshape((nx, nt))[nodes[1],:], color=colors[1])
 axs[0,1].set_ylim([0, 1.5])
 axs[0,1].set_xticks([4, 6, 8, 10])
 axs[0,1].set_xlim([4, 10])
@@ -123,10 +130,11 @@ ax.set_ylim([0, 25])
 ax.set_yticks([0, 12.5, 25])
 ax.text(0.025, 0.95, 'd', transform=ax.transAxes,
     fontweight='bold', ha='left', va='top')
-ax.plot(mesh['x'][node]/1e3, mesh['y'][node]/1e3,
-    'wo', markersize=4)
-ax.plot(mesh['x'][node]/1e3, mesh['y'][node]/1e3,
-    'ko', markersize=3)
+for i in range(3):
+    node = nodes[i]
+    ax.plot(mesh['x'][node]/1e3, mesh['y'][node]/1e3,
+        's', markersize=5, color=colors[i],
+        markeredgewidth='1', markeredgecolor='w')
 ax.set_xlabel('Distance from terminus (km)', labelpad=0)
 # ax.set_rasterized(True)
 cbar = fig.colorbar(tripc, cax=cax, orientation='horizontal')

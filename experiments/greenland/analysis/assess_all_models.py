@@ -232,10 +232,10 @@ def plot_joint_loss(path, n_sims, n_pcs, linestyle='solid'):
     alphabet = ('a', 'b')
     cbars = [0, 0, 0]
     colors = cmocean.cm.deep(np.linspace(0.15, 0.9, len(n_sims)))
-    for i in range(len(metrics)):
-        ax = axs[i]
-        ax.grid(linestyle=':', linewidth=0.5)
-        for j in range (len(n_sims)):
+    for j in range(len(n_sims)):
+        for i in range(len(metrics)):
+            ax = axs[i]
+            ax.grid(linestyle=':', linewidth=0.5)
             if linestyle=='solid':
                 ax.plot(n_pcs, metrics[i][j,:], color=colors[j], label=n_sims[j])
 
@@ -245,6 +245,7 @@ def plot_joint_loss(path, n_sims, n_pcs, linestyle='solid'):
             ax.set_xlim([n_pcs[0]-0.5, n_pcs[-1]+0.5])
             ylim = ax.get_ylim()
             ax.set_ylim([0, ub])
+            ax.set_xticks(n_pcs)
 
             span_rects = []
             mean_rects = []
@@ -269,38 +270,16 @@ def plot_joint_loss(path, n_sims, n_pcs, linestyle='solid'):
                         alpha=1.)
                 ax.add_collection(mean_pcol)
 
-        ax.set_ylabel(labels[i])
-        ax.text(0.05, 0.95, alphabet[i], transform=ax.transAxes,
-            ha='left', va='top', fontweight='bold')
-    
-    fig.text(0.5, 0.025, 'Number of PCs', ha='center')
-    ax1.legend(loc='upper right', frameon=False, ncols=2)
-    fig.subplots_adjust(left=0.1, bottom=0.15, right=0.975, top=0.95, wspace=0.2)
-
-    # AIC = AIC - np.min(AIC, axis=0)
-    # BIC = BIC - np.min(BIC, axis=0)
-    fig2, (ax1, ax2) = plt.subplots(ncols=2, figsize=(8, 4.5))
-    for i in range(len(n_sims)):    
-        AIC[i] = AIC[i] - np.min(AIC[i])
-        BIC[i] = BIC[i] - np.min(BIC[i])
-        ax1.plot(n_pcs, AIC[i], label=n_sims[i], color=colors[i], linewidth=2)
-        ax2.plot(n_pcs, BIC[i], label=n_sims[i], color=colors[i], linewidth=2)
-        aic_minpc = np.argmin(AIC[i])
-        bic_minpc = np.argmin(BIC[i])
-        ax1.plot(n_pcs[aic_minpc], AIC[i,aic_minpc], marker='x', color=colors[i])
-        ax2.plot(n_pcs[bic_minpc], BIC[i,bic_minpc], marker='x', color=colors[i])
-    ax1.grid()
-    ax2.grid()
-    ax1.set_xticks(n_pcs)
-    ax2.set_xticks(n_pcs)
-    ax1.set_ylabel(r'$\Delta$AIC')
-    ax2.set_ylabel(r'$\Delta$BIC')
-    
-    fig2.text(0.5, 0.15, 'Number of PCs', ha='center')
-    ax1.legend(loc='upper left', frameon=False, ncols=2,
-        bbox_to_anchor=(0, -0.5, 1, 0.425))
-    fig2.subplots_adjust(left=0.1, bottom=0.25, right=0.95, top=0.95, wspace=0.3)
-    return fig, fig2
+            ax.set_ylabel(labels[i])
+            ax.text(0.05, 0.95, alphabet[i], transform=ax.transAxes,
+                ha='left', va='top', fontweight='bold')\
+        
+            fig.text(0.5, 0.025, 'Number of PCs', ha='center')
+            ax1.legend(bbox_to_anchor=(0, 0.98, 1, 0.2),
+                ncols=len(n_sims), loc='lower left',frameon=False)
+        fig.subplots_adjust(left=0.1, bottom=0.15, right=0.975, top=0.9, wspace=0.2)
+        fig.savefig('figures/IGS_2024/nsim_npc_model_selection_{:02d}.png'.format(j), dpi=600)
+    return fig
 
 
 def compute_test_error(train_config, test_config, n_sims, n_pcs, 
@@ -438,7 +417,7 @@ def main(train_config, test_config, n_sims, n_pcs,
 
     path = os.path.join(train_config.data_dir, 'architecture/performance_n{:03d}_p{:02d}.csv')
     print('path:', path)
-    fig1, fig2 = plot_joint_loss(path, n_sims, n_pcs)
+    fig1 = plot_joint_loss(path, n_sims, n_pcs)
     if not os.path.exists(train_config.figures):
         os.makedirs(train_config.figures)
     fig1.savefig(os.path.join(train_config.figures, 'nsim_npcs_error.png'),

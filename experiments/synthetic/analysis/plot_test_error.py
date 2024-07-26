@@ -19,7 +19,7 @@ from scipy import linalg
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 from matplotlib.tri import Triangulation
-from matplotlib import colors
+from matplotlib import colors as mpc
 import cmocean
 
 from sepia.SepiaModel import SepiaModel
@@ -117,6 +117,7 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     nodes[0] = np.argmin( (nodexy[:, 0]-xpos[0])**2 + (nodexy[:, 1]-ypos[0])**2)
     nodes[1] = np.argmin( (nodexy[:, 0]-xpos[1])**2 + (nodexy[:, 1]-ypos[1])**2)
     nodes[2] = np.argmin( (nodexy[:, 0]-xpos[2])**2 + (nodexy[:, 1]-ypos[2])**2)
+    colors = cmocean.cm.algae([0.25, 0.5, 0.75])
 
     # Pick low (5%), median, and high (95%) ensemble members
     qntls = [0.95, 0.5, 0.05]
@@ -126,7 +127,7 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     ms = [m_high, m_med, m_low]
 
     # Pick logical time steps (winter, spring, summer)
-    t_steps = [120, 160, 220]
+    t_steps = []
     alphabet = ['a', 'b', 'c', 'd']
 
     # Width-averaged
@@ -149,7 +150,7 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
             xavg[i] = np.nanmean(x[mask,:],axis=0)
         return xavg
     
-    cm2 = colors.LinearSegmentedColormap.from_list('', cmocean.cm.gray(np.linspace(0.05, 1, 128)))
+    cm2 = mpc.LinearSegmentedColormap.from_list('', cmocean.cm.gray(np.linspace(0.05, 1, 128)))
     cmap = tools.join_cmaps(cmocean.cm.dense, cm2, average=0, N1=128, N2=128)
     
     for i in range(len(ms)):
@@ -242,8 +243,8 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
 
     # Timeseries error
     fig = plt.figure(figsize=(8, 3.75))
-    gs = GridSpec(3, 3, wspace=0.1, hspace=0.1, left=0.08, right=0.96,
-        bottom=0.15, top=0.95)
+    gs = GridSpec(3, 3, wspace=0.1, hspace=0.1, left=0.05, right=0.975,
+        bottom=0.12, top=0.9)
     lws = [1.5, 1]
     axs = np.array([[fig.add_subplot(gs[i,j]) for j in range(3)]
                         for i in range(3)])
@@ -256,9 +257,9 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
             yi_uq = cv_uq[mi].reshape((nx, nt))[node, :]
             ax = axs[i,j]
             ax.fill_between(tt, yi_lq, yi_uq,
-                color='#B58898', alpha=0.67, edgecolor='none')
-            ax.plot(tt, yi_sim, color='#222222', label='Sim', linewidth=1.5)
-            ax.plot(tt, yi_pred, color='#823853', label='GP', linewidth=1)
+                color=colors[j], alpha=0.5, edgecolor='none')
+            ax.plot(tt, yi_sim, color='k', label='GlaDS', linewidth=1.5)
+            ax.plot(tt, yi_pred, color=colors[j], label='Emulator', linewidth=1)
             ax.grid(linestyle='dotted', linewidth=0.5)
             ax.set_xticks(ticks)
             ax.set_xticklabels(ticklabels, rotation=45)
@@ -292,7 +293,9 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
             va='bottom', ha='right')
     
     axs[1, 0].set_ylabel('Flotation fraction')
-    axs[-1, -1].legend(loc='lower right', ncols=2)
+    # axs[-1, -1].legend(loc='lower right', ncols=2)
+    axs[0,1].legend(bbox_to_anchor=(0,1,1,0.2), loc='lower left',
+        ncols=2, frameon=False)
     
     figs.append(fig)
 
@@ -342,7 +345,7 @@ def plot_scatter(config, y_sim, cv_y):
     phi_max = 2e7/1e6
     phi_ticks = [5, 10, 15, 20]
 
-    countnorm = colors.LogNorm(vmin=1e0, vmax=1e4, clip=True)
+    countnorm = mpc.LogNorm(vmin=1e0, vmax=1e4, clip=True)
 
     axs[0].hexbin(y_sim_scatter, y_pred_scatter, norm=countnorm,
         cmap=cmocean.cm.rain, gridsize=100, edgecolors='none',

@@ -33,8 +33,8 @@ import matplotlib.pyplot as plt
 import matplotlib.path as mpath
 
 # Geometry and compute misc fields
-bed = np.vstack(np.load('IS_bed.npy'))
-surf = np.vstack(np.load('IS_surface.npy'))
+bed = np.vstack(np.load('../issm/data/geom/IS_bed.npy'))
+surf = np.vstack(np.load('../issm/data/geom/IS_surface.npy'))
 thick = surf - bed
 bed[thick<50] = surf[thick<50] - 50
 thick = surf - bed
@@ -43,7 +43,7 @@ aws_xy = [-217706.690013, -2504221.345267]
 
 # Compute triangulation
 # md = read_netCDF('IS_bamg.nc')
-with open('IS_mesh.pkl', 'rb') as meshin:
+with open('../issm/data/geom/IS_mesh.pkl', 'rb') as meshin:
     mesh = pickle.load(meshin)
 
 # md = model()
@@ -79,14 +79,14 @@ node3 = np.nanargmin(bedmask)
 print('Node 3:', node3)
 print(mesh['x'][node3]/1e3, mesh['y'][node3]/1e3, bed[node3], surf[node3])
 
-plot_nodes = [node1, node2, node3]
-# plot_nodes = [node1, node3]
+# plot_nodes = [node1, node2, node3]
+plot_nodes = [node1, node3]
 
 # area_ele = GetAreas(mesh['elements'], mesh['x'], mesh['y'])/1e6
 # candidates = np.arange(md.mesh.numberofvertices)[md.mesh.vertexonboundary==0]
 # rng = np.random.default_rng(seed=549374)
 # moulin_indices = rng.choice(candidates, size=50)
-with open('../moulins/moulins_catchments.pkl', 'rb') as infile:
+with open('../issm/data/moulins/moulins_catchments.pkl', 'rb') as infile:
     basins = pickle.load(infile)
 
 moulin_indices = np.array([basin['moulin'] for basin in basins])
@@ -124,12 +124,15 @@ for ax in (ax1, ax2):
         marker='.', color='k', markersize=ms/2, linestyle='', label='Moulins')
     iii=0
     for node_index in plot_nodes:
-        colors = cmocean.cm.algae([0.25, 0.5, 0.75])
+        colors = cmocean.cm.algae([0.25, 0.75])
         ax.plot(mesh['x'][node_index]/1e3, mesh['y'][node_index]/1e3, 
             marker='s', color=colors[iii], zorder=10, markeredgecolor='w',
             markersize=ms, markeredgewidth=mlw, linestyle='',
             label='{:.0f} m asl.'.format(surf[node_index][0]))
         iii+=1
+    # ax.set_title('Flotation fraction and channel discharge')
+    # ax.plot(mesh['x'][moulin_indices]/1e3, mesh['y'][moulin_indices]/1e3,
+    #     linestyle='', marker='x', markersize=8, color='r')
     
     ax.plot(mesh['x'][pos]/1e3, mesh['y'][pos]/1e3, linestyle='',
         marker='*', color='k', markersize=ms/1.5, label=r'$p_{\rm{w}}=0$ outlets')
@@ -138,6 +141,15 @@ for ax in (ax1, ax2):
     ax.set_yticks([])
     ax.spines[['left', 'bottom', 'right', 'top']].set_visible(False)
     ax.set_facecolor('none')
+
+# cnorm = mpc.Normalize(vmin=Qmin, vmax=Qmax)
+# cbar2 = fig.colorbar(cm.ScalarMappable(norm=cnorm, cmap=Qcmap), cax=cax2, 
+#     orientation='horizontal')
+# cbar2.set_label('Channel discharge (m$^3$ s$^{-1}$)')
+# cticks = cbar2.get_ticks()
+# print(cticks)
+# cticks[0] = Qmin
+# cbar2.set_ticks(cticks)
 
 zmax = 1850
 surf0 = surf[:, 0]
@@ -158,7 +170,7 @@ pc = PatchCollection([rect], facecolor='none', edgecolor='k',
 ax1.add_collection(pc)
 
 
-scale = Rectangle(xy=(xmin+0, ymin+2), width=50, height=1, zorder=15)
+scale = Rectangle(xy=(xmin+0, ymin+2), width=50, height=1.5, zorder=15)
 spc = PatchCollection([scale], facecolor='k', clip_on=False)
 ax2.add_collection(spc)
 ax2.text(xmin+0+0.5*50, ymin+2+2.5, '50 km', ha='center', va='bottom')
@@ -168,7 +180,7 @@ ax2.legend(bbox_to_anchor=(0, 0.15, 0.5, 0.8),
 
 
 
-scale2 = Rectangle(xy=(mesh['x'].max()/1e3-10-100, ymax-10), width=100, height=2.5, zorder=15)
+scale2 = Rectangle(xy=(mesh['x'].max()/1e3-10-100, ymax-10), width=100, height=5, zorder=15)
 spc2 = PatchCollection([scale2], facecolor='k', clip_on=False)
 ax1.add_collection(spc2)
 ax1.text(mesh['x'].max()/1e3-10-0.5*100, ymax-10+5+2, '100 km', ha='center', va='bottom')
@@ -178,7 +190,7 @@ ax1.text(mesh['x'].max()/1e3-10-0.5*100, ymax-10+5+2, '100 km', ha='center', va=
 # fig.subplots_adjust(left=0.31, bottom=0.325, right=1.05, top=1.)
 # fig.savefig('figures/ff_discharge.png', dpi=400)
 
-with rs.open('GimpIceMask_90m_2015_v1.2.tif') as geotiff:
+with rs.open('../issm/data/geom/GimpIceMask_90m_2015_v1.2.tif') as geotiff:
     raster_mask = geotiff.read(1)
 
     rxmin = geotiff.bounds.left
@@ -198,7 +210,7 @@ ax3.set_xticks([])
 ax3.set_yticks([])
 ax3.spines[['left', 'bottom', 'right', 'top']].set_visible(False)
 ax3.set_aspect('equal')
-outline = np.loadtxt('IS_outline.csv', skiprows=1, quotechar='"', delimiter=',')
+outline = np.loadtxt('../issm/data/geom/IS_outline.csv', skiprows=1, quotechar='"', delimiter=',')
 # ax3.plot(outline[:, 1]/1e3, outline[:, 2]/1e3)
 xy = np.array([outline[:, 1], outline[:, 2]]).T
 ax3.tripcolor(triangulation, thick.flatten(), vmin=0, vmax=2500, cmap=cmocean.cm.ice_r,
@@ -221,13 +233,4 @@ ax1.text(xmin+2, ymin+2, 'c', va='bottom', ha='left', zorder=10)
 fig.text(0.025, 0.55, 'c', fontweight='bold',
     va='bottom', ha='left')
 
-fig.savefig('greenland_domain_summary.png', dpi=400)
-
-# Plot slope
-fig, ax = plt.subplots(figsize=(8, 4))
-slope = np.load('IS_surface_slope.npy')
-tripc = ax.tripcolor(triangulation, slope, cmap=cmocean.cm.matter, vmin=0, vmax=0.1)
-cbar = fig.colorbar(tripc)
-cbar.set_label('Slope')
-ax.set_aspect('equal')
-fig.savefig('greenland_domain_slope.png', dpi=400)
+fig.savefig('figures/IGS_2024/greenland_domain_summary.png', dpi=400)

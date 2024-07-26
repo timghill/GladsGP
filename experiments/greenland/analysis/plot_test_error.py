@@ -16,10 +16,16 @@ from src.model import load_model
 
 import numpy as np
 from scipy import linalg
+import matplotlib
+matplotlib.rc('font', size=12)
 from matplotlib import pyplot as plt
-from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
+from matplotlib.gridspec import GridSpec
 from matplotlib.tri import Triangulation
+from matplotlib.colors import LinearSegmentedColormap
 from matplotlib import colors
+from matplotlib import patches
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Rectangle
 import cmocean
 
 from sepia.SepiaModel import SepiaModel
@@ -88,7 +94,7 @@ def compute_test_predictions(model, samples, t_pred, n_folds=100, quantile=0.025
         pred_upper[i, :] = np.quantile(emulator_preds + error_preds, 1-quantile, axis=0)
     return pred_mean, pred_lower, pred_upper
 
-def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
+def plot_error_samples(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     figs = []
 
     with open(os.path.join(config.sim_dir,config.mesh), 'rb') as meshin:
@@ -97,163 +103,54 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     connect = mesh['elements']-1
     mtri = Triangulation(nodexy[:, 0]/1e3, nodexy[:, 1]/1e3, connect)
 
+    surf = np.load('../issm/data/geom/IS_surface.npy')
+    bed = np.load('../issm/data/geom/IS_bed.npy')
+    zmax = 1850
+    xmin = np.min(mesh['x'][surf<=zmax])/1e3
+    xmax = np.max(mesh['x'][surf<=zmax])/1e3
+    ymin = np.min(mesh['y'][surf<=zmax])/1e3
+    ymax = np.max(mesh['y'][surf<=zmax])/1e3
+
     # Pick ensemble members, nodes, and time steps
     m_test = cv_y.shape[0]
     nx = len(mesh['x'])
     nt = int(cv_y.shape[1]/nx)
     dim_separated_cv_error = np.zeros((m_test, nx, nt), dtype=np.float32)
     for i in range(m_test):
-        # Ysim = cv_y[i, :] + cv_error[i, :]
         dim_separated_cv_error[i, :, :] = cv_error[i, :].reshape((nx, nt))
-    # dim_separated_cv_error[~cv_mask, :] = np.nan
     rmse_m = np.sqrt(np.nanmean(dim_separated_cv_error**2, axis=(1,2)))
     rmse_x = np.sqrt(np.nanmean(dim_separated_cv_error**2, axis=(0,2)))
     rmse_t = np.sqrt(np.nanmean(dim_separated_cv_error**2, axis=(0, 1)))
 
-    # nodes = [-1, -1, -1]
-    # xpos = [15e3, 30e3, 50e3]
-    # ypos = [12.5e3, 12.5e3, 12.5e3]
-    # nodes[0] = np.argmin( (nodexy[:, 0]-xpos[0])**2 + (nodexy[:, 1]-ypos[0])**2)
-    # nodes[1] = np.argmin( (nodexy[:, 0]-xpos[1])**2 + (nodexy[:, 1]-ypos[1])**2)
-    # nodes[2] = np.argmin( (nodexy[:, 0]-xpos[2])**2 + (nodexy[:, 1]-ypos[2])**2)
     nodes = [4061, 2673]
+    timestep = 205
 
     # Pick low (5%), median, and high (95%) ensemble members
-    qntls = [0.95, 0.05]
+    # qntls = [0.95, 0.05]
+    qntls = [0.75, 0.25]
     m_low = np.nanargmin(np.abs(rmse_m - np.nanquantile(rmse_m, qntls[1])))
-    # m_med = np.nanargmin(np.abs(rmse_m - np.nanquantile(rmse_m, qntls[1])))
     m_high = np.nanargmin(np.abs(rmse_m - np.nanquantile(rmse_m, qntls[0])))
-    ms = [m_high, m_low]
+    sim_indices = [m_high, m_low]
 
     # Pick logical time steps (winter, spring, summer)
-    t_steps = [120, 160, 220]
     alphabet = ['a', 'b', 'c', 'd']
     colors = cmocean.cm.algae([0.25, 0.75])
 
-    # Width-averaged
-    fig = plt.figure(figsize=(8, 5))
-    gs = GridSpec(len(ms)+1, 4, wspace=0.15, hspace=0.2,
-        left=0.06, bottom=0.1, right=0.98, top=0.9,
-        height_ratios=[8] + len(ms)*[100])
-    axs = np.array([[fig.add_subplot(gs[i+1,j]) for j in range(4)]
-                        for i in range(len(ms))])
-    caxs = [fig.add_subplot(gs[0, i]) for i in range(4)]
-
-    def width_average(x, dx=2):
-        """Width-average (nx, nt) array x"""
-        xedge = np.arange(0, 100+dx, dx)
-        xmid = 0.5*(xedge[1:] + xedge[:-1])
-        xavg = np.zeros((len(xmid), x.shape[1]))
-        for i in range(len(xavg)):
-            xi = xmid[i]
-            mask = np.abs(nodexy[:,0]/1e3 - xi)<dx/2
-            xavg[i] = np.nanmean(x[mask,:],axis=0)
-        return xavg
-    
-    # cm2 = colors.LinearSegmentedColormap.from_list('', cmocean.cm.gray(np.linspace(0.05, 1, 128)))
-    # cmap = tools.join_cmaps(cmocean.cm.dense, cm2, average=0, N1=128, N2=128)
-    
-    # for i in range(len(ms)):
-    #     mi = ms[i]
-    #     y_sim_mi = cv_y[mi] + cv_error[mi]
-    #     avg_ysim = width_average(y_sim_mi.reshape((nx, nt)))
-    #     avg_ypred = width_average(cv_y[mi].reshape((nx, nt)))
-    #     avg_err = width_average(cv_error[mi].reshape((nx, nt)))
-    #     avg_sd = width_average((cv_uq[mi] - cv_lq[mi]).reshape((nx, nt)))
-    #     dx = 2
-    #     xedge = np.arange(0, 100+dx, dx)
-    #     t = np.arange(0, 366)
-    #     [tt,xx] = np.meshgrid(t,xedge)
-
-    #     ax0 = axs[i, 0]
-    #     ypc = ax0.pcolormesh(xx, tt, avg_ysim, cmap=cmap,
-    #         vmin=0, vmax=2, shading='flat')
-
-    #     ax00 = axs[i, 1]
-    #     ax00.pcolormesh(xx, tt, avg_ypred, cmap=cmap,
-    #         vmin=0, vmax=2, shading='flat')
-
-    #     ax1 = axs[i, 2]
-    #     epc = ax1.pcolormesh(xx, tt, avg_err, cmap=cmocean.cm.balance, 
-    #         vmin=-0.5, vmax=0.5, shading='flat')
-
-    #     ax2 = axs[i, 3]
-    #     spc = ax2.pcolormesh(xx, tt, avg_sd, cmap=cmocean.cm.amp, 
-    #         vmin=0, vmax=0.5, shading='flat')
-        
-    #     for j,ax in enumerate(axs[i, :]):
-    #         # ax.text(0.95, 0.95, 'm=%d'%mi, transform=ax.transAxes,
-    #         #     ha='right', va='top')
-    #         # ha = 'right' if j<=2 else 'left'
-    #         col = 'w' if j<=1 else 'k'
-    #         ax.text(0.975, 0.8, alphabet[j] + str(i+1),
-    #             transform=ax.transAxes, fontweight='bold',
-    #             ha='right', va='bottom', color=col)
-    #     axs[i,-1].text(0.975, 0.05, '$m_{{{}}}$ = {}'.format(qntls[i], ms[i]),
-    #         transform=axs[i,-1].transAxes, ha='right', va='bottom')
-        
-        
-    # for ax in axs.flat:
-    #     ax.set_xticks([0, 20, 40, 60, 80, 100])
-    #     months = np.array([4, 5, 6, 7, 8, 9, 10])
-    #     ticks = 365/12*months
-    #     ticklabels = ['May','','July','','Sept','','Nov']
-    #     ax.set_yticks(ticks)
-    #     ax.set_yticklabels(ticklabels)
-    #     ax.set_ylim([4*365/12, 10*365/12])
-    #     for i in range(len(nodes)):
-    #         ax.axvline(nodexy[nodes[i], 0]/1e3, linestyle=':', color='k', linewidth=0.75)
-    #     for j in range(len(t_steps)):
-    #         ax.axhline(t_steps[j], linestyle=':', color='k', linewidth=0.75)
-    
-    # for ax in axs[:, 1:].flat:
-    #     ax.set_yticklabels([])  
-    
-    # for ax in axs[:-1, :].flat:
-    #     ax.set_xticklabels([])
-    
-    # # fig.text(0.0, 0.5, 'Month', rotation=90, va='center')
-    # fig.text(0.5, 0.02, 'Distance from terminus (km)', ha='center')
-    
-    # cbar_ysim = fig.colorbar(ypc, cax=caxs[0], orientation='horizontal')
-    # cbar_ysim.set_label('Sim flotation fraction')
-    # cbar_ysim.set_ticks([0, 0.5, 1, 1.5, 2])
-    # cbar_ysim.set_ticklabels(['0', '0.5', '1', '1.5', '2'])
-
-    # cbar_ygp = fig.colorbar(ypc, cax=caxs[1], orientation='horizontal')
-    # cbar_ygp.set_label('GP flotation fraction')
-    # cbar_ygp.set_ticks([0, 0.5, 1, 1.5, 2])
-    # cbar_ygp.set_ticklabels(['0', '0.5', '1', '1.5', '2'])
-
-    # cbar_error = fig.colorbar(epc, cax=caxs[2], orientation='horizontal')
-    # cbar_error.set_label(r'$\Delta$ flotation fraction')
-    # cbar_error.set_ticks([-0.5, -0.25, 0, 0.25, 0.5])
-    # cbar_error.set_ticklabels(['-0.5', '-0.25', '0', '0.25', '0.5'])
-
-    # cbar_sd = fig.colorbar(spc, cax=caxs[3], orientation='horizontal')
-    # cbar_sd.set_label('95% prediction interval')
-    # cbar_sd.set_ticks([0, 0.2, 0.4])
-    # cbar_sd.set_ticklabels(['0', '0.2', '0.4'])
-
-    # for cax in caxs:
-    #     cax.xaxis.tick_top()
-    #     cax.xaxis.set_label_position('top')
-    
-    # figs.append(fig)
-
     # Timeseries error
+    cm2 = LinearSegmentedColormap.from_list('', cmocean.cm.gray(np.linspace(0.05, 1, 128)))
+    cmap = tools.join_cmaps(cmocean.cm.dense, cm2, average=0, N1=128, N2=64)
     fig = plt.figure(figsize=(8, 3.75))
-    gs = GridSpec(len(ms), len(nodes), wspace=0.1, hspace=0.1, left=0.08, right=0.96,
+    gs = GridSpec(len(sim_indices), len(nodes), wspace=0.25, hspace=0.1, left=0.08, right=0.96,
         bottom=0.15, top=0.95)
     lws = [1.5, 1]
     axs = np.array([[fig.add_subplot(gs[i,j]) for j in range(len(nodes))]
-                        for i in range(len(ms))])
+                        for i in range(len(sim_indices))])
     months = np.array([4, 5, 6, 7, 8, 9, 10])
     ticklabels = ['May','','July','','Sept','','Nov']
     ticks = 365/12*months
     tt = np.arange(365)
     for j,node in enumerate(nodes):
-        for i,mi in enumerate(ms):
+        for i,mi in enumerate(sim_indices):
             yi_sim = sim_y[mi].reshape((nx, nt))[node, :]
             yi_pred = cv_y[mi].reshape((nx, nt))[node, :]
             yi_lq = cv_lq[mi].reshape((nx, nt))[node, :]
@@ -261,45 +158,100 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
             ax = axs[i,j]
             ax.fill_between(tt, yi_lq, yi_uq,
                 color=colors[j], alpha=0.67, edgecolor='none')
-            ax.plot(tt, yi_sim, color='#222222', label='Sim', linewidth=1.5)
+            ax.plot(tt, yi_sim, color='#222222', label='GlaDS', linewidth=1.5)
             ax.plot(tt, yi_pred, color=colors[j], label='GP', linewidth=1)
             ax.grid(linestyle='dotted', linewidth=0.5)
             ax.set_xticks(ticks)
             ax.set_xticklabels(ticklabels)
             ax.set_xlim([4*365/12, 10*365/12])
-            # for k in range(len(t_steps)):
-            #     ax.axvline(t_steps[k], linestyle=':', color='k', linewidth=0.75)
+            ax.axvline(timestep, linestyle='dashed', color='k', linewidth=0.5)
             
             ax.text(0.025, 0.8, alphabet[j] + str(i+1), transform=ax.transAxes,
                 fontweight='bold', ha='left', va='bottom')
             
             ax.spines[['right', 'top']].set_visible(False)
-
-    # for i,ax in enumerate(axs[0,:]):
-    #     ax.text(0.5, 1.05, 'node={:d}, x={:.1f} km'.format(nodes[i], (xpos[i]/1e3)), transform=ax.transAxes,
-    #         ha='center')
-    
     for ax in axs[:-1, :].flat:
         ax.set_xticklabels([])
     
     for ax in axs[:, 1:].flat:
         ax.set_yticklabels([])
-    for i in range(len(ms)):
+    for i in range(len(sim_indices)):
         ylims = np.array([ax.get_ylim() for ax in axs[i, :]])
         ylim_max = np.max(ylims)
         for ax in axs[i, :]:
             ax.set_ylim([0, ylim_max])
-            # ax.set_ylim([0.5, 1.25])
         
 
-        axs[i,-1].text(0.975, 0.8, '$m_{{{}}}$ = {}'.format(qntls[i], ms[i]), transform=ax.transAxes,
+        axs[i,-1].text(0.975, 0.8, '$m_{{{}}}$ = {}'.format(qntls[i], sim_indices[i]), transform=ax.transAxes,
             va='bottom', ha='right')
     
-    # axs[1, 0].set_ylabel('Flotation fraction')
     fig.text(0.01, 0.5, 'Flotation fraction', va='center', rotation=90)
-    axs[-1, -1].legend(loc='lower right', ncols=2)
+    # axs[-1, -1].legend(loc='lower right', ncols=2)
     
     figs.append(fig)
+
+    fig = plt.figure(figsize=(8, 3.5))
+    gs = GridSpec(len(sim_indices)+1, 3, height_ratios=[8] + len(sim_indices)*[100],
+        wspace=0.15, hspace=0.08, left=0.05, bottom=0.05, right=0.95, top=0.85)
+    axs = np.array([[fig.add_subplot(gs[j+1,i]) for j in range(len(sim_indices))] for i in range(3)]).T
+    caxs = np.array([fig.add_subplot(gs[0,i]) for i in range(3)])
+    for i in range(len(sim_indices)):
+        mi = sim_indices[i]
+        (ax1,ax2,ax3) = axs[i, :]
+        y_sim_spatial = sim_y[mi].reshape((nx, nt))[:, timestep]
+        y_pred_spatial = cv_y[mi].reshape((nx, nt))[:, timestep]
+        pc1 = ax1.tripcolor(mtri, y_sim_spatial, 
+            vmin=0, vmax=1.5, cmap=cmap, rasterized=True)
+        pc2 = ax2.tripcolor(mtri, y_pred_spatial, 
+            vmin=0, vmax=1.5, cmap=cmap, rasterized=True)
+        pc3 = ax3.tripcolor(mtri, y_pred_spatial - y_sim_spatial,
+            vmin=-0.25, vmax=0.25, cmap=cmocean.cm.balance, rasterized=True)
+
+        for ax in axs[i,:].flat:
+            ax.set_aspect('equal')
+            ax.spines[['right', 'top', 'left', 'bottom']].set_visible(False)
+
+            ax.set_xlim([xmin, xmax])
+            ax.set_ylim([ymin, ymax])
+            ax.set_xticks([])
+            ax.set_yticks([])
+
+            for k in range(len(nodes)):
+                ax.plot(mesh['x'][nodes[k]]/1e3, mesh['y'][nodes[k]]/1e3, markersize=5,
+                    marker='s', color=colors[k], markeredgecolor='w')
+
+        cb1 = fig.colorbar(pc1, cax=caxs[0], orientation='horizontal')
+        cb2 = fig.colorbar(pc2, cax=caxs[1], orientation='horizontal')
+        cb3 = fig.colorbar(pc3, cax=caxs[2], orientation='horizontal')
+
+        lbl = '$m_{{{}}}$ = {}'.format(qntls[i], sim_indices[i])
+        ax3.text(1., 0.95, lbl, transform=ax3.transAxes,
+            ha='right', va='bottom')
+    
+    for cax in caxs:
+        cax.xaxis.tick_top()
+        cax.xaxis.set_label_position('top')
+
+    axs[0,0].text(0.5, 1.6, 'GlaDS', rotation=0, ha='center',
+        va='bottom', transform=axs[0,0].transAxes)
+    axs[0,1].text(0.5, 1.6, 'GP', rotation=0, ha='center',
+        va='bottom', transform=axs[0,1].transAxes)
+    axs[0,2].text(0.5, 1.6, 'Prediction error', rotation=0, ha='center',
+        va='bottom', transform=axs[0,2].transAxes)
+    
+    for i in range(len(sim_indices)):
+        for j in range(3):
+            axs[i,j].text(0., 0.95, alphabet[j]+str((i+1)),
+            fontweight='bold', transform=axs[i,j].transAxes, va='bottom')
+
+    # scale = Rectangle(xy=(xmin, ymin), width=50, height=4, zorder=15)
+    # spc = PatchCollection([scale], facecolor='k', clip_on=False)
+    # axs[-1,-1].add_collection(spc)
+    # axs[-1,-1].text(xmin+0.5*50, ymin+5, '50 km', ha='center', va='bottom')
+
+    figs.append(fig)
+    # fig.savefig(os.path.join(config.figures, 'IS_flot_frac_maps.png'), dpi=400)
+
 
     return figs
 
@@ -320,19 +272,38 @@ def plot_scatter(config, y_sim, cv_y):
     y_sim_scatter = y_sim.flat[rng_inds]
     y_pred_scatter = cv_y.flat[rng_inds]
 
-    surf = 390 + 6*( (np.sqrt(nodexy[:, 0] + 5e3) - np.sqrt(5e3)))
-    bed = 350
+    # surf = 390 + 6*( (np.sqrt(nodexy[:, 0] + 5e3) - np.sqrt(5e3)))
+    # bed = 350
+    # thick = surf - bed
+    surf = np.load('../issm/data/geom/IS_surface.npy')
+    bed = np.load('../issm/data/geom/IS_bed.npy')
     thick = surf - bed
-    p_i_spatial = 9.8*910*(surf - bed)
+    thick[thick<10] = 10
+
+    rho_w = 1000.
+    rho_i = 910.
+    g = 9.8
+
+    p_i_spatial = g*rho_i*thick
     p_i = np.tile(np.vstack(p_i_spatial), (1, 365))
     p_i = np.tile(p_i, (config.m, 1, 1))
+    p_i = p_i.reshape(y_sim.shape)
+
+    bed = np.tile(np.vstack(bed), (1, 365))
+    bed = np.tile(bed, (config.m, 1, 1))
+    bed = bed.reshape(y_sim.shape)
+    bed_scatter = bed.flat[rng_inds]
+
+    print('y_sim.shape:', y_sim.shape)
+    print('cv_y.shape:', cv_y.shape)
+    print('p_i.shape:', p_i.shape)
 
     p_i_scatter = p_i.flat[rng_inds]
     N_sim_scatter = p_i_scatter*(1 - y_sim_scatter)
     N_pred_scatter = p_i_scatter*(1 - y_pred_scatter)
 
-    phi_sim_scatter = 350*1e3*9.8 + p_i_scatter*y_sim_scatter
-    phi_pred_scatter = 350*1e3*9.8 + p_i_scatter*y_pred_scatter
+    phi_sim_scatter = rho_w*g*bed_scatter + p_i_scatter*y_sim_scatter
+    phi_pred_scatter = rho_w*g*bed_scatter + p_i_scatter*y_pred_scatter
 
     # Define bounds
     ff_min = -0.1
@@ -343,9 +314,9 @@ def plot_scatter(config, y_sim, cv_y):
     N_max = 5
     N_ticks = [0, 2, 4] 
 
-    phi_min = 350*9.8*1e3/1e6
-    phi_max = 2e7/1e6
-    phi_ticks = [5, 10, 15, 20]
+    phi_min = 1
+    phi_max = 2.5e7/1e6
+    phi_ticks = [5, 10, 15, 20, 25]
 
     countnorm = colors.LogNorm(vmin=1e0, vmax=1e4, clip=True)
 
@@ -463,7 +434,7 @@ def main(config, test_config, recompute=False, dtype=np.float32):
     cv_lq_file = os.path.join(data_dir, 'cv_lower.npy')
     cv_uq_file = os.path.join(data_dir, 'cv_upper.npy')
     if recompute or not os.path.exists(cv_y_file):
-        samples = model.get_samples(numsamples=64, nburn=256)
+        samples = model.get_samples(numsamples=16, nburn=256)
         for key in samples.keys():
             samples[key] = samples[key].astype(dtype)
         t0_cv = time.perf_counter()
@@ -481,16 +452,20 @@ def main(config, test_config, recompute=False, dtype=np.float32):
         cv_uq = np.load(cv_uq_file).astype(dtype)[:test_config.m, :]
 
     print('cv_y.shape:', cv_y.shape)
-    rmse_ts, = plot_rmse(config, 
+    rmse_ts, rmse_map = plot_error_samples(config, 
         sim_y=y_test_sim, cv_y=cv_y, cv_error=cv_y-y_test_sim, cv_lq=cv_lq, cv_uq=cv_uq)
-    # rmse_wavg.savefig(os.path.join(
-        # config.figures, 'test_error_width_avg.png'), dpi=400)
     rmse_ts.savefig(os.path.join(
         config.figures, 'test_error_timeseries.png'), dpi=400)
     rmse_ts.savefig(os.path.join(
         config.figures, 'test_error_timeseries.pdf'), dpi=400)
+    
+    rmse_map.savefig(os.path.join(
+        config.figures, 'test_error_map.png'), dpi=400)
+    rmse_map.savefig(os.path.join(
+        config.figures, 'test_error_map.pdf'), dpi=400)
 
-    scatter_fig = plot_scatter(config, y_test_sim, cv_y)
+
+    scatter_fig = plot_scatter(test_config, y_test_sim, cv_y)
     scatter_fig.savefig(os.path.join(
         config.figures, 'test_error_scatter.png'), dpi=400)
 
