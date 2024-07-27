@@ -351,10 +351,10 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
                 preds.w = preds.w.astype(np.float32)
                 ypreds = preds.get_y()
                 error_preds = np.zeros(ypreds.shape, dtype=np.float32)
-                # for l_pred in range(len(batch_indices[j])):
-                #     for l_sample in range(error_preds.shape[0]):
-                #         err_sd = 1/np.sqrt(samples['lamWOs'][l_sample])
-                #         error_preds[l_sample][l_pred] = sd_y*np.random.normal(scale=err_sd)
+                for l_pred in range(len(batch_indices[j])):
+                    for l_sample in range(error_preds.shape[0]):
+                        err_sd = 1/np.sqrt(samples['lamWOs'][l_sample])
+                        error_preds[l_sample][l_pred] = sd_y*np.random.normal(scale=err_sd)
                 ypred_mean[batch_indices[j]] = np.mean(ypreds, axis=0)
                 ypred_lq[batch_indices[j]] = np.quantile(ypreds + error_preds, quantile, axis=0)
                 ypred_uq[batch_indices[j]] = np.quantile(ypreds + error_preds, 1-quantile, axis=0)
