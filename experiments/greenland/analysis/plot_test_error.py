@@ -434,12 +434,12 @@ def main(config, test_config, recompute=False, dtype=np.float32):
     cv_lq_file = os.path.join(data_dir, 'cv_lower.npy')
     cv_uq_file = os.path.join(data_dir, 'cv_upper.npy')
     if recompute or not os.path.exists(cv_y_file):
-        samples = model.get_samples(numsamples=16, nburn=256)
+        samples = model.get_samples(numsamples=128, nburn=256)
         for key in samples.keys():
             samples[key] = samples[key].astype(dtype)
         t0_cv = time.perf_counter()
         cv_y, cv_lq, cv_uq = compute_test_predictions(model, 
-            samples, t_test_std, n_folds=16, quantile=0.025)
+            samples, t_test_std, n_folds=64, quantile=0.025)
         t1_cv = time.perf_counter()
         cputime['preds'] = t1_cv - t0_cv
         np.save(cv_y_file, cv_y)
