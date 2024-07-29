@@ -29,10 +29,7 @@ import cmocean
 
 from sepia.SepiaModel import SepiaModel
 from sepia.SepiaData import SepiaData
-from sepia import SepiaPlot
 from sepia.SepiaPredict import SepiaEmulatorPrediction
-from sepia.SepiaPredict import SepiaXvalEmulatorPrediction
-from sepia.SepiaPrior import SepiaPrior
 
 from src import utils
 
@@ -54,8 +51,6 @@ def init_model(t_std, y_sim, exp_name, data_dir='data/'):
     """
     data = SepiaData(t_sim=t_std, y_sim=y_sim)
     data.transform_xt()
-    y_mean = np.mean(y_sim, axis=0)
-    y_sd = np.std(y_sim, axis=0)
     data.standardize_y()
     model = SepiaModel(data)
     return data, model
