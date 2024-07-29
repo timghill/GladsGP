@@ -134,7 +134,7 @@ def plot_error_samples(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
 
     # Pick logical time steps (winter, spring, summer)
     alphabet = ['a', 'b', 'c', 'd']
-    colors = cmocean.cm.algae([0.25, 0.75])
+    colors = cmocean.cm.algae([0.4, 0.75])
 
     # Timeseries error
     cm2 = LinearSegmentedColormap.from_list('', cmocean.cm.gray(np.linspace(0.05, 1, 128)))
@@ -157,7 +157,7 @@ def plot_error_samples(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
             yi_uq = cv_uq[mi].reshape((nx, nt))[node, :]
             ax = axs[i,j]
             ax.fill_between(tt, yi_lq, yi_uq,
-                color=colors[j], alpha=0.67, edgecolor='none')
+                color=colors[j], alpha=0.5, edgecolor=colors[j])
             ax.plot(tt, yi_sim, color='#222222', label='GlaDS', linewidth=1.5)
             ax.plot(tt, yi_pred, color=colors[j], label='GP', linewidth=1)
             ax.grid(linestyle='dotted', linewidth=0.5)
@@ -403,16 +403,6 @@ def main(config, test_config, recompute=False, dtype=np.float32):
     t_test_phys = np.loadtxt(test_config.X_physical, delimiter=',',
         skiprows=1).astype(dtype)[:test_config.m, :]
     y_test_sim = np.load(test_config.Y_physical).T[:test_config.m, :].astype(dtype)
-
-    print('train:', config.Y_physical)
-    print(y_train_sim.shape)
-    print('test:', test_config.Y_physical)
-    print(y_test_sim.shape)
-
-    # fig,ax = plt.subplots()
-    # ax.plot(y_train_sim.reshape((64, 4897, 365))[33, 2959, :])
-    # ax.plot(y_test_sim.reshape((100, 4897, 365))[33, 2959, :])
-    # plt.show()
 
     cputime = {}
     t_orig = time.perf_counter()

@@ -72,7 +72,7 @@ def parser(md, jobid):
     
 
 ## GP CONFIGURATION
-p = 11               # Number of PCs
+p = 8               # Number of PCs
 data_dir = os.path.join(analysis_dir, 'data/')
 figures = os.path.join(analysis_dir, 'figures/')
 Y_physical = os.path.join(sim_dir, '{exp}_ff.npy'.format(exp=exp))
