@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --time=0-00:30
+#SBATCH --time=0-01:00
 #SBATCH --account=def-gflowers
 #SBATCH --mem=8G
 #SBATCH --ntasks=1
