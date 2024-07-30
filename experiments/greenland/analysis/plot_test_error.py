@@ -138,7 +138,7 @@ def plot_error_samples(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
 
     # Timeseries error
     cm2 = LinearSegmentedColormap.from_list('', cmocean.cm.gray(np.linspace(0.05, 1, 128)))
-    cmap = tools.join_cmaps(cmocean.cm.dense, cm2, average=0, N1=128, N2=64)
+    cmap = tools.join_cmaps(cmocean.cm.dense, cm2, average=0, N1=128, N2=128)
     fig = plt.figure(figsize=(8, 3.75))
     gs = GridSpec(len(sim_indices), len(nodes), wspace=0.25, hspace=0.1, left=0.08, right=0.96,
         bottom=0.15, top=0.95)
@@ -201,9 +201,9 @@ def plot_error_samples(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
         y_sim_spatial = sim_y[mi].reshape((nx, nt))[:, timestep]
         y_pred_spatial = cv_y[mi].reshape((nx, nt))[:, timestep]
         pc1 = ax1.tripcolor(mtri, y_sim_spatial, 
-            vmin=0, vmax=1.5, cmap=cmap, rasterized=True)
+            vmin=0, vmax=2.0, cmap=cmap, rasterized=True)
         pc2 = ax2.tripcolor(mtri, y_pred_spatial, 
-            vmin=0, vmax=1.5, cmap=cmap, rasterized=True)
+            vmin=0, vmax=2.0, cmap=cmap, rasterized=True)
         pc3 = ax3.tripcolor(mtri, y_pred_spatial - y_sim_spatial,
             vmin=-0.25, vmax=0.25, cmap=cmocean.cm.balance, rasterized=True)
 
