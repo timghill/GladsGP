@@ -9,7 +9,7 @@ import numpy as np
 from scipy import stats
 
 import matplotlib
-matplotlib.rc('font', size=8)
+matplotlib.rc('font', size=12)
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
 

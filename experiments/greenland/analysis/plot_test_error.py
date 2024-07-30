@@ -128,8 +128,8 @@ def plot_error_samples(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     # Pick low (5%), median, and high (95%) ensemble members
     # qntls = [0.95, 0.05]
     qntls = [0.75, 0.25]
-    m_low = np.nanargmin(np.abs(rmse_m - np.nanquantile(rmse_m, qntls[1])))
-    m_high = np.nanargmin(np.abs(rmse_m - np.nanquantile(rmse_m, qntls[0])))
+    m_low = np.nanargmin(np.abs(rmse_m - np.nanquantile(rmse_m, 0.25)))
+    m_high = np.nanargmin(np.abs(rmse_m - np.nanquantile(rmse_m, 0.76)))
     sim_indices = [m_high, m_low]
 
     # Pick logical time steps (winter, spring, summer)
@@ -201,9 +201,9 @@ def plot_error_samples(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
         y_sim_spatial = sim_y[mi].reshape((nx, nt))[:, timestep]
         y_pred_spatial = cv_y[mi].reshape((nx, nt))[:, timestep]
         pc1 = ax1.tripcolor(mtri, y_sim_spatial, 
-            vmin=0, vmax=2.0, cmap=cmap, rasterized=True)
+            vmin=0, vmax=2., cmap=cmap, rasterized=True)
         pc2 = ax2.tripcolor(mtri, y_pred_spatial, 
-            vmin=0, vmax=2.0, cmap=cmap, rasterized=True)
+            vmin=0, vmax=2., cmap=cmap, rasterized=True)
         pc3 = ax3.tripcolor(mtri, y_pred_spatial - y_sim_spatial,
             vmin=-0.25, vmax=0.25, cmap=cmocean.cm.balance, rasterized=True)
 
@@ -224,20 +224,21 @@ def plot_error_samples(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
         cb2 = fig.colorbar(pc2, cax=caxs[1], orientation='horizontal')
         cb3 = fig.colorbar(pc3, cax=caxs[2], orientation='horizontal')
 
-        lbl = '$m_{{{}}}$ = {}'.format(qntls[i], sim_indices[i])
-        ax3.text(1., 0.95, lbl, transform=ax3.transAxes,
-            ha='right', va='bottom')
+        # lbl = '$m_{{{}}}$ = {}'.format(qntls[i], sim_indices[i])
+        # ax1.text(0., 0.5, lbl, transform=ax1.transAxes,
+        #     ha='right', va='center')
     
     for cax in caxs:
         cax.xaxis.tick_top()
         cax.xaxis.set_label_position('top')
+        cax.tick_params(axis='both', labelsize=9)
 
     axs[0,0].text(0.5, 1.6, 'GlaDS', rotation=0, ha='center',
-        va='bottom', transform=axs[0,0].transAxes)
-    axs[0,1].text(0.5, 1.6, 'GP', rotation=0, ha='center',
-        va='bottom', transform=axs[0,1].transAxes)
-    axs[0,2].text(0.5, 1.6, 'Prediction error', rotation=0, ha='center',
-        va='bottom', transform=axs[0,2].transAxes)
+        va='bottom', transform=axs[0,0].transAxes, fontweight='bold')
+    axs[0,1].text(0.5, 1.6, 'GP emulator', rotation=0, ha='center',
+        va='bottom', transform=axs[0,1].transAxes, fontweight='bold')
+    axs[0,2].text(0.5, 1.6, 'GP emulator error', rotation=0, ha='center',
+        va='bottom', transform=axs[0,2].transAxes, fontweight='bold')
     
     for i in range(len(sim_indices)):
         for j in range(3):

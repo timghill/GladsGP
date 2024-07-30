@@ -124,7 +124,7 @@ for ax in (ax1, ax2):
         marker='.', color='k', markersize=ms/2, linestyle='', label='Moulins')
     iii=0
     for node_index in plot_nodes:
-        colors = cmocean.cm.algae([0.25, 0.75])
+        colors = cmocean.cm.algae([0.4, 0.75])
         ax.plot(mesh['x'][node_index]/1e3, mesh['y'][node_index]/1e3, 
             marker='s', color=colors[iii], zorder=10, markeredgecolor='w',
             markersize=ms, markeredgewidth=mlw, linestyle='',

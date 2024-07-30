@@ -91,6 +91,7 @@ gst = GridSpecFromSubplotSpec(2, 1, gs[:-1, 2])
 ax1 = ax2.inset_axes((0.35, 0.7, 0.9, 0.8))
 cax1 = ax2.inset_axes((0.05, 1.25, 0.3, 0.4/10))
 cax2 = ax2.inset_axes((0.05, 1.2, 0.3, 0.4/10))
+colors = cmocean.cm.algae([0.4, 0.75])
 
 for ax in (ax1, ax2):
 
@@ -110,7 +111,6 @@ for ax in (ax1, ax2):
         else:
             ms = 10
             mlw = 2
-        colors = cmocean.cm.algae([0.25, 0.75])
         ax.plot(mesh['x'][node_index]/1e3, mesh['y'][node_index]/1e3, 
             marker='s', color=colors[iii], zorder=10, markeredgecolor='w',
             markersize=ms, markeredgewidth=mlw)
@@ -168,7 +168,7 @@ spc = PatchCollection([scale], facecolor='k', clip_on=False)
 ax2.add_collection(spc)
 ax2.text(xmin+3+0.5*50, ymin-2.5, '50 km', ha='center', va='bottom')
 
-colors = cmocean.cm.algae([0.2, 0.5, 0.8])
+# colors = cmocean.cm.algae([0.2, 0.5, 0.8])
 tticks = 1 + np.array([4, 5, 6, 7, 8, 9, 10])/12
 ttick_labels = ['May', '', 'July', '', 'Sept', '', 'Nov']
 for i,nindex in enumerate(plot_nodes):
