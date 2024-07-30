@@ -29,10 +29,7 @@ import cmocean
 
 from sepia.SepiaModel import SepiaModel
 from sepia.SepiaData import SepiaData
-from sepia import SepiaPlot
 from sepia.SepiaPredict import SepiaEmulatorPrediction
-from sepia.SepiaPredict import SepiaXvalEmulatorPrediction
-from sepia.SepiaPrior import SepiaPrior
 
 from src import utils
 
@@ -54,8 +51,6 @@ def init_model(t_std, y_sim, exp_name, data_dir='data/'):
     """
     data = SepiaData(t_sim=t_std, y_sim=y_sim)
     data.transform_xt()
-    y_mean = np.mean(y_sim, axis=0)
-    y_sd = np.std(y_sim, axis=0)
     data.standardize_y()
     model = SepiaModel(data)
     return data, model
@@ -73,145 +68,16 @@ def plot_num_sims_average(train_config, test_config, nsims):
     scalar_defs = ['channel_frac',
         'log_transit_time', 'channel_length',
     ]
-    thresholds = [ np.array([5, 10, 15, 20, 35, 30, -1]),
-                    np.array([5, 10, 15, 20, 35, 30, -1]),
-                    np.array([0.5, 1.])
-    ]
+    # thresholds = [ np.array([5, 10, 15, 20, 35, 30, -1]),
+    #                 np.array([5, 10, 15, 20, 35, 30, -1]),
+    #                 np.array([0.5, 1.])
+    # ]
     def_thresholds = [-1, -1, 0]
     t_names = np.loadtxt(train_config.X_physical, delimiter=',', max_rows=1,
         dtype=str, comments=None)
 
     data_dir = 'data/scalars'
     fig_dir = os.path.join(train_config.figures, 'scalars')
-
-    ## 1 - Plot full dataset (supplement)
-    fig = plt.figure(figsize=(8, 5))
-    gs = GridSpec(3, 6, width_ratios=(30, 15, 150, 15, 75, 6),
-        left=0.08, right=0.925, bottom=0.08, top=0.95,
-        wspace=0.05, hspace=0.1,
-        )
-    ax0s = np.array([
-        fig.add_subplot(gs[0, 0]),
-        fig.add_subplot(gs[1, 0]),
-        fig.add_subplot(gs[2, 0]),])
-
-    ax1s = np.array([
-        fig.add_subplot(gs[0, 2]),
-        fig.add_subplot(gs[1, 2]),
-        fig.add_subplot(gs[2, 2]),])
-    
-    ax2s = np.array([
-        fig.add_subplot(gs[0, 4]),
-        fig.add_subplot(gs[1, 4]),
-        fig.add_subplot(gs[2, 4]),])
-    caxs = np.array([
-        fig.add_subplot(gs[0, 5]),
-        fig.add_subplot(gs[1, 5]),
-        fig.add_subplot(gs[2, 5]),])
-    alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
-
-    for k in range(len(scalar_defs)):
-        print('For response:', scalar_defs[k])
-
-        y_sim = np.load(os.path.join(test_config.sim_dir, '{}_{}.npy'.format(test_config.exp, scalar_defs[k])))
-        nthresh = len(thresholds[k])
-        y_error = np.zeros((nthresh*len(nsims), y_sim.shape[1]))
-        pred_uncert = np.zeros((nthresh, len(nsims)))
-        
-        for j in range(len(nsims)):
-            y_pred = np.load(os.path.join(data_dir, 'test_pred_{}_n{}.npy'.format(scalar_defs[k], nsims[j])))
-            y_error[j*nthresh:(j+1)*nthresh,:] = y_pred - y_sim
-            y_qntl = np.load(os.path.join(data_dir, 'test_quantiles_{}_n{}.npy'.format(scalar_defs[k], nsims[j])))
-            pred_uncert[:, j] = np.mean(y_qntl[:,:,1] - y_qntl[:,:,0], axis=1)
-            
-        if thresholds[k][-1]==-1:
-            cticks = np.zeros(len(thresholds[k]))
-            cticks[:-1] = np.linspace(0.15, 0.85, len(thresholds[k])-1)
-            colors = cmocean.cm.delta(cticks)
-            colors[-1] = [0.4, 0.4, 0.4, 1.]
-            cticks = cticks[:-1]
-        else:
-            cticks = np.linspace(0.15, 0.85, len(thresholds[k]))
-            colors = cmocean.cm.delta(cticks)
-
-        # Compute boxwidth so plot looks less empty for channel length
-        nthresh = len(thresholds[k])
-        line = 0.25 - (0.25-0.07)*(nthresh - 2)/(7-2)
-        boxwidth = min(0.25, max(0.07, line))
-        
-        p0 = 1.625*boxwidth
-        positions = np.array(
-            [[p0*(j + 0.5 -len(thresholds[k])/2) + m_index for j in range(len(thresholds[k]))] 
-                for m_index in range(len(nsims))]).flatten()
-        
-        boxprops = dict(
-            medianprops = {'color':'#000000'},
-            boxprops = {'edgecolor':'none'},
-            flierprops = {'marker':'+', 'markersize':2, 'markerfacecolor':'k', 'markeredgewidth':0.6},
-            patch_artist=True,
-            whiskerprops = {'linewidth':0.65}
-        )
-
-        ax0 = ax0s[k]
-        ax1 = ax1s[k]
-        ax2 = ax2s[k]
-        box0s = ax0.boxplot(y_sim.T, positions=positions[-len(thresholds[k]):], 
-            widths=boxwidth, **boxprops)
-
-        box1s = ax1.boxplot(y_error.T, positions=positions, widths=boxwidth, **boxprops)
-
-        for j in range(nthresh):
-            box0s['boxes'][j].set_facecolor(colors[j])
-
-            for box in box1s['boxes'][j::nthresh]:
-                box.set_facecolor(colors[j])
-
-            ax2.plot(np.arange(1, len(nsims)+1), pred_uncert[j],
-                color=colors[j])
-        
-        # Styling
-        for ax in (ax0, ax1, ax2):
-            ax.grid(linestyle=':')
-            ax.spines[['top', 'right']].set_visible(False)
-
-        ax0.grid(linestyle=':')
-        ax0.set_xticks([len(nsims)-1])
-        ax0.set_xticklabels([test_config.m])
-        ax0.set_ylabel(ylabels[k])
-        ax0.set_xlim([positions[-nthresh]-0.2, positions[-1]+0.2])
-        ax0.text(0, 1, alphabet[3*k], transform=ax0.transAxes,
-            fontweight='bold', ha='right', va='bottom')
-
-        ax1.set_xticks(np.arange(len(nsims)))
-        ax1.set_xticklabels(nsims)
-        ax1.set_xlim([positions[0]-0.25, positions[-1]+0.25])
-        ax1.text(0, 1, alphabet[3*k + 1], transform=ax1.transAxes,
-            fontweight='bold', ha='right', va='bottom')
-        
-            
-        ax2.grid(linestyle=':')
-        ax2.set_xticks(np.arange(1, len(nsims)+1), nsims)
-        ax2.set_xticklabels(nsims)
-        ax2.text(0, 1, alphabet[3*k+2], transform=ax.transAxes,
-            fontweight='bold', ha='right', va='bottom')
-        ylim2 = ax2.get_ylim()
-        ax2.set_ylim([0, ylim2[1]])
-
-        norm = Normalize(0, 1)
-        cmappable = ScalarMappable(norm=norm, cmap=cmocean.cm.delta)
-        cbar = fig.colorbar(cmappable, cax=caxs[k])
-        cbar.set_ticks(cticks)
-        cbar.set_ticklabels(thresholds[k][thresholds[k]>0])
-        cbar.set_label(xlabels[k])
-
-        for ax in (ax0, ax1, ax2):
-            if k<2:
-                ax.set_xticklabels([])
-            else:
-                ax1.set_xlabel('Number of simulations')
-
-    fig.savefig(os.path.join(train_config.figures, 'scalar_qoi_convergence.png'), dpi=400)
-    fig.savefig(os.path.join(train_config.figures, 'scalar_qoi_convergence.pdf'))
 
     ## 2 - Plot just the averaged quantities
     fig_small = plt.figure(figsize=(6, 4))

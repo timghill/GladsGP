@@ -21,7 +21,7 @@ import numpy as np
 
 from . import definitions
 
-def collect_issm_results(config, njobs, dtype=np.float32):
+def collect_issm_results(config, njobs, dtype=np.float32, save_all=False):
 
     # Definitions for special quantities of interest
     fluxgate_positions = np.arange(5e3, 35e3, 5e3)
@@ -99,9 +99,19 @@ def collect_issm_results(config, njobs, dtype=np.float32):
     append_transit_time[-1, :] = np.mean(all_transit_time, axis=0)
 
     np.save(aggpattern.format('ff'), all_ff)
-    np.save(aggpattern.format('channel_frac'), append_channel_frac)
-    np.save(aggpattern.format('channel_length'), all_channel_length)
-    np.save(aggpattern.format('log_transit_time'), append_transit_time)
+
+    if save_all:
+        save_channel_frac = append_channel_frac
+        save_channel_length = all_channel_length
+        save_transit_time = all_transit_time
+    else:
+        save_channel_frac = append_channel_frac[-1].squeeze()
+        save_channel_length = all_channel_length[0]
+        save_transit_time = all_transit_time[-1]
+
+    np.save(aggpattern.format('channel_frac'), save_channel_frac)
+    np.save(aggpattern.format('channel_length'), save_channel_length)
+    np.save(aggpattern.format('log_transit_time'), save_transit_time)
 
 
 def main():
@@ -113,6 +123,7 @@ def main():
     parser.add_argument('version', help='"matlab" or "issm" GlaDS')
     parser.add_argument('conf_file', help='Path to experiment config file')
     parser.add_argument('njobs', help='Number of jobs', type=int)
+    parser.add_argument('--all', action='store true')
     args = parser.parse_args()
 
     if args.version not in ['matlab', 'issm']:
