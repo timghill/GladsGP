@@ -15,7 +15,10 @@ from src.utils import import_config
 from src.model import load_model
 
 import numpy as np
-from scipy import linalg
+
+import matplotlib
+matplotlib.rc('font', size=8)
+
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 from matplotlib.tri import Triangulation
@@ -131,7 +134,7 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     alphabet = ['a', 'b', 'c', 'd']
 
     # Width-averaged
-    fig = plt.figure(figsize=(8, 5))
+    fig = plt.figure(figsize=(6, 3.75))
     gs = GridSpec(len(ms)+1, 4, wspace=0.15, hspace=0.2,
         left=0.06, bottom=0.1, right=0.98, top=0.9,
         height_ratios=[8] + len(ms)*[100])
@@ -167,19 +170,19 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
 
         ax0 = axs[i, 0]
         ypc = ax0.pcolormesh(xx, tt, avg_ysim, cmap=cmap,
-            vmin=0, vmax=2, shading='flat')
+            vmin=0, vmax=2, shading='flat', rasterized=True)
 
         ax00 = axs[i, 1]
         ax00.pcolormesh(xx, tt, avg_ypred, cmap=cmap,
-            vmin=0, vmax=2, shading='flat')
+            vmin=0, vmax=2, shading='flat', rasterized=True)
 
         ax1 = axs[i, 2]
         epc = ax1.pcolormesh(xx, tt, avg_err, cmap=cmocean.cm.balance, 
-            vmin=-0.5, vmax=0.5, shading='flat')
+            vmin=-0.5, vmax=0.5, shading='flat', rasterized=True)
 
         ax2 = axs[i, 3]
         spc = ax2.pcolormesh(xx, tt, avg_sd, cmap=cmocean.cm.amp, 
-            vmin=0, vmax=0.5, shading='flat')
+            vmin=0, vmax=0.5, shading='flat', rasterized=True)
         
         for j,ax in enumerate(axs[i, :]):
             # ax.text(0.95, 0.95, 'm=%d'%mi, transform=ax.transAxes,
@@ -216,24 +219,25 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     fig.text(0.5, 0.02, 'Distance from terminus (km)', ha='center')
     
     cbar_ysim = fig.colorbar(ypc, cax=caxs[0], orientation='horizontal')
-    cbar_ysim.set_label('Sim flotation fraction')
+    cbar_ysim.set_label(r'GlaDS $f_{\rm{w}}$')
     cbar_ysim.set_ticks([0, 0.5, 1, 1.5, 2])
     cbar_ysim.set_ticklabels(['0', '0.5', '1', '1.5', '2'])
 
     cbar_ygp = fig.colorbar(ypc, cax=caxs[1], orientation='horizontal')
-    cbar_ygp.set_label('GP flotation fraction')
+    cbar_ygp.set_label(r'GP emulator $f_{\rm{w}}$')
     cbar_ygp.set_ticks([0, 0.5, 1, 1.5, 2])
     cbar_ygp.set_ticklabels(['0', '0.5', '1', '1.5', '2'])
 
     cbar_error = fig.colorbar(epc, cax=caxs[2], orientation='horizontal')
-    cbar_error.set_label(r'$\Delta$ flotation fraction')
+    # cbar_error.set_label(r'$\Delta f_{\rm{w}}$')
+    cbar_error.set_label('GP emulator error')
     cbar_error.set_ticks([-0.5, -0.25, 0, 0.25, 0.5])
     cbar_error.set_ticklabels(['-0.5', '-0.25', '0', '0.25', '0.5'])
 
     cbar_sd = fig.colorbar(spc, cax=caxs[3], orientation='horizontal')
     cbar_sd.set_label('95% prediction interval')
-    cbar_sd.set_ticks([0, 0.2, 0.4])
-    cbar_sd.set_ticklabels(['0', '0.2', '0.4'])
+    cbar_sd.set_ticks([0, 0.25, 0.5])
+    cbar_sd.set_ticklabels(['0', '0.25', '0.5'])
 
     for cax in caxs:
         cax.xaxis.tick_top()
@@ -242,7 +246,7 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     figs.append(fig)
 
     # Timeseries error
-    fig = plt.figure(figsize=(8, 3.75))
+    fig = plt.figure(figsize=(6, 3))
     gs = GridSpec(3, 3, wspace=0.1, hspace=0.1, left=0.05, right=0.975,
         bottom=0.12, top=0.9)
     lws = [1.5, 1]
@@ -307,7 +311,7 @@ def plot_scatter(config, y_sim, cv_y):
         mesh = pickle.load(meshin)
     nodexy = np.array([mesh['x'], mesh['y']]).T
     # Make a scatter plot
-    fig = plt.figure(figsize=(8, 2.5))
+    fig = plt.figure(figsize=(6, 1.875))
     wspace = 10
     gs = GridSpec(1, 6, width_ratios=(100, wspace, 100, wspace, 100, 8),
         left=0.075, right=0.9, bottom=0.225, top=0.95, wspace=0.1)
@@ -349,7 +353,7 @@ def plot_scatter(config, y_sim, cv_y):
 
     axs[0].hexbin(y_sim_scatter, y_pred_scatter, norm=countnorm,
         cmap=cmocean.cm.rain, gridsize=100, edgecolors='none',
-        extent=(ff_min, ff_max, ff_min, ff_max))
+        extent=(ff_min, ff_max, ff_min, ff_max), rasterized=True)
     axs[0].set_xlim([ff_min, ff_max])
     axs[0].set_ylim([ff_min, ff_max])
     R2 = np.corrcoef(y_sim_scatter.flatten(), y_pred_scatter.flatten())[0,1]**2
@@ -364,7 +368,7 @@ def plot_scatter(config, y_sim, cv_y):
 
     axs[1].hexbin(N_sim_scatter/1e6, N_pred_scatter/1e6, norm=countnorm,
         cmap=cmocean.cm.rain, gridsize=100, edgecolors='none',
-        extent=(N_min, N_max, N_min, N_max))
+        extent=(N_min, N_max, N_min, N_max), rasterized=True)
     axs[1].set_xlim([N_min, N_max])
     axs[1].set_ylim([N_min, N_max])
     R2 = np.corrcoef(N_sim_scatter, N_pred_scatter)[0,1]**2
@@ -472,12 +476,19 @@ def main(config, test_config, recompute=False, dtype=np.float32):
         cv_y=cv_y, cv_error=cv_y-y_test_sim, cv_lq=cv_lq, cv_uq=cv_uq)
     rmse_wavg.savefig(os.path.join(
         config.figures, 'test_error_width_avg.png'), dpi=400)
+    rmse_wavg.savefig(os.path.join(
+        config.figures, 'test_error_width_avg.pdf'), dpi=400)
+
     rmse_ts.savefig(os.path.join(
         config.figures, 'test_error_timeseries.png'), dpi=400)
+    rmse_ts.savefig(os.path.join(
+        config.figures, 'test_error_timeseries.pdf'), dpi=400)
 
     scatter_fig = plot_scatter(config, y_test_sim, cv_y)
     scatter_fig.savefig(os.path.join(
         config.figures, 'test_error_scatter.png'), dpi=400)
+    scatter_fig.savefig(os.path.join(
+        config.figures, 'test_error_scatter.pdf'), dpi=400)
 
     print('Timing (seconds):', cputime)
     return

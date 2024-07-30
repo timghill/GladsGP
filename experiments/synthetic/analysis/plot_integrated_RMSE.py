@@ -45,10 +45,7 @@ def main(train_config, test_config, n_pcs, recompute=False, dtype=np.float32):
     alphabet = ['a', 'b', 'c', 'd',]
     colors = ['#000000', '#555555', '#aaaaaa']
 
-    # Plot CV error: width-averaged, space, and time error
-    # with nc.Dataset(train_config.mesh, 'r') as dmesh:
-    #     nodexy = dmesh['tri/nodes'][:].data.T
-    #     connect = dmesh['tri/connect'][:].data.T.astype(int)-1
+    # Plot test error: width-averaged, space, and time error
     with open(os.path.join(train_config.sim_dir, train_config.mesh), 'rb') as meshin:
         mesh = pickle.load(meshin)
     nodexy = np.array([mesh['x'], mesh['y']]).T
@@ -68,8 +65,8 @@ def main(train_config, test_config, n_pcs, recompute=False, dtype=np.float32):
         if not os.path.exists(timeseries_fname) or not os.path.exists(spatial_fname) or recompute:
             data, model = load_model(train_config, train_config.m, p)
 
-            # Compute CV predictions and error
-            samples = model.get_samples(numsamples=50)
+            # Compute test predictions and error
+            samples = model.get_samples(numsamples=32, nburn=256)
             for key in samples.keys():
                 samples[key] = samples[key].astype(dtype)
             Y_preds = np.zeros_like(y_test_sim)
@@ -83,10 +80,8 @@ def main(train_config, test_config, n_pcs, recompute=False, dtype=np.float32):
                 y_pred = y_pred.mean(axis=0)
                 Y_preds[k] = y_pred
 
-            # cv_y, cv_lq, cv_uq = compute_cross_validation(model, 
-            #     samples, n_folds=16, quantile=0.025)
             test_error = Y_preds - y_test_sim
-            # Pick ensemble members, nodes, and time steps
+            # Integrated over time and space
             nx = nodexy.shape[0]
             nt = int(test_error.shape[1]/nx)
             dim_separated_test_error = np.zeros((test_config.m, nx, nt), dtype=dtype)
@@ -110,8 +105,6 @@ def main(train_config, test_config, n_pcs, recompute=False, dtype=np.float32):
         ax2.set_xlim([0, 100])
         ax2.set_ylim([0, 25])
         ax2.set_yticks([0, 12.5, 25])
-        # ax2.set_ylabel('Distance across (km)')
-        # ax2.set_xlabel('Distance from terminus (km)')
         ax2.text(0.95, 0.95, alphabet[i], transform=ax2.transAxes,
             fontweight='bold', ha='right', va='top')
         ax2.text(0.95, 0.05, 'p={}'.format(p), transform=ax2.transAxes,
@@ -122,10 +115,8 @@ def main(train_config, test_config, n_pcs, recompute=False, dtype=np.float32):
         ax1.plot(t_month, rmse_t, label='p={}'.format(p), color=colors[i], linewidth=1)
         ax1.set_xlabel('Month')
         ax1.set_ylabel('RMSE')
-        # ax1.set_ylim([0, 0.20])
         ax1.set_xlim([0, 12])
         ax1.set_xticks([0, 2, 4, 6, 8, 10, 12])
-        # ax1.set_xticklabels(['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov', 'Jan'])
         ax1.grid(linestyle=':', linewidth=0.5)
     
     for ax in pcaxs[:-1]:
@@ -158,5 +149,5 @@ if __name__=='__main__':
     args = parser.parse_args()
     train_config = import_config(args.train_config)
     test_config = import_config(args.test_config)
-    npcs = [2, 5, 7]
+    npcs = [2, 5, 8]
     main(train_config, test_config, npcs, recompute=args.recompute)

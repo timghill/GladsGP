@@ -126,7 +126,7 @@ def plot_main_indices(config):
     pcvar = S**2/np.sum(S**2)
     n_pcs = 3
     alphabet = ['a', 'b', 'c', 'd']
-    fig = plt.figure(figsize=(6, 4))
+    fig = plt.figure(figsize=(6, 6))
     gs = GridSpec(1, n_pcs+1, bottom=0.15, left=0.05, right=0.95, top=.95,
         wspace=0.3)
     axs = np.array([fig.add_subplot(gs[i]) for i in range(4)])

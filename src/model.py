@@ -99,7 +99,7 @@ def init_model(t_std, y_sim, exp, p, data_dir='data/',
 
     # Construct the basis K, this is the scaling SEPIA uses by default
     K = np.diag(S[:p]) @ Vh[:p] / np.sqrt(y_sim.shape[0])
-    data.create_K_basis(K=K)
+    data.create_K_basis(K=K.astype(np.float32))
     print('K.shape', K.shape)
 
     # Now make the SepiaModel instances since we are done with the data

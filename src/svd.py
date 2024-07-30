@@ -43,7 +43,7 @@ def randomized_svd(X, p, k=None, q=1, return_error=False):
         k = p
     
     # Random matrix with oversampling
-    omega = np.random.normal(size=(X.shape[1], p+k))
+    omega = np.random.normal(size=(X.shape[1], p+k)).astype(np.float32)
     Y = X @ omega
 
     # Power iterations to reduce error

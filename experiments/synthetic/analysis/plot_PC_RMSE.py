@@ -10,6 +10,11 @@ import pickle
 import numpy as np
 import scipy
 
+fs = 8
+import matplotlib
+matplotlib.rc('font', size=fs)
+
+import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 from matplotlib.tri import Triangulation
@@ -36,8 +41,8 @@ def plot_PC_RMSE_variance(recompute=False):
 
     # colors = cmocean.cm.haline(np.linspace(0.2, 0.85, len(nsims)))
     colors = cmocean.cm.deep(np.linspace(0.15, 0.9, len(nsims)))
-    fig = plt.figure(figsize=(8, 5))
-    gs_global = GridSpec(1, 2, left=0.1, bottom=0.125, top=0.95, right=0.975,
+    fig = plt.figure(figsize=(6, 3.75))
+    gs_global = GridSpec(1, 2, left=0.1, bottom=0.125, top=0.95, right=0.95,
         hspace=0.0, wspace=0.15,
         width_ratios=(60, 100))
     gs_left = GridSpecFromSubplotSpec(2, 1, gs_global[0,0], hspace=0.05)
@@ -53,7 +58,6 @@ def plot_PC_RMSE_variance(recompute=False):
         if not os.path.exists(rmse_fname) or recompute:
             y_sim = y_full[:nsims[j]]
             print('y_sim.shape', y_sim.shape)
-            print('y_sim.dtype', y_sim.dtype)
             y_mean = np.mean(y_sim, axis=0)
             y_sd = np.std(y_sim, ddof=1, axis=0)
             y_sd[y_sd<1e-6] = 1e-6
@@ -69,6 +73,7 @@ def plot_PC_RMSE_variance(recompute=False):
                 U_ = U[:,:npcs[k]]
                 S_ = np.diag(S[:npcs[k]])
                 Vh_ = Vh[:npcs[k],:]
+                yhat = U_ @ (S_ @ Vh_)
                 pca_rmse[k] = compute_truncation_error((U_,S_,Vh_), y_mean, y_sd, y_sim)
             
             writedata = np.array([npcs, pca_rmse]).T
@@ -96,9 +101,6 @@ def plot_PC_RMSE_variance(recompute=False):
     ax2.set_ylabel('Cumulative proportion of variance')
     ax1.legend(frameon=False)
 
-    # ax1.set_ylim([0, 0.5])
-    # ax2.set_ylim([0, 1])
-
     ax1.set_xticklabels([])
     ax2.set_xlabel('Number of PCs')
 
@@ -108,8 +110,8 @@ def plot_PC_RMSE_variance(recompute=False):
         fontweight='bold', ha='left', va='top')
     
     ## Part 2: Plot basis vectors
-    data, model = load_model(config, config.m, 7, dtype=np.float32)
-    K = data.sim_data.K
+    data, model = load_model(config, config.m, config.p, dtype=np.float32)
+    K = data.sim_data.K.astype(np.float32)
     S = np.load(os.path.join(config.data_dir, 
         'models/pca_synthetic_n{:03d}_S.npy'.format(config.m)))
     pcvar = S**2/np.sum(S**2)
@@ -117,7 +119,7 @@ def plot_PC_RMSE_variance(recompute=False):
     ncols = 2
     nrows = int(np.ceil(nplot/ncols))
     gs_right = GridSpecFromSubplotSpec(nrows, ncols, gs_global[1],
-        hspace=0.4)
+        hspace=0.3)
     cgs = GridSpecFromSubplotSpec(5, 1, gs_right[3,1])
     cax = fig.add_subplot(cgs[-1])
     axs = np.array([[fig.add_subplot(gs_right[i,j]) for j in range(ncols)]
@@ -134,7 +136,8 @@ def plot_PC_RMSE_variance(recompute=False):
         kavg, xe = width_average(mesh, K[i].reshape(nx, nt))
         t = np.arange(0, 365+1) * 12/365
         [xx,tt] = np.meshgrid(xe, t)
-        pcol = ax.pcolormesh(xx, tt, kavg.T, cmap=cmocean.cm.delta, vmin=-1.1, vmax=1.1)
+        pcol = ax.pcolormesh(xx, tt, kavg.T, cmap=cmocean.cm.delta, 
+            vmin=-1.1, vmax=1.1, rasterized=True)
 
         # ax.set_aspect('equal')
         ax.set_xlim([0, 100])
@@ -164,8 +167,9 @@ def plot_PC_RMSE_variance(recompute=False):
     cbar.set_label('PC coefficients')
 
     fig.savefig('figures/pca_rmse_var.png', dpi=600)
+    fig.savefig('figures/pca_rmse_var.pdf', dpi=600)
     
 
 if __name__=='__main__':
-    plot_PC_RMSE_variance(recompute=True)
+    plot_PC_RMSE_variance(recompute=False)
 

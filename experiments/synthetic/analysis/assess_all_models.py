@@ -64,11 +64,11 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
         cov[i,:] = performance[:,5]
         coverage[i] = np.mean(cov[i])
 
-    metrics = (RMSE.T, 100*MAPE.T, CI.T, 100*cov.T)
-    labels = ('RMSE', 'MAPE (%)', '95% prediction interval', 'Coverage (%)')
-    alphabet = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h')
-    dys = (0.05, 2, 0.1, 5)
-    labelpads = [2, -2, 0, -4]
+    metrics = (RMSE.T, 100*MAPE.T, CI.T)
+    labels = ('RMSE', 'MAPE (%)', '95% prediction interval')
+    alphabet = ('a', 'b', 'c', 'd', 'e', 'f')
+    dys = (0.05, 2, 0.1)
+    labelpads = [2, -2, 0]
     # cbars = [0, 0, 0]
     # colors = cmocean.cm.amp(np.linspace(0.25, 1, len(n_sims)))
     medianprops = {'color':'#000000'}
@@ -99,10 +99,6 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
     
     axs[0,2].plot(np.arange(1, len(n_pcs)+1), full_cis, 
         linestyle='', marker='.', color='#000000', markersize=4, zorder=10)
-
-    axs[0,-1].plot(np.arange(1, len(n_pcs)+1), 100*coverage, 
-        linestyle='', marker='.', color='#000000', markersize=4, zorder=10)
-    # axs[0,-1].set_ylim([0, 100])
     
     fig.text(0.5, 0.52, 'Number of PCs', ha='center')
 
@@ -131,7 +127,7 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
         cov[i,:] = performance[:,5]
         coverage[i] = np.mean(cov[i])
 
-    metrics = (RMSE.T, 100*MAPE.T, CI.T, 100*cov.T)
+    metrics = (RMSE.T, 100*MAPE.T, CI.T)
     # labels = ('RMSE', 'MAPE (%)', '95% prediction interval width', 'Coverage (%)')
     # medianprops = {'color':'#000000'}
     # boxprops = {'edgecolor':'none'}
@@ -182,6 +178,94 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
     # axs[1, -1].axhline(95, color='k', linewidth=5/8, zorder=2, linestyle='dashed')
     
     fig.text(0.5, 0.025, 'Number of Simulations', ha='center')
+    fig.subplots_adjust(left=0.085, bottom=0.1, right=0.92, top=0.975, wspace=0.5, hspace=0.3)
+    return fig
+
+
+def plot_coverage(path, n_sims, n_pcs, m_ref, p_ref):
+    """
+    Plot GP prediction RMSE, std residuals for n_sims and n_pcs
+    """
+    fig, axs = plt.subplots(figsize=(6, 2.5), ncols=2, nrows=1)
+
+    coverage = np.zeros(len(n_pcs))
+    labelsize = 6
+    cov = None
+    for i in range(len(n_pcs)):
+        p = n_pcs[i]
+        performance = np.loadtxt(path.format(m_ref, p), delimiter=',')
+        if cov is None:
+            n_train = performance.shape[0]
+            cov = np.zeros((len(n_pcs), n_train))
+        cov[i,:] = performance[:,5]
+        coverage[i] = np.mean(cov[i])
+
+    medianprops = {'color':'#000000'}
+    boxprops = {'edgecolor':'none'}
+    boxprops['facecolor'] = '#555555'
+    ax = axs[0]
+    boxes = ax.boxplot(100*cov.T, tick_labels=n_pcs, patch_artist=True,
+        medianprops=medianprops, boxprops=boxprops, showcaps=False, showfliers=True,
+        flierprops=flierprops, whiskerprops={'linewidth':0.65})
+    ax.plot(np.arange(1, len(n_pcs)+1), 100*coverage, 
+        linestyle='', marker='.', color='#000000', markersize=4, zorder=10)
+    ax.text(0.15, 0.9, 'a', transform=ax.transAxes,
+        ha='right', va='bottom', fontweight='bold')
+    xtlabels = np.array(n_pcs).astype(str)
+    xtlabels[1::2] = ''
+    ax.set_xticks(n_pcs, xtlabels)
+
+    # 2 Number of simulations
+    cov = None
+    full_cis = np.zeros(len(n_sims))
+    coverage = np.zeros(len(n_sims))
+    for i in range(len(n_sims)):
+        m = n_sims[i]
+        performance = np.loadtxt(path.format(m,p_ref), delimiter=',')
+        if RMSE is None:
+            n_train = performance.shape[0]
+            RMSE = np.zeros((len(n_sims), n_train))
+            MAPE = np.zeros((len(n_sims), n_train))
+            CI = np.zeros((len(n_sims), n_train))
+            cov = np.zeros((len(n_sims), n_train))
+        cov[i,:] = performance[:,5]
+        coverage[i] = np.mean(cov[i])
+
+    ax = axs[1]
+    boxes = ax.boxplot(100*cov.T, tick_labels=n_sims, patch_artist=True,
+        medianprops=medianprops, boxprops=boxprops, showcaps=False, showfliers=True,
+        flierprops=flierprops, whiskerprops={'linewidth':0.65})
+    ax.plot(np.arange(1, len(n_sims)+1), 100*coverage, 
+        linestyle='', marker='.', color='#000000', markersize=4, zorder=10)
+    ax.text(0.15, 0.9, 'b', transform=ax.transAxes,
+        ha='right', va='bottom', fontweight='bold')
+    
+    ax.spines[['right', 'top']].set_visible(False)
+    ax.tick_params(axis='both', labelsize=fs)
+    xtlabels = np.array(n_sims).astype(str)
+    xtlabels[0::2] = ''
+    ax.set_xticks(np.arange(1,len(n_sims)+1), xtlabels)
+    
+
+    ax2 = axs[1,-1].twinx()
+    ax2.spines['top'].set_visible(False)
+    cputime = 0.5*n_sims
+    ax2.plot(np.arange(1, len(n_sims)+1), cputime,
+        color='#000000', marker='.', markersize=3, linewidth=0.65)
+    ax2.set_ylabel('CPU-hours', rotation=-90, labelpad=8)
+    ax2.tick_params(axis='both', labelsize=fs)
+
+    for ax in axs:
+        ax.spines[['right', 'top']].set_visible(False)
+        ax.tick_params(axis='both', labelsize=fs)
+        ax.set_ylim([50, 108])
+        yt = np.array([50, 60, 70, 80, 90, 95, 100])
+        ax.set_yticks(yt)
+        ax.grid(linestyle=':', linewidth=0.5)
+    
+    axs[0].set_ylabel('Coverage (%)')
+    axs[0].set_xlabel('Number of PCs')
+    axs[1].set_xlabel('Number of simulations')
     fig.subplots_adjust(left=0.085, bottom=0.1, right=0.92, top=0.975, wspace=0.5, hspace=0.3)
     return fig
 
@@ -448,6 +532,10 @@ def main(train_config, test_config, n_sims, n_pcs,
     fig3 = plot_marginal_loss(path, np.array(n_sims), np.array(n_pcs), train_config.m, train_config.p)
     fig3.savefig(os.path.join(train_config.figures, 'nsim_boxplot.png'), dpi=400)
     fig3.savefig(os.path.join(train_config.figures, 'nsim_boxplot.pdf'))
+
+    sfig = plot_coverage(path, np.array(n_sims), np.array(n_pcs), train_config.m, train_config.p)
+    sfig.savefig(os.path.join(train_config.figures, 'coverage_boxplot.png'), dpi=400)
+    sfig.savefig(os.path.join(train_config.figures, 'coverage_boxplot.pdf'))
         
 
 if __name__=='__main__':
