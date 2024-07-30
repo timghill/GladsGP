@@ -55,7 +55,6 @@ def saltelli_sensitivity_indices(func, n_dim, m, bootstrap=True):
     """
     t0 = time.perf_counter()
     sampler = stats.qmc.Sobol(d=2*n_dim)
-    N = 2**5
     AB = sampler.random_base2(m=int(m))
     A = AB[:, n_dim:]
     B = AB[:, :n_dim]
@@ -150,7 +149,6 @@ def PCA_saltelli_sensitivity_indices(func, n_dim, m, pcvar, bootstrap=True):
     """
     t0 = time.perf_counter()
     sampler = stats.qmc.Sobol(d=2*n_dim)
-    N = 2**5
     AB = sampler.random_base2(m=int(m))
     A = AB[:, n_dim:]
     B = AB[:, :n_dim]

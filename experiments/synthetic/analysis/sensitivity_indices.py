@@ -103,15 +103,23 @@ def compute_field_indices(config, dtype=np.float32, recompute=True):
         total_index = indices[1],
         general_first_order = indices[2],
         general_total_index = indices[3])
-    info['boostrap'] = dict(
-        first_order = np.array((bootstrap['first_order'].confidence_interval.low,
-                        bootstrap['first_order'].confidence_interval.high)),
-        total_index = np.array((bootstrap['total_index'].confidence_interval.low,
-                        bootstrap['total_index'].confidence_interval.high)),
-        general_first_order = np.array((bootstrap['general_first_order'].confidence_interval.low,
-                        bootstrap['general_first_order'].confidence_interval.high)),
-        general_total_index = np.array((bootstrap['general_total_index'].confidence_interval.low,
-                        bootstrap['general_total_index'].confidence_interval.high)),
+    info['bootstrap'] = dict(
+        first_order = np.array((
+            np.median(bootstrap['first_order'].bootstrap_distribution, axis=-1)
+            bootstrap['first_order'].confidence_interval.low,
+            bootstrap['first_order'].confidence_interval.high)),
+        total_index = np.array((
+            np.median(bootstrap['total_index'].bootstrap_distribution, axis=-1)
+            bootstrap['total_index'].confidence_interval.low,
+            bootstrap['total_index'].confidence_interval.high)),
+        general_first_order = np.array((
+            np.median(bootstrap['general_first_order'].bootstrap_distribution, axis=-1)
+            bootstrap['general_first_order'].confidence_interval.low,
+            bootstrap['general_first_order'].confidence_interval.high)),
+        general_total_index = np.array((
+            np.median(bootstrap['general_total_index'].bootstrap_distribution, axis=-1)
+            bootstrap['general_total_index'].confidence_interval.low,
+            bootstrap['general_total_index'].confidence_interval.high)),
     )
 
     with open('sobol_indices.pkl', 'wb') as sobin:
@@ -211,11 +219,15 @@ def compute_scalar_indices(config, dtype=np.float32, recompute=True):
         first_order = indices[0],
         total_index = indices[1]
     )
-    info['boostrap'] = dict(
-        first_order = np.array((bootstrap['first_order'].confidence_interval.low,
-                        bootstrap['first_order'].confidence_interval.high)),
-        total_index = np.array((bootstrap['total_index'].confidence_interval.low,
-                        bootstrap['total_index'].confidence_interval.high))
+    info['bootstrap'] = dict(
+        first_order = np.array((
+            np.median(bootstrap['first_order'].bootstrap_distribution, axis=-1)
+            bootstrap['first_order'].confidence_interval.low,
+            bootstrap['first_order'].confidence_interval.high)),
+        total_index = np.array((
+            np.median(bootstrap['total_index'].bootstrap_distribution, axis=-1)
+            bootstrap['total_index'].confidence_interval.low,
+            bootstrap['total_index'].confidence_interval.high))
     )
 
     indices_file = os.path.join(sensitivity_dir, 'scalar_indices.pkl')
@@ -237,11 +249,11 @@ def plot_main_indices(config):
     y2 = np.arange(8) + dy
     axs[0].barh(y1, indices['general_first_order'], height=0.35,
         color='#aaaaaa', label='First-order',
-        xerr=(indices['boostrap']['general_first_order']),
+        xerr=(indices['bootstrap']['general_first_order']),
         ecolor='k', capsize=3)
     axs[0].barh(y2, indices['general_total_index'], height=0.35,
         color='#555555', label='Total',
-        xerr=(indices['boostrap']['general_total_index']),
+        xerr=(indices['bootstrap']['general_total_index']),
         ecolor='k', capsize=3)
     axs[0].legend(bbox_to_anchor=(0, -0.2, 1, 0.3), frameon=False)
 
@@ -249,11 +261,11 @@ def plot_main_indices(config):
         ax = axs[k+1]
         ax.barh(y1, scalar_indices['first_order'][k], height=0.32,
         color='#aaaaaa', label='First-order',
-        xerr=(scalar_indices['boostrap']['first_order'][:, k]),
+        xerr=(scalar_indices['bootstrap']['first_order'][:, k]),
         ecolor='k', capsize=3)
         ax.barh(y2, scalar_indices['total_index'][k], height=0.32,
         color='#555555', label='First-order',
-        xerr=(scalar_indices['boostrap']['total_index'][:, k]),
+        xerr=(scalar_indices['bootstrap']['total_index'][:, k]),
         ecolor='k', capsize=3)
 
 
