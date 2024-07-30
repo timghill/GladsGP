@@ -90,7 +90,7 @@ def compute_field_indices(config, dtype=np.float32, recompute=True):
     pcvar = S2/np.sum(S2)
     pcvar = pcvar[:p]
     print('Starting sensitivity calculation...')
-    indices = utils.PCA_saltelli_sensitivity_indices(func, n_dim, 4, pcvar, bootstrap=True)
+    indices = utils.PCA_saltelli_sensitivity_indices(func, n_dim, 8, pcvar, bootstrap=True)
     print('Done computing sensitivity indices')
     first_order = indices[0]
     total_index = indices[1]
@@ -201,7 +201,7 @@ def compute_scalar_indices(config, dtype=np.float32, recompute=True):
             y[:, k] = y_mean
         return y
         
-    indices = utils.saltelli_sensitivity_indices(func, n_dim, 4, bootstrap=True)
+    indices = utils.saltelli_sensitivity_indices(func, n_dim, 8, bootstrap=True)
     print('Done computing sensitivity indices')
     first_order = indices[0]
     total_index = indices[1]
@@ -284,10 +284,8 @@ def main():
     train_config = utils.import_config(args.train_config)
 
     if args.recompute:
-        # train_config.m = 64
-        # train_config.p = 5
         compute_scalar_indices(train_config)
-    #     compute_field_indices(train_config)
+        compute_field_indices(train_config)
 
     
     plot_main_indices(train_config)
