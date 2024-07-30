@@ -57,13 +57,13 @@ def main(config, test_config, dtype=np.float32):
     dt_y = []
     data,model = load_model(config, config.m, config.p)
 
-    samples = model.get_samples(numsamples=32, nburn=256)
+    samples = model.get_samples(numsamples=16, nburn=256)
     for key in samples.keys():
         samples[key] = samples[key].astype(dtype)
 
     m = config.m
     # m_pred = test_config.m
-    m_pred = 4
+    m_pred = 20
     n = model.data.sim_data.y.shape[1]
     mu_y = np.mean(model.data.sim_data.y, axis=0)
     sd_y = np.std(model.data.sim_data.y, ddof=1, axis=0)
@@ -78,14 +78,11 @@ def main(config, test_config, dtype=np.float32):
             model=model, t_pred=xi)
         preds.w = preds.w.astype(dtype)
         emulator_preds = preds.get_y()
-        print('emulator_preds.shape:', emulator_preds.shape)
         t1 = time.perf_counter()
 
         error_preds = np.zeros(emulator_preds.shape, dtype=np.float32)
-        print('sd_y.shape:', sd_y.shape)
-        print('samples.shape:', samples['lamWOs'].shape)
-        error_preds = sd_y*np.random.normal(scale=1/np.sqrt(samples['lamWOs']))
-        print('error_preds.shape:', error_preds.shape)
+        for j in range(error_preds.shape[0]):
+            error_preds[j] = sd_y*np.random.normal(scale=1/np.sqrt(samples['lamWOs'][j])).astype(np.float32)
         
         y_preds = emulator_preds + error_preds
         t2 = time.perf_counter()
