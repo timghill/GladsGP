@@ -5,6 +5,10 @@ Basic plots
 import pickle
 import numpy as np
 import os
+import sys
+
+sys.path.append(os.path.expanduser('~/SFU-code'))
+from palettes.code import tools
 
 import matplotlib
 from matplotlib import pyplot as plt
@@ -30,8 +34,12 @@ phi = np.load(base + 'phi.npy').astype(np.float32)
 time = np.load(base + 'time.npy').astype(np.float32)
 
 # print('time', time)
-ix = 208
+ix = 205
 print(time[ix])
+
+
+cm2 = mpc.LinearSegmentedColormap.from_list('', cmocean.cm.gray(np.linspace(0.05, 1, 128)))
+cmap = tools.join_cmaps(cmocean.cm.dense, cm2, average=0, N1=128, N2=64)
 
 # Geometry and compute misc fields
 bed = np.vstack(np.load(os.path.join(config.sim_dir, '../data/geom/IS_bed.npy')))
@@ -95,7 +103,7 @@ colors = cmocean.cm.algae([0.4, 0.75])
 
 for ax in (ax1, ax2):
 
-    sc = ax.tripcolor(triangulation, ff[:, ix], vmin=0, vmax=1, cmap=cmocean.cm.dense)
+    sc = ax.tripcolor(triangulation, ff[:, ix], vmin=0, vmax=1.5, cmap=cmap)
     if ax is ax2:
         cbar = fig.colorbar(sc, shrink=0.75, pad=0.02, cax=cax1, orientation='horizontal')
         cbar.set_label('Flotation fraction')

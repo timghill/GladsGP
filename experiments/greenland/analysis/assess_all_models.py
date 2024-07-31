@@ -233,11 +233,14 @@ def plot_joint_loss(path, n_sims, n_pcs, linestyle='solid'):
     cbars = [0, 0, 0]
     colors = cmocean.cm.deep(np.linspace(0.15, 0.9, len(n_sims)))
     for j in range(len(n_sims)):
+        lines = []
+        collections = []
         for i in range(len(metrics)):
             ax = axs[i]
             ax.grid(linestyle=':', linewidth=0.5)
             if linestyle=='solid':
-                ax.plot(n_pcs, metrics[i][j,:], color=colors[j], label=n_sims[j])
+                line, = ax.plot(n_pcs, metrics[i][j,:], color=colors[j], label=n_sims[j])
+            lines.append(line)
 
             ymax = np.max(upper[i])
             dy = dys[i]
@@ -264,6 +267,7 @@ def plot_joint_loss(path, n_sims, n_pcs, linestyle='solid'):
             span_pcol = PatchCollection(span_rects, color=colors[j], edgecolor='none',
                 alpha=0.5)
             ax.add_collection(span_pcol)
+            collections.append(span_pcol)
 
             if linestyle=='bar':
                 mean_pcol = PatchCollection(mean_rects, color=colors[j], edgecolor='none',
@@ -275,10 +279,24 @@ def plot_joint_loss(path, n_sims, n_pcs, linestyle='solid'):
                 ha='left', va='top', fontweight='bold')\
         
             fig.text(0.5, 0.025, 'Number of PCs', ha='center')
-            ax1.legend(bbox_to_anchor=(0, 0.98, 1, 0.2),
+            leg = ax1.legend(bbox_to_anchor=(0, 0.98, 1, 0.2),
                 ncols=len(n_sims), loc='lower left',frameon=False)
         fig.subplots_adjust(left=0.1, bottom=0.15, right=0.975, top=0.9, wspace=0.2)
-        fig.savefig('figures/IGS_2024/nsim_npc_model_selection_{:02d}.png'.format(j), dpi=600)
+        fig.savefig('figures/IGS_2024/nsim_npc_model_selection_{:02d}.png'.format(j+1), dpi=600)
+
+        if j==0:
+            for line in lines:
+                line.set_alpha(0.)
+            for pcol in collections:
+                pcol.set_alpha(0.)
+            leg.set_visible(False)
+            fig.savefig('figures/IGS_2024/nsim_npc_model_selection_blank.png'.format(j+1), dpi=600)
+
+            for line in lines:
+                line.set_alpha(1.)
+            for pcol in collections:
+                pcol.set_alpha(0.5)
+            leg.set_visible(True)
     return fig
 
 

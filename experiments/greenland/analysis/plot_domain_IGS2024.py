@@ -4,20 +4,8 @@ import sys
 import pickle
 import numpy as np
 import os
-# import sys
-# ISSM_DIR = os.getenv('ISSM_DIR')
-# sys.path.append(os.path.join(ISSM_DIR, 'bin/'))
-# sys.path.append(os.path.join(ISSM_DIR, 'lib/'))
-# from issmversion import issmversion
-# sys.path.append(os.path.join(ISSM_DIR, 'src/m/dev/'))
-# import devpath
-# from model import model
-# # from read_netCDF import read_netCDF
-# from meshconvert import meshconvert
-# from parameterize import parameterize
-# from GetAreas import GetAreas
+
 import matplotlib
-#matplotlib.use('QtAgg')
 from matplotlib import pyplot as plt
 from matplotlib import tri
 from matplotlib.patches import Rectangle, Polygon
@@ -82,10 +70,6 @@ print(mesh['x'][node3]/1e3, mesh['y'][node3]/1e3, bed[node3], surf[node3])
 # plot_nodes = [node1, node2, node3]
 plot_nodes = [node1, node3]
 
-# area_ele = GetAreas(mesh['elements'], mesh['x'], mesh['y'])/1e6
-# candidates = np.arange(md.mesh.numberofvertices)[md.mesh.vertexonboundary==0]
-# rng = np.random.default_rng(seed=549374)
-# moulin_indices = rng.choice(candidates, size=50)
 with open('../issm/data/moulins/moulins_catchments.pkl', 'rb') as infile:
     basins = pickle.load(infile)
 
@@ -110,8 +94,6 @@ for ax in (ax1, ax2):
     if ax is ax2:
         cbar = fig.colorbar(sc, shrink=0.75, pad=0.02, cax=cax, orientation='vertical')
         cbar.set_label('Ice thickness (m)')
-        # cax.xaxis.tick_top()
-        # cax.xaxis.set_label_position('top')
     if ax is ax1:
         ms = 5
         mlw = 1
@@ -130,9 +112,6 @@ for ax in (ax1, ax2):
             markersize=ms, markeredgewidth=mlw, linestyle='',
             label='{:.0f} m asl.'.format(surf[node_index][0]))
         iii+=1
-    # ax.set_title('Flotation fraction and channel discharge')
-    # ax.plot(mesh['x'][moulin_indices]/1e3, mesh['y'][moulin_indices]/1e3,
-    #     linestyle='', marker='x', markersize=8, color='r')
     
     ax.plot(mesh['x'][pos]/1e3, mesh['y'][pos]/1e3, linestyle='',
         marker='*', color='k', markersize=ms/1.5, label=r'$p_{\rm{w}}=0$ outlets')
@@ -141,15 +120,6 @@ for ax in (ax1, ax2):
     ax.set_yticks([])
     ax.spines[['left', 'bottom', 'right', 'top']].set_visible(False)
     ax.set_facecolor('none')
-
-# cnorm = mpc.Normalize(vmin=Qmin, vmax=Qmax)
-# cbar2 = fig.colorbar(cm.ScalarMappable(norm=cnorm, cmap=Qcmap), cax=cax2, 
-#     orientation='horizontal')
-# cbar2.set_label('Channel discharge (m$^3$ s$^{-1}$)')
-# cticks = cbar2.get_ticks()
-# print(cticks)
-# cticks[0] = Qmin
-# cbar2.set_ticks(cticks)
 
 zmax = 1850
 surf0 = surf[:, 0]
@@ -184,11 +154,6 @@ scale2 = Rectangle(xy=(mesh['x'].max()/1e3-10-100, ymax-10), width=100, height=5
 spc2 = PatchCollection([scale2], facecolor='k', clip_on=False)
 ax1.add_collection(spc2)
 ax1.text(mesh['x'].max()/1e3-10-0.5*100, ymax-10+5+2, '100 km', ha='center', va='bottom')
-
-
-# fig.subplots_adjust(left=0.35, bottom=0.2, right=1.0, top=1.)
-# fig.subplots_adjust(left=0.31, bottom=0.325, right=1.05, top=1.)
-# fig.savefig('figures/ff_discharge.png', dpi=400)
 
 with rs.open('../issm/data/geom/GimpIceMask_90m_2015_v1.2.tif') as geotiff:
     raster_mask = geotiff.read(1)

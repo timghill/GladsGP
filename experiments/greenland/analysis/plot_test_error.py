@@ -8,7 +8,7 @@ import argparse
 import time
 import pickle
 
-sys.path.append(os.path.expanduser('~/SFU-code//'))
+sys.path.append(os.path.expanduser('~/SFU-code'))
 from palettes.code import palettes, tools
 
 from src.utils import import_config
