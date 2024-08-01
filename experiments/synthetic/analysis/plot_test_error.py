@@ -158,7 +158,7 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     
     for i in range(len(ms)):
         mi = ms[i]
-        y_sim_mi = cv_y[mi] + cv_error[mi]
+        y_sim_mi = sim_y[mi]
         avg_ysim = width_average(y_sim_mi.reshape((nx, nt)))
         avg_ypred = width_average(cv_y[mi].reshape((nx, nt)))
         avg_err = width_average(cv_error[mi].reshape((nx, nt)))
@@ -247,7 +247,7 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
 
     # Timeseries error
     fig = plt.figure(figsize=(6, 3))
-    gs = GridSpec(3, 3, wspace=0.1, hspace=0.1, left=0.05, right=0.975,
+    gs = GridSpec(3, 3, wspace=0.1, hspace=0.1, left=0.07, right=0.975,
         bottom=0.12, top=0.9)
     lws = [1.5, 1]
     axs = np.array([[fig.add_subplot(gs[i,j]) for j in range(3)]

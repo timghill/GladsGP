@@ -371,6 +371,48 @@ def fit(train_config, test_config, nsims, recompute=False):
             np.save(test_qntl_file, all_quantiles)
     return
 
+def summarize_performance(train_config, test_config):
+    m_train = train_config.m
+    m_test = test_config.m
+    scalar_vars = ['channel_frac', 'log_transit_time', 'channel_length']
+    def_thresholds = [6, 6, 0]
+    for k in range(len(scalar_vars)):
+        print(scalar_vars[k])
+        y_sim = np.load(os.path.join(test_config.sim_dir,
+            train_config.exp+'_' + scalar_vars[k] + '.npy'))
+        y_sim = y_sim[def_thresholds[k]]
+        # print(y_sim.shape)
+
+        y_pred = np.load(os.path.join('data/scalars',
+            'test_pred_{}_n{}.npy'.format(
+                scalar_vars[k], m_train)))
+        y_pred = y_pred[def_thresholds[k]]
+        # print(y_pred.shape)
+
+        test_err = y_pred - y_sim
+
+        test_rmse = np.sqrt(np.mean(test_err**2))
+        mape_arg = test_err/y_sim
+        # Neglect +-10% of data closest to zero to avoid MAPE blowing up
+        mape_arg[np.abs(y_sim)<np.quantile(np.abs(y_sim), 0.2)] = np.nan
+        test_mape = np.nanmean(np.abs(mape_arg))
+        print('Range of values:', np.min(y_sim), np.max(y_sim))
+        print('RMSE:', test_rmse)
+        print('5% error:', np.quantile(test_err, 0.05))
+        print('25% error:', np.quantile(test_err, 0.25))
+        print('50% error:', np.quantile(test_err, 0.50))
+        print('75% error:', np.quantile(test_err, 0.75))
+        print('95% error:', np.quantile(test_err, 0.95))
+        print('MAPE:', 100*test_mape)
+        print('5% percent error:', 100*np.nanquantile(mape_arg, 0.05))
+        print('25% percent error:', 100*np.nanquantile(mape_arg, 0.25))
+        print('50% percent error:', 100*np.nanquantile(mape_arg, 0.50))
+        print('75% percent error:', 100*np.nanquantile(mape_arg, 0.75))
+        print('95% percent error:', 100*np.nanquantile(mape_arg, 0.95))
+        print('\n')
+
+
+
 def main():
     """
     Command-line interface to src.model tools for model fitting
@@ -399,6 +441,7 @@ def main():
         fit(train_config, test_config, nsims=args.nsim, recompute=args.recompute)
 
     plot_num_sims_average(train_config, test_config, args.nsim)
+    summarize_performance(train_config, test_config)
 
 if __name__=='__main__':
     main()

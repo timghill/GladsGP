@@ -36,15 +36,14 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
     """
     Plot GP prediction RMSE, std residuals for n_sims and n_pcs
     """
-    fig, axs = plt.subplots(figsize=(6, 4), ncols=4, nrows=2)
+    fig, axs = plt.subplots(figsize=(6, 3.5), ncols=3, nrows=2)
 
     # 1 For number of PCs
-    ax1,ax2,ax3,ax4 = axs[0]
+    ax1,ax2,ax3 = axs[0]
     RMSE = None
     MAPE = None
     CI = None
     full_cis = np.zeros(len(n_pcs))
-    coverage = np.zeros(len(n_pcs))
     labelsize = 6
     for i in range(len(n_pcs)):
         p = n_pcs[i]
@@ -61,21 +60,20 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
         upper = performance[:, 3]
         CI[i,:] = upper - lower
         full_cis[i] = performance[0, 4]
-        cov[i,:] = performance[:,5]
-        coverage[i] = np.mean(cov[i])
 
     metrics = (RMSE.T, 100*MAPE.T, CI.T)
     labels = ('RMSE', 'MAPE (%)', '95% prediction interval')
     alphabet = ('a', 'b', 'c', 'd', 'e', 'f')
-    dys = (0.05, 2, 0.1)
-    labelpads = [2, -2, 0]
-    # cbars = [0, 0, 0]
-    # colors = cmocean.cm.amp(np.linspace(0.25, 1, len(n_sims)))
+    dys = (0.05, 5, 0.1)
+    labelpads = [2, 2, 0]
     medianprops = {'color':'#000000'}
     boxprops = {'edgecolor':'none'}
     # fc = ['#356575', '#6295A20.024, 0.', '#80B9AD', '#B3E2A7']
-    fc = [(0.272, 0.259, 0.539), (0.420, 0.431, 0.812),
-        (0.647, 0.318, 0.580), (0.858, 0.478, 0.791)]
+    fc = [
+        (0.272, 0.259, 0.539), 
+        (0.420, 0.431, 0.812),
+        (0.647, 0.318, 0.580),
+    ]
     for i in range(len(metrics)):
         ax = axs[0,i]
         ax.grid(linestyle=':', linewidth=0.5)
@@ -96,19 +94,18 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
         xtlabels = np.array(n_pcs).astype(str)
         xtlabels[1::2] = ''
         ax.set_xticks(n_pcs, xtlabels)
+        ax.set_xlabel('Number of PCs')
     
     axs[0,2].plot(np.arange(1, len(n_pcs)+1), full_cis, 
         linestyle='', marker='.', color='#000000', markersize=4, zorder=10)
-    
-    fig.text(0.5, 0.52, 'Number of PCs', ha='center')
+
 
     # 2 Number of simulations
-    ax1,ax2,ax3,ax4 = axs[1]
+    ax1,ax2,ax3 = axs[1]
     RMSE = None
     MAPE = None
     CI = None
     full_cis = np.zeros(len(n_sims))
-    coverage = np.zeros(len(n_sims))
     for i in range(len(n_sims)):
         m = n_sims[i]
         performance = np.loadtxt(path.format(m,p_ref), delimiter=',')
@@ -124,16 +121,8 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
         upper = performance[:, 3]
         CI[i,:] = upper - lower
         full_cis[i] = performance[0, 4]
-        cov[i,:] = performance[:,5]
-        coverage[i] = np.mean(cov[i])
 
     metrics = (RMSE.T, 100*MAPE.T, CI.T)
-    # labels = ('RMSE', 'MAPE (%)', '95% prediction interval width', 'Coverage (%)')
-    # medianprops = {'color':'#000000'}
-    # boxprops = {'edgecolor':'none'}
-    # # fc = ['#8a0A0A', '#BF3131', '#DA6262']
-    # # fc = cmocean.cm.balance([0.85, 0.75, 0.15, 0.25])
-    # fc = ['#356575', '#6295A2', '#80B9AD', '#B3E2A7']
     for i in range(len(metrics)):
         ax = axs[1,i]
         ax.grid(linestyle=':', linewidth=0.5)
@@ -147,7 +136,7 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
         upper = dy*np.ceil(ymax/dy)
         ylim = ax.get_ylim()
         ax.set_ylim([0, upper])
-        ax.text(0.15, 0.9, alphabet[i+4], transform=ax.transAxes,
+        ax.text(0.15, 0.9, alphabet[i+3], transform=ax.transAxes,
             ha='right', va='bottom', fontweight='bold')
         
         ax.spines[['right', 'top']].set_visible(False)
@@ -155,30 +144,19 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
         xtlabels = np.array(n_sims).astype(str)
         xtlabels[0::2] = ''
         ax.set_xticks(np.arange(1,len(n_sims)+1), xtlabels)
+        ax.set_xlabel('Number of simulations')
         
     axs[1,2].plot(np.arange(1, len(n_sims)+1), full_cis, 
-        linestyle='', marker='.', color='#000000', markersize=4, zorder=10)
-    axs[1,-1].plot(np.arange(1, len(n_sims)+1), 100*coverage, 
         linestyle='', marker='.', color='#000000', markersize=4, zorder=10)
 
     ax2 = axs[1,-1].twinx()
     ax2.spines['top'].set_visible(False)
-    cputime = 0.5*n_sims
+    cputime = 0.42*n_sims
     ax2.plot(np.arange(1, len(n_sims)+1), cputime,
         color='#000000', marker='.', markersize=3, linewidth=0.65)
     ax2.set_ylabel('CPU-hours', rotation=-90, labelpad=8)
     ax2.tick_params(axis='both', labelsize=fs)
-
-    axs[0,-1].set_ylim([50, 108])
-    axs[1,-1].set_ylim([50, 108])
-    yt = np.array([50, 60, 70, 80, 90, 95, 100])
-    axs[0,-1].set_yticks(yt)
-    axs[1,-1].set_yticks(yt)
-    # axs[0, -1].axhline(95, color='k', linewidth=5/8, zorder=1, linestyle='dashed')
-    # axs[1, -1].axhline(95, color='k', linewidth=5/8, zorder=2, linestyle='dashed')
-    
-    fig.text(0.5, 0.025, 'Number of Simulations', ha='center')
-    fig.subplots_adjust(left=0.085, bottom=0.1, right=0.92, top=0.975, wspace=0.5, hspace=0.3)
+    fig.subplots_adjust(left=0.085, bottom=0.125, right=0.92, top=0.975, wspace=0.35, hspace=0.4)
     return fig
 
 
@@ -202,15 +180,15 @@ def plot_coverage(path, n_sims, n_pcs, m_ref, p_ref):
 
     medianprops = {'color':'#000000'}
     boxprops = {'edgecolor':'none'}
-    boxprops['facecolor'] = '#555555'
+    boxprops['facecolor'] = 'gray'
     ax = axs[0]
     boxes = ax.boxplot(100*cov.T, tick_labels=n_pcs, patch_artist=True,
         medianprops=medianprops, boxprops=boxprops, showcaps=False, showfliers=True,
         flierprops=flierprops, whiskerprops={'linewidth':0.65})
     ax.plot(np.arange(1, len(n_pcs)+1), 100*coverage, 
         linestyle='', marker='.', color='#000000', markersize=4, zorder=10)
-    ax.text(0.15, 0.9, 'a', transform=ax.transAxes,
-        ha='right', va='bottom', fontweight='bold')
+    ax.text(0.05, 0.9, 'a', transform=ax.transAxes,
+        ha='left', va='bottom', fontweight='bold')
     xtlabels = np.array(n_pcs).astype(str)
     xtlabels[1::2] = ''
     ax.set_xticks(n_pcs, xtlabels)
@@ -222,11 +200,11 @@ def plot_coverage(path, n_sims, n_pcs, m_ref, p_ref):
     for i in range(len(n_sims)):
         m = n_sims[i]
         performance = np.loadtxt(path.format(m,p_ref), delimiter=',')
-        if RMSE is None:
+        if cov is None:
             n_train = performance.shape[0]
-            RMSE = np.zeros((len(n_sims), n_train))
-            MAPE = np.zeros((len(n_sims), n_train))
-            CI = np.zeros((len(n_sims), n_train))
+            # RMSE = np.zeros((len(n_sims), n_train))
+            # MAPE = np.zeros((len(n_sims), n_train))
+            # CI = np.zeros((len(n_sims), n_train))
             cov = np.zeros((len(n_sims), n_train))
         cov[i,:] = performance[:,5]
         coverage[i] = np.mean(cov[i])
@@ -237,8 +215,8 @@ def plot_coverage(path, n_sims, n_pcs, m_ref, p_ref):
         flierprops=flierprops, whiskerprops={'linewidth':0.65})
     ax.plot(np.arange(1, len(n_sims)+1), 100*coverage, 
         linestyle='', marker='.', color='#000000', markersize=4, zorder=10)
-    ax.text(0.15, 0.9, 'b', transform=ax.transAxes,
-        ha='right', va='bottom', fontweight='bold')
+    ax.text(0.05, 0.9, 'b', transform=ax.transAxes,
+        ha='left', va='bottom', fontweight='bold')
     
     ax.spines[['right', 'top']].set_visible(False)
     ax.tick_params(axis='both', labelsize=fs)
@@ -247,9 +225,9 @@ def plot_coverage(path, n_sims, n_pcs, m_ref, p_ref):
     ax.set_xticks(np.arange(1,len(n_sims)+1), xtlabels)
     
 
-    ax2 = axs[1,-1].twinx()
+    ax2 = axs[-1].twinx()
     ax2.spines['top'].set_visible(False)
-    cputime = 0.5*n_sims
+    cputime = 0.42*n_sims
     ax2.plot(np.arange(1, len(n_sims)+1), cputime,
         color='#000000', marker='.', markersize=3, linewidth=0.65)
     ax2.set_ylabel('CPU-hours', rotation=-90, labelpad=8)
@@ -266,7 +244,7 @@ def plot_coverage(path, n_sims, n_pcs, m_ref, p_ref):
     axs[0].set_ylabel('Coverage (%)')
     axs[0].set_xlabel('Number of PCs')
     axs[1].set_xlabel('Number of simulations')
-    fig.subplots_adjust(left=0.085, bottom=0.1, right=0.92, top=0.975, wspace=0.5, hspace=0.3)
+    fig.subplots_adjust(left=0.085, bottom=0.15, right=0.92, top=0.975, wspace=0.2, hspace=0.3)
     return fig
 
 def plot_joint_loss(path, n_sims, n_pcs, linestyle='solid'):
@@ -360,31 +338,7 @@ def plot_joint_loss(path, n_sims, n_pcs, linestyle='solid'):
     fig.text(0.5, 0.025, 'Number of PCs', ha='center')
     ax1.legend(loc='upper right', frameon=False, ncols=2)
     fig.subplots_adjust(left=0.1, bottom=0.15, right=0.975, top=0.95, wspace=0.2)
-
-    # AIC = AIC - np.min(AIC, axis=0)
-    # BIC = BIC - np.min(BIC, axis=0)
-    fig2, (ax1, ax2) = plt.subplots(ncols=2, figsize=(8, 4.5))
-    for i in range(len(n_sims)):    
-        AIC[i] = AIC[i] - np.min(AIC[i])
-        BIC[i] = BIC[i] - np.min(BIC[i])
-        ax1.plot(n_pcs, AIC[i], label=n_sims[i], color=colors[i], linewidth=2)
-        ax2.plot(n_pcs, BIC[i], label=n_sims[i], color=colors[i], linewidth=2)
-        aic_minpc = np.argmin(AIC[i])
-        bic_minpc = np.argmin(BIC[i])
-        ax1.plot(n_pcs[aic_minpc], AIC[i,aic_minpc], marker='x', color=colors[i])
-        ax2.plot(n_pcs[bic_minpc], BIC[i,bic_minpc], marker='x', color=colors[i])
-    ax1.grid()
-    ax2.grid()
-    ax1.set_xticks(n_pcs)
-    ax2.set_xticks(n_pcs)
-    ax1.set_ylabel(r'$\Delta$AIC')
-    ax2.set_ylabel(r'$\Delta$BIC')
-    
-    fig2.text(0.5, 0.15, 'Number of PCs', ha='center')
-    ax1.legend(loc='upper left', frameon=False, ncols=2,
-        bbox_to_anchor=(0, -0.5, 1, 0.425))
-    fig2.subplots_adjust(left=0.1, bottom=0.25, right=0.95, top=0.95, wspace=0.3)
-    return fig, fig2
+    return fig
 
 
 def compute_test_error(train_config, test_config, n_sims, n_pcs, 
@@ -522,7 +476,7 @@ def main(train_config, test_config, n_sims, n_pcs,
 
     path = os.path.join(train_config.data_dir, 'architecture/performance_n{:03d}_p{:02d}.csv')
     print('path:', path)
-    fig1, fig2 = plot_joint_loss(path, n_sims, n_pcs)
+    fig1 = plot_joint_loss(path, n_sims, n_pcs)
     if not os.path.exists(train_config.figures):
         os.makedirs(train_config.figures)
     fig1.savefig(os.path.join(train_config.figures, 'nsim_npcs_error.png'),
