@@ -8,7 +8,7 @@ import os
 import sys
 
 sys.path.append(os.path.expanduser('~/SFU-code'))
-from palettes.code import tools
+from palettes.code import tools, palettes
 
 import matplotlib
 from matplotlib import pyplot as plt
@@ -133,7 +133,8 @@ for ax in (ax1, ax2):
     cy = np.array([mesh['y'][channel0[channel_mask]], mesh['y'][channel1[channel_mask]]]).T/1e3
 
     Qnorm = lambda x: min(0.99, max(0.01, (x-Qmin)/(Qmax-Qmin)))
-    Qcmap = cmocean.cm.gray_r
+    # Qcmap = cmocean.cm.
+    Qcmap = palettes.get_cmap('BrownYellow')
     for i in range(len(cx)):
         Qscore = Qnorm(np.abs(Q[channel_mask, ix][i]))
         color = Qcmap(Qscore)
