@@ -20,13 +20,13 @@ def import_config(conf_path):
     
     Returns
     -------
-    module instance with configuration file globals
+    module instance with configuration fields
     """
     return importfile(conf_path)
 
 def saltelli_sensitivity_indices(func, n_dim, m, bootstrap=True):
     """
-    Compute first-order and total sensitivity indices following Saltelli et al.
+    Compute first-order and total sensitivity indices for scalar variable
 
     This function mimics scipy.stats.sobol_indices but is faster (at least a
     factor of ~5x) because it assumes the shape of the data.
@@ -35,10 +35,8 @@ def saltelli_sensitivity_indices(func, n_dim, m, bootstrap=True):
     ----------
     func : callable
            Function with call signature
-               func(x: (N, n_dim) ) --> (N, p)
-           Where N=2**m is the number of points and p is
-           the dimensionality of the output of a single func
-           calculation (i.e., the number of PCs)
+               func(x: (N, n_dim) ) --> (N,)
+           Where N=2**m is the number of points
     
     n_dim : int
             Number of input dimensions
@@ -49,6 +47,15 @@ def saltelli_sensitivity_indices(func, n_dim, m, bootstrap=True):
     bootstrap: bool
                If bootstrap is True, use bootstrap resampling to
                compute 95% confidence intervals on sensitivity indices
+
+    Returns
+    -------
+    first_order : (m, n_dim) array of first-order sensitivity indices
+    
+    total_index : (m, n_dim) array of total sensitivity indices
+
+    res : dict with keys 'first_order', 'total_index' with
+          corresponding scipy.stats.bootstrap instances as values
     
     See also: scipy.stats.sobol_indices
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.sobol_indices.html#scipy.stats.sobol_indices
@@ -120,7 +127,7 @@ def saltelli_sensitivity_indices(func, n_dim, m, bootstrap=True):
 
 def PCA_saltelli_sensitivity_indices(func, n_dim, m, pcvar, bootstrap=True):
     """
-    Compute first-order and total sensitivity indices following Saltelli et al.
+    Compute first-order and total sensitivity for multivariate variables
 
     This function mimics scipy.stats.sobol_indices but is faster (at least a
     factor of ~5x) because it assumes the shape of the data.
@@ -140,9 +147,29 @@ def PCA_saltelli_sensitivity_indices(func, n_dim, m, pcvar, bootstrap=True):
     m : int
         Use 2**m samples
     
+    pcvar : array
+            Sequence of proportion of explained variance for each PC
+    
     bootstrap: bool
                If bootstrap is True, use bootstrap resampling to
                compute 95% confidence intervals on sensitivity indices
+
+
+    Returns
+    -------
+    first_order : (m, n_dim, p) array of first-order sensitivity indices
+                  defined for each PC
+    
+    total_index : (m, n_dim, p) array of total sensitivity indices
+                  defined for each PC
+
+    gen_first_order : (m, n_dim) general first-order indices for complete field
+
+    gen_total_index : (m, n_dim) general total indices for complete field
+
+    res : dict with keys 'first_order', 'total_index', 'gen_first_order'
+          and 'gen_total_index' with corresponding 
+          scipy.stats.bootstrap instances as values
     
     See also: scipy.stats.sobol_indices
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.sobol_indices.html#scipy.stats.sobol_indices
@@ -230,7 +257,26 @@ def PCA_saltelli_sensitivity_indices(func, n_dim, m, pcvar, bootstrap=True):
 
 
 def width_average(mesh, x, dx=2):
-    """Width-average (nx, nt) array x"""
+    """Width-average values defined on a triangular mesh.
+    
+    For array x with shape (nx, nt), average in specified dx bins
+    to leave the spatial dimension representing x only.
+    
+    Parameters
+    ----------
+    mesh : dictionary with keys 'x' and 'y' providing lists of
+           x and y coordinates
+    
+    x : array with shape (nx, nt)
+        Target to average over y
+    
+    dx : float, optional (default 2)
+         Bin width in first dimension
+    
+    Returns
+    -------
+    array averaged over y in dx-width bins
+    """
     xedge = np.arange(0, 100+dx, dx)
     xmid = 0.5*(xedge[1:] + xedge[:-1])
     xavg = np.zeros((len(xmid), x.shape[1]))
@@ -241,6 +287,21 @@ def width_average(mesh, x, dx=2):
     return xavg, xedge
 
 def reorder_edges(md):
+    """
+    Reorder edges from ISSM mesh md to make it easier to relate 
+    channel discharge to the nodes of the mesh. Critical for plotting
+    channel discharge and computing discharge across fluxgates.
+
+    Based on plotchannels.m from ISSM model source.
+
+    Parameters
+    ----------
+    md : model instance
+
+    Returns:
+    edges : (md.mesh.numberofedges, 2) array specifying
+            ordered nodes connected to each edge
+    """
     maxnbf = 3*md.mesh.numberofelements
     edges = np.zeros((maxnbf, 3)).astype(int)
     exchange = np.zeros(maxnbf).astype(int)

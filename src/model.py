@@ -153,7 +153,8 @@ def fit_models(train_config, n_sims, n_pcs,
     dtype=np.float32, recompute=False):
     """
     Fit GP model using Metropolis MCMC sampling and save to
-    data directory
+    data directory. Saves time to compute PCA and do MCMC
+    sampling to a csv in the data directory.
 
     Parameters
     ----------

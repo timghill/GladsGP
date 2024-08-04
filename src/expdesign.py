@@ -67,54 +67,6 @@ def log_design(m, bounds, sampler=None):
     design = dict(standard=X_std, log=X_log, physical=X_phys)
     return design
 
-def linear_design(m, bounds, sampler=None):
-    """
-    Generate untransformed parameter design.
-
-    Note that bounds are specified in linear space. For example,
-    bounds = [0, 1] generates samples in physical space between
-    0 and 1.
-
-    Parameters
-    ----------
-    m : int
-        Number of samples to draw
-
-    bounds : (n_para, 2) array
-             Lower and upper bounds on log parameters
-    
-    sampler : stats.qmc.QMCEngine, optional
-              QMC sampler for generating the design. If not provided,
-              defaults to stats.qmc.LatinHypercube
-    
-    Returns
-    -------
-    design : dict
-             design['standard'] standardized design in [0, 1] hypercube
-             design['log'] log design in provided bounds
-             design['physical'] physical parameter values
-    """
-    if sampler is None:
-        n_dim = bounds.shape[0]
-        sampler = stats.qmc.LatinHypercube(n_dim, 
-            optimization='random-cd', scramble=False, seed=42186)
-    
-    X_std = sampler.random(n=m)
-
-    # Stretch [0, 1] interval into provided physical bounds
-    X_phys = bounds[:, 0] + (bounds[:, 1] - bounds[:, 0])*X_std
-
-    print('Generated', X_std.shape, 'design')
-
-    print('Standardized min/max')
-    print(X_std.min(axis=0), X_std.max(axis=0))
-
-    print('Physical min/max')
-    print(X_phys.min(axis=0), X_phys.max(axis=0))
-
-    design = dict(standard=X_std, physical=X_phys)
-    return design
-
 def plot_design(design, bounds, para_names, figure=None):
     """
     Plot experimental design.
@@ -183,7 +135,16 @@ def plot_design(design, bounds, para_names, figure=None):
     return fig
 
 def write_table(design, table_file='table.dat'):
-    """Create table.dat for job array"""
+    """Create table.dat for job array, compatible with Digital
+    Research Alliance metafarm package.
+    
+    Parameters
+    ----------
+    design : dict
+             Result of log_design
+    
+    table_file : str
+                 File path to save table"""
     output_str = ''
     _line_template = '%d %d\n'
 
@@ -199,16 +160,20 @@ def write_table(design, table_file='table.dat'):
 def main():
     """
     Command-line interface to compute, plot and save experimental design
+
+    python -m src.expdesign config
+
+    where config is the path to a valid configuration file.
     """
     desc = 'Compute, plot and save experimental design'
     parser = argparse.ArgumentParser(description=desc)
-    parser.add_argument('conf_file', help='Path to experiment config file')
+    parser.add_argument('config', help='Path to experiment config file')
     args = parser.parse_args()
 
-    if not os.path.exists(args.conf_file):
-        raise OSError('Configuration file "{}" does not exist'.format(args.conf_file))
+    if not os.path.exists(args.config):
+        raise OSError('Configuration file "{}" does not exist'.format(args.config))
     
-    path, name = os.path.split(args.conf_file)
+    path, name = os.path.split(args.config)
     if path:
         abspath = os.path.abspath(path)
         sys.path.append(abspath)

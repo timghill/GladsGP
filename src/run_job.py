@@ -1,3 +1,15 @@
+"""
+Run ISSM-GlaDS simultions using experiment config files from command-line
+
+Usage
+-----
+
+    python -m src.run_job [config] [id]
+
+config : path to experiment configuration file
+id : integer job number
+"""
+
 import os
 import sys
 import argparse
@@ -5,17 +17,10 @@ import argparse
 import numpy as np
 import pickle
 
-# Import ISSM paths
 ISSM_DIR = os.getenv('ISSM_DIR')
 sys.path.append(os.path.join(ISSM_DIR, 'bin/'))
 sys.path.append(os.path.join(ISSM_DIR, 'lib/'))
 from issmversion import issmversion
-#sys.path.append(os.path.join(ISSM_DIR, 'src/m/dev/'))
-#import devpath
-# Import ISSM modules. These follow the pattern of
-# from X import X because they are structured like a
-# matlab project
-#from read_netCDF import read_netCDF
 
 from model import model
 from meshconvert import meshconvert
@@ -26,13 +31,14 @@ from parameterize import parameterize
 from src.utils import import_config
 
 def run_job(config, jobid):
-    """Execute seasonal ISSM-GlaDS simulation number 'jobid'
+    """Execute a single ISSM-GlaDS simulation.
     
-    Default ISSM parameters are set by the defaults file,
-    and job-specific parameters are set by the parameterfile.
+    Default ISSM parameters are set by the experiment-specific
+    defaults file and job-specific parameters are set 
+    by the config files.
 
     Results are saved in directory
-        RUN/output_XXX/
+        {exp}/RUN/output_XXX/
     The md.hydrology portion of the model class is pickled as
     md.hydrology.pkl and individual fields are saved in .npy format.
     
@@ -42,12 +48,8 @@ def run_job(config, jobid):
             Row number in the parameterfile. Note this ID is
             one-indexed, i.e. this should take values [1, n_jobs]
             inclusive
-    defaults : str, optional
-               Path to python defaults file
-    meshfile : str, optional
-               Path to triangular mesh file
-    parameterfile : str, optional
-                    Path to parameter file
+    config  : str, optional
+              Experiment configuration file
     
     Returns
     -------
@@ -58,22 +60,14 @@ def run_job(config, jobid):
     # Initialize model, set mesh, and set default parameters
     md = model()
     
-    # with nc.Dataset(meshfile, 'r') as dmesh:
-    #     xy = dmesh['tri/nodes'][:].data.T
-    #     elements = dmesh['tri/connect'][:].data.T.astype(int)
-    # md.mesh.x = xy[:, 0]
-    # md.mesh.y = xy[:, 1]
-    # md.mesh.elements = elements
-    # md = meshconvert(md, md.mesh.elements, md.mesh.x, md.mesh.y)
-
-    # md = read_nc(config.mesh)
+    # Read in mesh and pass to ISSM
     with open(config.mesh, 'rb') as meshin:
         mesh = pickle.load(meshin)
     md = meshconvert(md, mesh['elements'], mesh['x'], mesh['y'])
     md = setmask(md, '', '')
+
     md = parameterize(md, '../defaults.py')
     md.miscellaneous.name = 'ensemble_{:03d}'.format(jobid)
-
 
     # Overwrite hydrology defaults for given parameter vector
     md = config.parser(md, jobid)
@@ -135,11 +129,14 @@ def extract_requested_outputs(md):
     return outputs
 
 def main():
+    """
+    Parse command-line arguments
+    """
     parser = argparse.ArgumentParser()
-    parser.add_argument('configuration_file')
+    parser.add_argument('config')
     parser.add_argument('jobid', type=int)
     args = parser.parse_args()
-    config = import_config(args.configuration_file)
+    config = import_config(args.config)
     md = run_job(config, args.jobid)
 
 if __name__=='__main__':

@@ -1,5 +1,9 @@
 """
-Collect outputs from individual simulations into .npy arrays
+Collect outputs from individual simulations into .npy arrays.
+
+Command line interface
+
+    python -m src.aggregate_outputs issm [config] [njobs] [--all]
 """
 
 import os
@@ -8,20 +12,31 @@ import importlib
 import argparse
 import pickle
 
-# issm_dir = os.getenv('ISSM_DIR')
-# print(issm_dir)
-# sys.path.append(issm_dir + '/bin')
-# sys.path.append(issm_dir + '/lib')
-# from issmversion import issmversion
-# sys.path.append(issm_dir + '/src/m/dev')
-# import devpath
-# from read_netCDF import read_netCDF
-
 import numpy as np
 
 from . import definitions
 
 def collect_issm_results(config, njobs, dtype=np.float32, save_all=False):
+    """
+    Collect outputs from individual simulations into .npy arrays.
+
+    Parameters
+    ----------
+    config : module
+             Imported configuration file
+    
+    njobs : int
+            Number of jobs to look for in the results directory
+    
+    dtype : type
+            Data type to cast outputs into. Recommend np.float32
+    
+    save_all : bool
+               If save_all is True, save values for all scalar
+               variable definitions in addition to the mean.
+               If save_all is False, save values for only
+               the mean of each variable across definitions.
+    """
 
     # Definitions for special quantities of interest
     fluxgate_positions = np.arange(5e3, 35e3, 5e3)
@@ -87,9 +102,7 @@ def collect_issm_results(config, njobs, dtype=np.float32, save_all=False):
         T_mean = np.mean(T, axis=1)/365/86400
         all_transit_time[:, i] = np.log10(T_mean)
     
-    # Compute average of channel frac
-    # Compute log of sheet transit times
-
+    # Compute average of channel frac and log transit time
     append_channel_frac = np.zeros((all_channel_frac.shape[0]+1, all_channel_frac.shape[1]))
     append_transit_time = np.zeros((all_transit_time.shape[0]+1, all_transit_time.shape[1]))
 
@@ -121,7 +134,7 @@ def main():
     desc = 'Collect simulation outputs'
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('version', help='"matlab" or "issm" GlaDS')
-    parser.add_argument('conf_file', help='Path to experiment config file')
+    parser.add_argument('config', help='Path to experiment config file')
     parser.add_argument('njobs', help='Number of jobs', type=int)
     parser.add_argument('--all', action='store true')
     args = parser.parse_args()
@@ -131,10 +144,10 @@ def main():
     elif args.version=='matlab':
         raise NotImplementedError('"matlab" version is not implemented')
 
-    if not os.path.exists(args.conf_file):
-        raise OSError('Configuration file "{}" does not exist'.format(args.conf_file))
+    if not os.path.exists(args.config):
+        raise OSError('Configuration file "{}" does not exist'.format(args.config))
     
-    path, name = os.path.split(args.conf_file)
+    path, name = os.path.split(args.config)
     if path:
         abspath = os.path.abspath(path)
         sys.path.append(abspath)

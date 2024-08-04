@@ -11,6 +11,11 @@ import numpy as np
 
 def randomized_svd(X, p, k=None, q=1, return_error=False):
     """
+    Fixed-rank radomized approximate singular value decomposition.
+
+    Implementation of Halko et al. (2011) 
+    https://doi.org/10.1137/090771806
+
     Parameters
     ----------
     X : (m, n) array-like
@@ -36,7 +41,7 @@ def randomized_svd(X, p, k=None, q=1, return_error=False):
           Vh: (p, n)
     
     error : float
-            Error upper bound
+            Error upper bound if return_error is True
     """
     # Default: compute 2*k rank SVD then truncate
     if k is None:
