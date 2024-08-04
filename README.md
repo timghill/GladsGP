@@ -1,15 +1,34 @@
-# GP emulation of GlaDS subglacial drainage model
+# Gaussian Process emulation of GlaDS subglacial drainage model
+
+Tim Hill, 2024 (tim_hill_2@sfu.ca)
+
+This project emulates Glacier Drainage System (GlaDS) model ([Werder et al., 2013](https://doi.org/10.1002/jgrf.20146)) outputs.
+
+## Description
+
+The project structure is:
+
+ * `src/`: shared code for setting up experiments and analyzing outputs
+ * `experiments/`: individual directories for each model experiment
+ * `docs/`: notebooks with examples, function and module documentation
+
+Each directory has a README file to describe the contents.
 
 ## Installation
 
-The analysis source code has been tested against python 3.11. Package requirements are listed in `requirements.txt`, and it is recommended to use a virtual environment to manage versions. For example
+The analysis source code has been tested against python 3.11 (the specified versions explicitly do not work with python 3.12). Package requirements are listed in `requirements.txt`, and it is recommended to use a virtual environment to manage versions. For example
 
 ```
-virtualenv --python 3.12 pyenv/
+virtualenv --python 3.11 pyenv/
 source pyenv/bin/activate
 pip install -r requirements.txt
 ```
 
-Note that the specified versions explicitly do not work with python 3.12, and versions <3.11 have not been tested.
+To install the code for this project on your python path, navigate into the `src` directory and install in editable (`-e`) mode with pip:
 
-This code also depends on [timghill/GPmodule](https://github.com/timghill/GPmodule) and [timghill/SEPIA](https://github.com/timghill/SEPIA) packages that can be installed using `pip install -e GPmodule`.
+```
+cd src
+pip install -e .
+```
+
+This code also depends on a fork of the SEPIA package ([timghill/SEPIA](https://github.com/timghill/SEPIA)) that that can be installed using `pip install -e .`.
