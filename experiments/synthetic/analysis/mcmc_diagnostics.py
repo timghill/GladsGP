@@ -1,3 +1,9 @@
+"""
+Assess MCMC sampling chain convergence, posterior sampling
+
+usage: mcmc_diagnostics.py [-h] train_config
+"""
+
 import os
 import argparse
 import numpy as np

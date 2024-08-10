@@ -70,7 +70,7 @@ def compute_field_indices(config, dtype=np.float32, recompute=True):
     model_file = os.path.join(data_dir, 
         'models/{}_n{:03d}_p{:02d}'.format(config.exp, config.m, config.p))
     model.restore_model_info(model_file)
-    samples = model.get_samples(numsamples=30)
+    samples = model.get_samples(numsamples=32, nburn=256)
     n_dim = t_std.shape[1]
     def func(x):
         """
@@ -187,7 +187,7 @@ def compute_scalar_indices(config, dtype=np.float32, recompute=True):
         data.standardize_y()
         model = SepiaModel(data)
         model.restore_model_info(model_file)
-        samples = model.get_samples(numsamples=16)
+        samples = model.get_samples(numsamples=32, nburn=256)
         sample_dicts.append(samples)
         models.append(model)
         n_dim = t_std.shape[1]

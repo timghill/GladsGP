@@ -469,9 +469,9 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
             sd_y[sd_y<1e-6] = 1e-6
 
             if test:
-                samples = model.get_samples(6)
+                samples = model.get_samples(6, nburn=0)
             else:
-                samples = model.get_samples(64)
+                samples = model.get_samples(64, nburn=256)
             
             for key in samples.keys():
                 samples[key] = samples[key].astype(dtype)

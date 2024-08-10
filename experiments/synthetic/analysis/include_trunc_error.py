@@ -22,7 +22,7 @@ def main(train_config, test_config, m, p, dtype=np.float32):
 
     # What was the MCMC mean value?
     data,model = md.load_model(train_config, m, p)
-    smp = model.get_samples(64)
+    smp = model.get_samples(64, nburn=64)
     est_prec = smp['lamWOs'].mean()
     print(smp['lamWOs'].mean())
     print(np.var(smp['lamWOs']))
@@ -81,7 +81,7 @@ def main(train_config, test_config, m, p, dtype=np.float32):
         model.tune_step_sizes(50, 10)
 
         model.do_mcmc(128)
-        samples = model.get_samples(64)
+        samples = model.get_samples(64, nburn=64)
 
         preds = SepiaEmulatorPrediction(t_pred=t_test, samples=samples, model=model)
         preds.w = preds.w.astype(np.float32)

@@ -11,3 +11,4 @@ File | Description
 `sensitivity_indices.py`    | Compute Sobol' indices for functional and scalar outputs
 `summary_statistics.py`     | Statistics to summarize emulator performance
 `time_predictions.py`       | Compute time to make predictions in a fair way
+`mcmc_diagnostics.py`       | Assess MCMC sampling chain convergence, posterior sampling
