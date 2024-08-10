@@ -1,32 +1,22 @@
-import os
-import sys
+"""
+Compute time to make predictions in a fair way
+
+usage: time_predictions.py [-h] conf_file test_file
+"""
+
 import argparse
 import time
-import pickle
 from src.utils import import_config
 from src.model import load_model
 
 import numpy as np
-from scipy import linalg
-import matplotlib
-matplotlib.rc('font', size=12)
-from matplotlib import pyplot as plt
-from matplotlib.gridspec import GridSpec
-from matplotlib.tri import Triangulation
-from matplotlib.colors import LinearSegmentedColormap
-from matplotlib import colors
-from matplotlib import patches
-from matplotlib.collections import PatchCollection
-from matplotlib.patches import Rectangle
-import cmocean
 
-from sepia.SepiaModel import SepiaModel
-from sepia.SepiaData import SepiaData
 from sepia.SepiaPredict import SepiaEmulatorPrediction
 
 def main(config, test_config, dtype=np.float32):
     """
-    Fit GP, compute and save CV prediction error, make basic figures
+    Mock GP fitting and predicting to fairly time the model without some
+    of the overhead etc. from the main fitting function
 
     Parameters
     ----------
@@ -57,6 +47,9 @@ def main(config, test_config, dtype=np.float32):
     dt_y = []
     data,model = load_model(config, config.m, config.p)
 
+    # Using 32 posterior samples. Appropriate for a lot of uses,
+    # especially comparing multiple GPs. May want to use more samples
+    # (64, 128) for "best" predictions
     samples = model.get_samples(numsamples=32, nburn=256)
     for key in samples.keys():
         samples[key] = samples[key].astype(dtype)
@@ -75,21 +68,29 @@ def main(config, test_config, dtype=np.float32):
     for i in range(m_pred):
         xi = t_test_std[i:i+1]
         print('Sample {}/{}:'.format(i+1, m_pred))
-
+        
+        # Start timing
         t0 = time.perf_counter()
+        # Timing includes making predictions of PCs and transforming
+        # back into physical space
         preds = SepiaEmulatorPrediction(samples=samples,
             model=model, t_pred=xi)
         preds.w = preds.w.astype(dtype)
         emulator_preds = preds.get_y()
+
+        # Intermediate reference point to partition timing
         t1 = time.perf_counter()
 
+        # Time to sample PC error term
         error_preds = np.zeros(emulator_preds.shape, dtype=np.float32)
         for j in range(error_preds.shape[0]):
             error_preds[j] = sd_y*np.random.normal(scale=1/np.sqrt(samples['lamWOs'][j])).astype(np.float32)
         
+        # Construct the full predictions
         y_preds = emulator_preds + error_preds
-        t2 = time.perf_counter()
 
+        # End timing
+        t2 = time.perf_counter()
         dt_emulator.append(t1-t0)
         dt_error.append(t2-t1)
         dt_y.append(t2-t0)

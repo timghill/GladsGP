@@ -1,7 +1,5 @@
 """
-
 Plot singular value proportion of variance, RMSE, and basis vectors
-
 """
 
 import os
@@ -25,12 +23,39 @@ from src.svd import randomized_svd
 from src.model import load_model
 
 def compute_truncation_error(usv, y_mean, y_sd, y_sim):
+    """
+    Compute truncated SVD error.
+
+    Parameters
+    ----------
+    usv: tuple (U, S, V)
+         where U,S,V are (truncated) singular value decomposition of y_sim
+    
+    y_mean : array-like
+             Mean of y_sim
+    
+    y_sd : array-like
+           Standard devaition of y_sim
+    
+    y_sim : (m, n_x*n_t) array-like
+            Simulation output matrix in physical units
+    """
     U,S,V = usv
     y_error = y_sim - y_mean - y_sd*(U @ S @ V)
     y_rmse = np.linalg.norm(y_error, ord='fro')/np.sqrt(y_sim.size)
     return y_rmse
 
 def plot_PC_RMSE_variance(recompute=False):
+    """
+    Plot PC RMSE, cumulative proportion of variance and first 7 basis vectors.
+
+    This function (c.f. others) assumes config file positions.
+
+    Parameters
+    ----------
+    recompute : bool, optional
+                Force recompute PC error and overwrite on disk?
+    """
     ## Part 1: plot RMSE and cumulative proportion of variance
     config = import_config('../train_config.py')
     y_fname = config.Y_physical
@@ -128,7 +153,6 @@ def plot_PC_RMSE_variance(recompute=False):
     with open(os.path.join(config.sim_dir, config.mesh), 'rb') as meshin:
         mesh = pickle.load(meshin)
     
-    # mtri = Triangulation(mesh['x'], mesh['y'], mesh['elements']-1)
     for i in range(nplot):
         ax = axs.flat[i]
         nx = len(mesh['x'])

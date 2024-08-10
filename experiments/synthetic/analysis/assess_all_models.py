@@ -1,6 +1,10 @@
 """
 Compute prediction error for different numbers of simulations and different
 choices for the number of principal components given a common test set
+
+usage: assess_all_models.py [-h] --npc NPC [NPC ...] --nsim NSIM [NSIM ...] [--recompute] [--test]
+                            train_conf test_conf
+
 """
 
 import os
@@ -30,15 +34,38 @@ from sepia.SepiaPredict import SepiaXvalEmulatorPrediction
 from src import utils
 from src.model import load_model
 
+# Settings for consistent boxplots
 flierprops = {'marker':'+', 'markersize':2, 'markeredgewidth':0.6}
 
 def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
     """
-    Plot GP prediction RMSE, std residuals for n_sims and n_pcs
+    Plot GP prediction RMSE, MAPE, prediction uncertainty
+    for n_sims and n_pcs separately.
+
+    Parameters
+    ----------
+    path : str
+           Pattern for csv performance statistics files
+    
+    n_sims : array
+             List of numbers of simulations
+    
+    n_pcs : array
+             List of numbers of PCs
+    
+    m_ref : int
+            Number of simulations for the reference emulator
+    
+    p_ref : int
+            Number of PCs for the reference emulator
+    
+    Returns
+    -------
+    matplotlib.figure
     """
     fig, axs = plt.subplots(figsize=(6, 3.5), ncols=3, nrows=2)
 
-    # 1 For number of PCs
+    # 1 For number of PCs, read in CSV data and put into arrays
     ax1,ax2,ax3 = axs[0]
     RMSE = None
     MAPE = None
@@ -68,12 +95,12 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
     labelpads = [2, 2, 0]
     medianprops = {'color':'#000000'}
     boxprops = {'edgecolor':'none'}
-    # fc = ['#356575', '#6295A20.024, 0.', '#80B9AD', '#B3E2A7']
     fc = [
         (0.272, 0.259, 0.539), 
         (0.420, 0.431, 0.812),
         (0.647, 0.318, 0.580),
     ]
+    # Plot each metric
     for i in range(len(metrics)):
         ax = axs[0,i]
         ax.grid(linestyle=':', linewidth=0.5)
@@ -98,7 +125,6 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
     
     axs[0,2].plot(np.arange(1, len(n_pcs)+1), full_cis, 
         linestyle='', marker='.', color='#000000', markersize=4, zorder=10)
-
 
     # 2 Number of simulations
     ax1,ax2,ax3 = axs[1]
@@ -162,7 +188,28 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
 
 def plot_coverage(path, n_sims, n_pcs, m_ref, p_ref):
     """
-    Plot GP prediction RMSE, std residuals for n_sims and n_pcs
+    Plot GP coverage percentrage for n_sims and n_pcs separately.
+
+    Parameters
+    ----------
+    path : str
+           Pattern for csv performance statistics files
+    
+    n_sims : array
+             List of numbers of simulations
+    
+    n_pcs : array
+             List of numbers of PCs
+    
+    m_ref : int
+            Number of simulations for the reference emulator
+    
+    p_ref : int
+            Number of PCs for the reference emulator
+    
+    Returns
+    -------
+    matplotlib.figure
     """
     fig, axs = plt.subplots(figsize=(6, 2.5), ncols=2, nrows=1)
 
@@ -202,9 +249,6 @@ def plot_coverage(path, n_sims, n_pcs, m_ref, p_ref):
         performance = np.loadtxt(path.format(m,p_ref), delimiter=',')
         if cov is None:
             n_train = performance.shape[0]
-            # RMSE = np.zeros((len(n_sims), n_train))
-            # MAPE = np.zeros((len(n_sims), n_train))
-            # CI = np.zeros((len(n_sims), n_train))
             cov = np.zeros((len(n_sims), n_train))
         cov[i,:] = performance[:,5]
         coverage[i] = np.mean(cov[i])
@@ -247,9 +291,24 @@ def plot_coverage(path, n_sims, n_pcs, m_ref, p_ref):
     fig.subplots_adjust(left=0.085, bottom=0.15, right=0.92, top=0.975, wspace=0.2, hspace=0.3)
     return fig
 
-def plot_joint_loss(path, n_sims, n_pcs, linestyle='solid'):
+def plot_joint_loss(path, n_sims, n_pcs):
     """
-    Plot GP prediction RMSE, std residuals for n_sims and n_pcs
+    Plot GP prediction RMSE, MAPE, for n_sims and n_pcs together
+
+    Parameters
+    ----------
+    path : str
+           Pattern for csv performance statistics files
+    
+    n_sims : array
+             List of numbers of simulations
+    
+    n_pcs : array
+             List of numbers of PCs
+    
+    Returns
+    -------
+    matplotlib.figure
     """
     fig, axs = plt.subplots(figsize=(6, 3), ncols=2)
     ax1,ax2 = axs
@@ -298,8 +357,7 @@ def plot_joint_loss(path, n_sims, n_pcs, linestyle='solid'):
         ax = axs[i]
         ax.grid(linestyle=':', linewidth=0.5)
         for j in range (len(n_sims)):
-            if linestyle=='solid':
-                ax.plot(n_pcs, metrics[i][j,:], color=colors[j], label=n_sims[j])
+            ax.plot(n_pcs, metrics[i][j,:], color=colors[j], label=n_sims[j])
 
             ymax = np.max(upper[i])
             dy = dys[i]
@@ -326,11 +384,6 @@ def plot_joint_loss(path, n_sims, n_pcs, linestyle='solid'):
                 alpha=0.5)
             ax.add_collection(span_pcol)
 
-            if linestyle=='bar':
-                mean_pcol = PatchCollection(mean_rects, color=colors[j], edgecolor='none',
-                        alpha=1.)
-                ax.add_collection(mean_pcol)
-
         ax.set_ylabel(labels[i])
         ax.text(0.05, 0.95, alphabet[i], transform=ax.transAxes,
             ha='left', va='top', fontweight='bold')
@@ -343,6 +396,35 @@ def plot_joint_loss(path, n_sims, n_pcs, linestyle='solid'):
 
 def compute_test_error(train_config, test_config, n_sims, n_pcs, 
     quantile=0.025, dtype=np.float32, test=False):
+    """
+    Compute test error for specified GPs.
+
+    Produces the CSV files read by the various plotting functions.
+
+    Parameters
+    ----------
+    train_config : module
+                   Training ensemble configuration
+    
+    test_config: module
+                 Test ensemble configuration
+                
+    n_sims : array
+             List of numbers of simulations
+    
+    n_pcs : array
+             List of numbers of PCs
+    
+    quantile : float, optional
+               Compute prediction uncertainty between [quantile, 1-quantile]
+    
+    dtype : type, optional
+            Type to cast simulation outputs into, e.g. np.float32
+    
+    test : bool, optional
+           Development only! Use only a few MCMC samples and integration points
+           to enable faster development. Do not use for making real predictions!
+    """
 
     t_std = np.loadtxt(train_config.X_standard, delimiter=',', skiprows=1,
         comments=None).astype(dtype)
@@ -397,6 +479,8 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
             ypred_lq = np.zeros((test_config.m, yi_phys.shape[1]), dtype=dtype)
             ypred_uq = np.zeros((test_config.m, yi_phys.shape[1]), dtype=dtype)
 
+            # First loop over test points, make predictions in batches (reduce
+            # memory usage, probably a little slower)
             n_per_batch = 4
             n_batches = int(np.ceil(len(x_pred)/n_per_batch))
             batch_indices = np.array_split(np.arange(len(x_pred)), n_batches)
@@ -418,6 +502,8 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
                 ypred_lq[batch_indices[j]] = np.quantile(ypreds + error_preds, quantile, axis=0)
                 ypred_uq[batch_indices[j]] = np.quantile(ypreds + error_preds, 1-quantile, axis=0)
 
+            # Second loop over integration points, make predictions in batches (reduce
+            # memory usage, probably a little slower)
             test_confint = np.zeros(len(t_integrate), dtype=dtype)
             n_batches = int(np.ceil(len(t_integrate)/n_per_batch))
             batch_indices = np.array_split(np.arange(len(t_integrate)), n_batches)
@@ -437,6 +523,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
                 yint_uq = np.quantile(ypreds + error_preds, 1-quantile, axis=0)
                 test_confint[batch_indices[j]] = np.mean(yint_uq - yint_lq)
 
+            # Compute statistics and save results
             pred_resid = ypred_mean - y_test
             pred_rmse = np.sqrt(np.mean(pred_resid**2, axis=1))
             print('RMSE:', np.sqrt(np.mean(pred_rmse**2)))
@@ -470,6 +557,30 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
 
 def main(train_config, test_config, n_sims, n_pcs, 
     recompute=False, test=False):
+    """
+    Compute and plot test error.
+
+    Parameters
+    ----------
+    train_config : module
+                   Training ensemble configuration
+    
+    test_config: module
+                 Test ensemble configuration
+                
+    n_sims : array
+             List of numbers of simulations
+    
+    n_pcs : array
+             List of numbers of PCs
+    
+    recompute : bool, optional
+                Force to recompute error and overwrite on disk?
+    
+    test : bool, optional
+           Development only! Use only a few MCMC samples and integration points
+           to enable faster development. Do not use for making real predictions!
+    """
 
     if recompute:
         compute_test_error(train_config, test_config, n_sims, n_pcs, test=test)

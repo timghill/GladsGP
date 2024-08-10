@@ -1,10 +1,7 @@
 """
-TODO
 Compute Sobol' indices for functional and scalar outputs
 
-2 figures
-    1 - FF field, scalar variables sensitivity
-    2 - principal components sensitivity
+TODO: Which version of sensitivity indices to use?
 """
 
 import os
@@ -29,15 +26,23 @@ from src import utils
 def compute_field_indices(config, dtype=np.float32, recompute=True):
     """
     Compute sensitivity indices using homemade code that mimics the
-    scipy.stats.sobol_indices function.
+    scipy.stats.sobol_indices function. This version works on multivariate
+    outputs using a PC representation.
 
-    See Table 2 from:
-    Andrea Saltelli, Paola Annoni, Ivano Azzini, Francesca Campolongo, 
-    Marco Ratto, Stefano Tarantola
-    Variance based sensitivity analysis of model output. Design and estimator
-    for the total sensitivity index,
-    Computer Physics Communications, Volume 181, Issue 2, 2010
-    https://doi.org/10.1016/j.cpc.2009.09.018.
+    Parameters
+    ----------
+    config : module
+             Training ensemble configuration
+    
+    dtype : type, optional
+            Type to cast simulation outputs into, e.g. np.float32
+
+    recompute : bool, optional
+                Force to recompute sensitivity indices and overwrite on disk?
+    
+    Returns
+    -------
+    dict : sensitivity indices
     """
     # Load data and initialize model
     t_std = np.loadtxt(config.X_standard, delimiter=',', skiprows=1,
@@ -125,15 +130,23 @@ def compute_field_indices(config, dtype=np.float32, recompute=True):
 def compute_scalar_indices(config, dtype=np.float32, recompute=True):
     """
     Compute sensitivity indices using homemade code that mimics the
-    scipy.stats.sobol_indices function.
+    scipy.stats.sobol_indices function. This version works on scalar outputs,
+    but assumes there are mutliple independent scalar outputs.
 
-    See Table 2 from:
-    Andrea Saltelli, Paola Annoni, Ivano Azzini, Francesca Campolongo, 
-    Marco Ratto, Stefano Tarantola
-    Variance based sensitivity analysis of model output. Design and estimator
-    for the total sensitivity index,
-    Computer Physics Communications, Volume 181, Issue 2, 2010
-    https://doi.org/10.1016/j.cpc.2009.09.018.
+    Parameters
+    ----------
+    config : module
+             Training ensemble configuration
+    
+    dtype : type, optional
+            Type to cast simulation outputs into, e.g. np.float32
+
+    recompute : bool, optional
+                Force to recompute sensitivity indices and overwrite on disk?
+    
+    Returns
+    -------
+    dict : sensitivity indices
     """
     # Load data and initialize model
     t_std = np.loadtxt(config.X_standard, delimiter=',', skiprows=1,
@@ -192,11 +205,6 @@ def compute_scalar_indices(config, dtype=np.float32, recompute=True):
         output :    (n, p)
                     p: output dimensionality
         """
-        # GPpreds = SepiaEmulatorPrediction(model=model, 
-        #     t_pred=x, samples=samples)
-        # ws = GPpreds.w.astype(np.float32)
-        # wmean = np.mean(ws, axis=0)
-        # return wmean.astype(np.float64)
         y = np.zeros((x.shape[0], 3))
         for k in range(3):
             preds = SepiaEmulatorPrediction(model=models[k],
@@ -230,6 +238,9 @@ def compute_scalar_indices(config, dtype=np.float32, recompute=True):
     return info
 
 def plot_main_indices(config):
+    """
+    TODO
+    """
     data_dir = 'data'
     sensitivity_dir = os.path.join(data_dir, 'sensitivity/')
     indices = np.load(

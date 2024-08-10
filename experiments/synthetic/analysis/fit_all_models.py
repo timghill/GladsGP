@@ -1,6 +1,8 @@
 """
 Fit GP models for different subsets of training data and different
 choices for the number of principal components.
+
+usage: fit_all_models.py --npc NPC [NPC ...] --nsim NSIM [NSIM ...] [--recompute] config_file
 """
 
 import argparse
@@ -9,18 +11,20 @@ from src import model
 
 def main():
     """
-    Command-line interface to src.model tools for model fitting
+    Fit GP models for different subsets of training data and different
+    choices for the number of principal components.
+        
+    Command-line interface to src.model.fit_models tools for model fitting
 
-    usage: fit_all_models.py [-h] --npc NPC [NPC ...] --nsim NSIM [NSIM ...] [--recompute] config_file
+    usage: fit_all_models.py --npc NPC [NPC ...] --nsim NSIM [NSIM ...] [--recompute] config_file
     
     positional arguments:
         config_file
 
     options:
-        -h, --help            show help message and exit
-        --npc NPC [NPC ...]
-        --nsim NSIM [NSIM ...]
-        --recompute, -r
+        --npc NPC [NPC ...]     list of numbers of PCs
+        --nsim NSIM [NSIM ...]  list of numbers of simulations
+        --recompute, -r         Force to recompute PCs and overwrite on disk? Optional
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('config_file')

@@ -1,5 +1,7 @@
 """
-Evaluate GP for GlaDS ensembles
+Evaluate GP for GlaDS ensembles: timeseries, width-averaged test errors.
+
+usage: plot_test_error.py [-h] [--recompute] conf_file test_file
 """
 
 import os
@@ -8,10 +10,11 @@ import argparse
 import time
 import pickle
 
+# Specific colourmap tools
 sys.path.append(os.path.expanduser('~/SFU-code//'))
 from palettes.code import palettes, tools
 
-from src.utils import import_config
+from src.utils import import_config, width_average
 from src.model import load_model
 
 import numpy as np
@@ -30,13 +33,13 @@ from sepia.SepiaData import SepiaData
 from sepia.SepiaPredict import SepiaEmulatorPrediction
 
 
-def compute_test_predictions(model, samples, t_pred, n_folds=100, quantile=0.025):
+def compute_test_predictions(model, samples, t_pred, quantile=0.025):
     """
-    Cross-validation error
+    Test-set prediction error
 
     Compute mean predictions and prediction intervals on
     test samples. This is intentionally written as a
-    CPU-inefficient 'for' loop to minimize memory usage.
+    CPU-inefficient 'for' loop to manage memory usage.
 
     Parameters
     ----------
@@ -58,20 +61,12 @@ def compute_test_predictions(model, samples, t_pred, n_folds=100, quantile=0.025
         (number of predictions, nx*nt) arrays
     """
 
-    print('mean simulator precision:')
-    print(np.mean(samples['lamWOs']))
-    print((samples['lamWOs']))
-
     m = model.data.sim_data.y.shape[0]
     m_pred = t_pred.shape[0]
     n = model.data.sim_data.y.shape[1]
     mu_y = np.mean(model.data.sim_data.y, axis=0)
     sd_y = np.std(model.data.sim_data.y, ddof=1, axis=0)
     sd_y[sd_y<1e-6] = 1e-6
-
-    print('mean, median sd:')
-    print(np.mean(sd_y))
-    print(np.median(sd_y))
 
     pred_mean = np.zeros((m_pred, n), dtype=model.data.sim_data.y.dtype)
     pred_lower = np.zeros((m_pred, n), dtype=model.data.sim_data.y.dtype)
@@ -92,7 +87,25 @@ def compute_test_predictions(model, samples, t_pred, n_folds=100, quantile=0.025
         pred_upper[i, :] = np.quantile(emulator_preds + error_preds, 1-quantile, axis=0)
     return pred_mean, pred_lower, pred_upper
 
-def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
+def plot_rmse(config, sim_y, test_y, test_error, test_lq, test_uq):
+    """
+    Make all test error figures
+
+    Parameters
+    ----------
+    config : module
+             Training ensemble configuration
+    
+    sim_y : (m, n_x*n_t) array
+            Simulation output matrix
+    
+    test_* : (m, n_x*n_t) array
+           Test predictions, errors and quantiles
+    
+    Returns
+    -------
+    figs : list of figures
+    """
     figs = []
 
     with open(os.path.join(config.sim_dir,config.mesh), 'rb') as meshin:
@@ -102,13 +115,13 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     mtri = Triangulation(nodexy[:, 0]/1e3, nodexy[:, 1]/1e3, connect)
 
     # Pick ensemble members, nodes, and time steps
-    m_test = cv_y.shape[0]
+    m_test = test_y.shape[0]
     nx = len(mesh['x'])
-    nt = int(cv_y.shape[1]/nx)
+    nt = int(test_y.shape[1]/nx)
     dim_separated_cv_error = np.zeros((m_test, nx, nt), dtype=np.float32)
     for i in range(m_test):
-        # Ysim = cv_y[i, :] + cv_error[i, :]
-        dim_separated_cv_error[i, :, :] = cv_error[i, :].reshape((nx, nt))
+        # Ysim = test_y[i, :] + test_error[i, :]
+        dim_separated_cv_error[i, :, :] = test_error[i, :].reshape((nx, nt))
     # dim_separated_cv_error[~cv_mask, :] = np.nan
     rmse_m = np.sqrt(np.nanmean(dim_separated_cv_error**2, axis=(1,2)))
     rmse_x = np.sqrt(np.nanmean(dim_separated_cv_error**2, axis=(0,2)))
@@ -133,7 +146,7 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     t_steps = []
     alphabet = ['a', 'b', 'c', 'd']
 
-    # Width-averaged
+    ## 1. Width-averaged
     fig = plt.figure(figsize=(6, 3.75))
     gs = GridSpec(len(ms)+1, 4, wspace=0.15, hspace=0.2,
         left=0.06, bottom=0.1, right=0.98, top=0.9,
@@ -141,17 +154,6 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     axs = np.array([[fig.add_subplot(gs[i+1,j]) for j in range(4)]
                         for i in range(len(ms))])
     caxs = [fig.add_subplot(gs[0, i]) for i in range(4)]
-
-    def width_average(x, dx=2):
-        """Width-average (nx, nt) array x"""
-        xedge = np.arange(0, 100+dx, dx)
-        xmid = 0.5*(xedge[1:] + xedge[:-1])
-        xavg = np.zeros((len(xmid), x.shape[1]))
-        for i in range(len(xavg)):
-            xi = xmid[i]
-            mask = np.abs(nodexy[:,0]/1e3 - xi)<dx/2
-            xavg[i] = np.nanmean(x[mask,:],axis=0)
-        return xavg
     
     cm2 = mpc.LinearSegmentedColormap.from_list('', cmocean.cm.gray(np.linspace(0.05, 1, 128)))
     cmap = tools.join_cmaps(cmocean.cm.dense, cm2, average=0, N1=128, N2=128)
@@ -160,9 +162,9 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
         mi = ms[i]
         y_sim_mi = sim_y[mi]
         avg_ysim = width_average(y_sim_mi.reshape((nx, nt)))
-        avg_ypred = width_average(cv_y[mi].reshape((nx, nt)))
-        avg_err = width_average(cv_error[mi].reshape((nx, nt)))
-        avg_sd = width_average((cv_uq[mi] - cv_lq[mi]).reshape((nx, nt)))
+        avg_ypred = width_average(test_y[mi].reshape((nx, nt)))
+        avg_err = width_average(test_error[mi].reshape((nx, nt)))
+        avg_sd = width_average((test_uq[mi] - test_lq[mi]).reshape((nx, nt)))
         dx = 2
         xedge = np.arange(0, 100+dx, dx)
         t = np.arange(0, 366)
@@ -185,9 +187,6 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
             vmin=0, vmax=0.5, shading='flat', rasterized=True)
         
         for j,ax in enumerate(axs[i, :]):
-            # ax.text(0.95, 0.95, 'm=%d'%mi, transform=ax.transAxes,
-            #     ha='right', va='top')
-            # ha = 'right' if j<=2 else 'left'
             col = 'w' if j<=1 else 'k'
             ax.text(0.975, 0.8, alphabet[j] + str(i+1),
                 transform=ax.transAxes, fontweight='bold',
@@ -245,7 +244,7 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     
     figs.append(fig)
 
-    # Timeseries error
+    ## 2. Timeseries error
     fig = plt.figure(figsize=(6, 3))
     gs = GridSpec(3, 3, wspace=0.1, hspace=0.1, left=0.07, right=0.975,
         bottom=0.12, top=0.9)
@@ -256,9 +255,9 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     for j,node in enumerate(nodes[:3]):
         for i,mi in enumerate(ms):
             yi_sim = sim_y[mi].reshape((nx, nt))[node, :]
-            yi_pred = cv_y[mi].reshape((nx, nt))[node, :]
-            yi_lq = cv_lq[mi].reshape((nx, nt))[node, :]
-            yi_uq = cv_uq[mi].reshape((nx, nt))[node, :]
+            yi_pred = test_y[mi].reshape((nx, nt))[node, :]
+            yi_lq = test_lq[mi].reshape((nx, nt))[node, :]
+            yi_uq = test_uq[mi].reshape((nx, nt))[node, :]
             ax = axs[i,j]
             ax.fill_between(tt, yi_lq, yi_uq,
                 color=colors[j], alpha=0.5, edgecolor='none')
@@ -275,10 +274,6 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
                 fontweight='bold', ha='left', va='bottom')
             
             ax.spines[['right', 'top']].set_visible(False)
-
-    # for i,ax in enumerate(axs[0,:]):
-    #     ax.text(0.5, 1.05, 'node={:d}, x={:.1f} km'.format(nodes[i], (xpos[i]/1e3)), transform=ax.transAxes,
-    #         ha='center')
     
     for ax in axs[:-1, :].flat:
         ax.set_xticklabels([])
@@ -297,7 +292,6 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
             va='bottom', ha='right')
     
     axs[1, 0].set_ylabel('Flotation fraction')
-    # axs[-1, -1].legend(loc='lower right', ncols=2)
     axs[0,1].legend(bbox_to_anchor=(0,1,1,0.2), loc='lower left',
         ncols=2, frameon=False)
     
@@ -306,7 +300,25 @@ def plot_rmse(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     return figs
 
 
-def plot_scatter(config, y_sim, cv_y):
+def plot_scatter(config, y_sim, test_y):
+    """
+    Scatter plot of simulated vs emulated flot frac, N, hydraulic potential
+
+    Parameters
+    ----------
+    config : module
+             Training ensemble configuration
+    
+    y_sim : (m, n_x*n_t) array
+            Simulation output matrix
+    
+    test_y : (m, n_x*n_t) array
+           Test predictions
+    
+    Returns
+    -------
+    figure
+    """
     with open(os.path.join(config.sim_dir, config.mesh), 'rb') as meshin:
         mesh = pickle.load(meshin)
     nodexy = np.array([mesh['x'], mesh['y']]).T
@@ -320,7 +332,7 @@ def plot_scatter(config, y_sim, cv_y):
     rng = np.random.default_rng()
     rng_inds = rng.choice(np.arange(np.prod(y_sim.shape)), size=int(1e6), replace=False)
     y_sim_scatter = y_sim.flat[rng_inds]
-    y_pred_scatter = cv_y.flat[rng_inds]
+    y_pred_scatter = test_y.flat[rng_inds]
 
     surf = 390 + 6*( (np.sqrt(nodexy[:, 0] + 5e3) - np.sqrt(5e3)))
     bed = 350
@@ -437,8 +449,6 @@ def main(config, test_config, recompute=False, dtype=np.float32):
 
     cputime = {}
     t_orig = time.perf_counter()
-    # data, model, pca_basis_fig = init_model(t_std, y_sim, config.exp, p, 
-    #     data_dir=config.data_dir, scale=scale, recompute=recompute, plot=True)
     data,model = load_model(config, config.m, config.p)
     print('main::model', model)
     
@@ -459,21 +469,21 @@ def main(config, test_config, recompute=False, dtype=np.float32):
         for key in samples.keys():
             samples[key] = samples[key].astype(dtype)
         t0_cv = time.perf_counter()
-        cv_y, cv_lq, cv_uq = compute_test_predictions(model, 
-            samples, t_test_std, n_folds=64, quantile=0.025)
+        test_y, test_lq, test_uq = compute_test_predictions(model, 
+            samples, t_test_std, quantile=0.025)
         t1_cv = time.perf_counter()
         cputime['preds'] = t1_cv - t0_cv
-        np.save(cv_y_file, cv_y)
-        np.save(cv_lq_file, cv_lq)
-        np.save(cv_uq_file, cv_uq)
+        np.save(cv_y_file, test_y)
+        np.save(cv_lq_file, test_lq)
+        np.save(cv_uq_file, test_uq)
         
     else:
-        cv_y = np.load(cv_y_file).astype(dtype)[:config.m, :]
-        cv_lq = np.load(cv_lq_file).astype(dtype)[:config.m :]
-        cv_uq = np.load(cv_uq_file).astype(dtype)[:config.m, :]
+        test_y = np.load(cv_y_file).astype(dtype)[:config.m, :]
+        test_lq = np.load(cv_lq_file).astype(dtype)[:config.m :]
+        test_uq = np.load(cv_uq_file).astype(dtype)[:config.m, :]
 
     rmse_wavg, rmse_ts = plot_rmse(config, sim_y=y_test_sim,
-        cv_y=cv_y, cv_error=cv_y-y_test_sim, cv_lq=cv_lq, cv_uq=cv_uq)
+        test_y=test_y, test_error=test_y-y_test_sim, test_lq=test_lq, test_uq=test_uq)
     rmse_wavg.savefig(os.path.join(
         config.figures, 'test_error_width_avg.png'), dpi=400)
     rmse_wavg.savefig(os.path.join(
@@ -484,7 +494,7 @@ def main(config, test_config, recompute=False, dtype=np.float32):
     rmse_ts.savefig(os.path.join(
         config.figures, 'test_error_timeseries.pdf'), dpi=400)
 
-    scatter_fig = plot_scatter(config, y_test_sim, cv_y)
+    scatter_fig = plot_scatter(config, y_test_sim, test_y)
     scatter_fig.savefig(os.path.join(
         config.figures, 'test_error_scatter.png'), dpi=400)
     scatter_fig.savefig(os.path.join(

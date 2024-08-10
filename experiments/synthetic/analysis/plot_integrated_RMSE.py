@@ -1,3 +1,10 @@
+"""
+Compute and plot space- and/or time-integrated RMSE patterns
+
+usage: plot_integrated_RMSE.py [-h] [--recompute] train_config test_config
+
+"""
+
 import os
 import sys
 import pickle
@@ -17,6 +24,24 @@ from src.model import load_model
 
 
 def main(train_config, test_config, n_pcs, recompute=False, dtype=np.float32):
+    """
+    Compute and plot space- and/or time-integrated RMSE patterns
+
+    Parameters
+    ----------
+    train_config : module
+                   Training ensemble configuration
+    
+    test_config: module
+                 Test ensemble configuration
+    
+    recompute : bool, optional
+                Force to recompute integrated RMSE values and overwrite on disk?
+
+    dtype : type, optional
+            Type to cast simulation outputs into, e.g. np.float32
+        
+    """
     # Load data and initialize model
     t_std = np.loadtxt(train_config.X_standard, delimiter=',', skiprows=1,
         comments=None).astype(dtype)

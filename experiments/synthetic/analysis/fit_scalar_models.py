@@ -1,15 +1,9 @@
 """
-Fit GP to GlaDS ensemble simulations and evaluate with LOOCV,
-for different scalar outputs of interest
+Fit GP models for different subsets of training data and different
+choices for the number of principal components for scalar variables,
+make scalar variable performance boxplots.
 
-Figures
-    * MCMC diagnostics
-        * Trace, ???
-    * Error boxplots
-        * RMSE, MAPE
-        * Mean absolute standardized error (by CV std.)
-    * Errors in parameter space
-        * RMSE, MAPE, standardized
+usage: fit_scalar_models.py [-h] --nsim NSIM [NSIM ...] [--recompute] train_config test_config
 """
 
 import argparse
@@ -25,7 +19,6 @@ from matplotlib.gridspec import GridSpec
 from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
 import cmocean
-# from scipy import stats
 
 from sepia.SepiaModel import SepiaModel
 from sepia.SepiaData import SepiaData
@@ -35,7 +28,7 @@ from src import utils
 
 def init_model(t_std, y_sim, exp_name, data_dir='data/'):
     """
-    Initialize SepiaData and SepiaModel instances
+    Initialize SepiaData and SepiaModel instances for scalar variable
 
     Parameters
     ----------
@@ -56,6 +49,20 @@ def init_model(t_std, y_sim, exp_name, data_dir='data/'):
     return data, model
 
 def plot_num_sims_average(train_config, test_config, nsims):
+    """
+    Boxplot of GP prediction error, uncertainty for training subsets
+
+    Parameters
+    ----------
+    train_config : module
+                   Training ensemble configuration
+    
+    test_config: module
+                 Test ensemble configuration
+
+    nsims : array-like
+            Numbers of simulations to evaluate
+    """
     coverage = 0.95
 
     labels = ['{:.0f} km', '{:.0f} km', '{:.1f} m']
@@ -291,6 +298,23 @@ def plot_num_sims_average(train_config, test_config, nsims):
     
 
 def fit(train_config, test_config, nsims, recompute=False):
+    """
+    Fit GP emulators of scalar variables.
+
+    Parameters
+    ----------
+    train_config : module
+                   Training ensemble configuration
+    
+    test_config: module
+                 Test ensemble configuration
+
+    nsims : array-like
+            Numbers of simulations to evaluate
+    
+    recompute : bool, optional
+                Force to redo MCMC sample and overwrite on disk
+    """
     # Define scalar variables
     scalar_defs = ['channel_frac', 'log_transit_time', 'channel_length']
     thresholds = [ np.array([5, 10, 15, 20, 25, 30, -1]),
@@ -372,6 +396,17 @@ def fit(train_config, test_config, nsims, recompute=False):
     return
 
 def summarize_performance(train_config, test_config):
+    """
+    Print summary statistics of emulator performance for scalar variables.
+
+    Parameters
+    ----------
+    train_config : module
+                   Training ensemble configuration
+    
+    test_config: module
+                 Test ensemble configuration
+    """
     m_train = train_config.m
     m_test = test_config.m
     scalar_vars = ['channel_frac', 'log_transit_time', 'channel_length']
@@ -415,18 +450,7 @@ def summarize_performance(train_config, test_config):
 
 def main():
     """
-    Command-line interface to src.model tools for model fitting
-
-    usage: fit_all_models.py [-h] --npc NPC [NPC ...] --nsim NSIM [NSIM ...] [--recompute] train_config_file
-    
-    positional arguments:
-        train_config_file
-
-    options:
-        -h, --help            show help message and exit
-        --npc NPC [NPC ...]
-        --nsim NSIM [NSIM ...]
-        --recompute, -r
+    usage: fit_scalar_models.py [-h] --nsim NSIM [NSIM ...] [--recompute] train_config test_config
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('train_config')
