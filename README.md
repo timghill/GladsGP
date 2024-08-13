@@ -31,4 +31,4 @@ cd src
 pip install -e .
 ```
 
-This code also depends on a fork of the SEPIA package ([timghill/SEPIA](https://github.com/timghill/SEPIA)) that that can be installed using `pip install -e .`.
+This code also depends on a fork of the SEPIA package ([timghill/SEPIA](https://github.com/timghill/SEPIA)) that that can be installed using `pip install -e .`, and simulations are run with the Ice-sheet and Sea-level System Model ([ISSM](https://github.com/ISSMteam/ISSM)).
