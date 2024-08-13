@@ -8,4 +8,5 @@ Notebooks
 
    notebooks/01_Gaussian_random_fields
    notebooks/02_univariate_GP_regression
-   notebooks/03_GP_emulation_GlaDS_ensemble
+   notebooks/03_GP_emulation_univariate_ensemble
+   notebooks/04_GP_emulation_multivariate_ensemble
