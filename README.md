@@ -10,7 +10,7 @@ The project structure is:
 
  * `src/`: shared code for setting up experiments and analyzing outputs
  * `experiments/`: individual directories for each model experiment
- * `docs/`: notebooks with examples, function and module documentation
+ * `examples/`: example notebooks for GP emulation of univariate and multivariate simulation outputs
 
 Each directory has a README file to describe the contents.
 
