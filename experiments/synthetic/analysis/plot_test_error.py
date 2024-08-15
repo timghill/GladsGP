@@ -14,7 +14,7 @@ import pickle
 sys.path.append(os.path.expanduser('~/SFU-code//'))
 from palettes.code import palettes, tools
 
-from src.utils import import_config, width_average
+from src.utils import import_config
 from src.model import load_model
 
 import numpy as np
@@ -147,6 +147,18 @@ def plot_rmse(config, sim_y, test_y, test_error, test_lq, test_uq):
     alphabet = ['a', 'b', 'c', 'd']
 
     ## 1. Width-averaged
+
+    def width_average(x, dx=2):
+        """Width-average (nx, nt) array x"""
+        xedge = np.arange(0, 100+dx, dx)
+        xmid = 0.5*(xedge[1:] + xedge[:-1])
+        xavg = np.zeros((len(xmid), x.shape[1]))
+        for i in range(len(xavg)):
+            xi = xmid[i]
+            mask = np.abs(nodexy[:,0]/1e3 - xi)<dx/2
+            xavg[i] = np.nanmean(x[mask,:],axis=0)
+        return xavg
+        
     fig = plt.figure(figsize=(6, 3.75))
     gs = GridSpec(len(ms)+1, 4, wspace=0.15, hspace=0.2,
         left=0.06, bottom=0.1, right=0.98, top=0.9,
@@ -323,12 +335,15 @@ def plot_scatter(config, y_sim, test_y):
         mesh = pickle.load(meshin)
     nodexy = np.array([mesh['x'], mesh['y']]).T
     # Make a scatter plot
-    fig = plt.figure(figsize=(6, 1.875))
+    # fig = plt.figure(figsize=(6, 1.875))
+    fig = plt.figure(figsize=(2.25, 5))
     wspace = 10
-    gs = GridSpec(1, 6, width_ratios=(100, wspace, 100, wspace, 100, 8),
-        left=0.075, right=0.9, bottom=0.225, top=0.95, wspace=0.1)
-    axs = np.array([fig.add_subplot(gs[2*i]) for i in range(3)])
-    cax = fig.add_subplot(gs[-1])
+    gs = GridSpec(5, 2, height_ratios=(100, wspace, 100, wspace, 100),
+        width_ratios=(100, 5), wspace=-0.15, hspace=0.2,
+        left=0.15, right=0.775, bottom=0.1, top=0.975)
+    axs = np.array([fig.add_subplot(gs[2*i,0]) for i in range(3)])
+    # cax = fig.add_subplot(gs[-1,0])
+    cax = fig.add_subplot(gs[2,1])
     rng = np.random.default_rng()
     rng_inds = rng.choice(np.arange(np.prod(y_sim.shape)), size=int(1e6), replace=False)
     y_sim_scatter = y_sim.flat[rng_inds]
@@ -374,7 +389,8 @@ def plot_scatter(config, y_sim, test_y):
     axs[0].set_aspect('equal')
     axs[0].set_xticks(ff_ticks)
     axs[0].set_yticks(ff_ticks)
-    axs[0].set_xlabel('Flot frac')
+    axs[0].set_xlabel(r'$f_{\rm{w}}$ GlaDS')
+    axs[0].set_ylabel(r'$f_{\rm{w}}$ emulator')
     axs[0].text(0.025, 0.95, 'a', transform=axs[0].transAxes,
         fontweight='bold', ha='left', va='top')
 
@@ -389,7 +405,8 @@ def plot_scatter(config, y_sim, test_y):
     axs[1].set_aspect('equal')
     axs[1].set_xticks(N_ticks)
     axs[1].set_yticks(N_ticks)
-    axs[1].set_xlabel('$N$ (MPa)')
+    axs[1].set_xlabel('$N$ (MPa) GlaDS')
+    axs[1].set_ylabel('$N$ (MPa) emulator')
     axs[1].text(0.025, 0.95, 'b', transform=axs[1].transAxes,
         fontweight='bold', ha='left', va='top')
 
@@ -404,12 +421,13 @@ def plot_scatter(config, y_sim, test_y):
     axs[2].set_aspect('equal')
     axs[2].set_xticks(phi_ticks)
     axs[2].set_yticks(phi_ticks)
-    axs[2].set_xlabel(r'$\phi$ (MPa)')
+    axs[2].set_xlabel(r'$\phi$ (MPa) GlaDS')
+    axs[2].set_ylabel(r'$\phi$ (MPa) emulator')
     axs[2].text(0.025, 0.95, 'c', transform=axs[2].transAxes,
         fontweight='bold', ha='left', va='top')
 
     cbar = fig.colorbar(hb, cax=cax)
-    cbar.set_label('Count (n={})'.format(len(rng_inds)))
+    cbar.set_label('Count (n=$10^{}$)'.format(int(np.log10(len(rng_inds)))))
 
     for ax in axs:
         ax.grid(linestyle=':', linewidth=0.5)
@@ -482,17 +500,17 @@ def main(config, test_config, recompute=False, dtype=np.float32):
         test_lq = np.load(cv_lq_file).astype(dtype)[:config.m :]
         test_uq = np.load(cv_uq_file).astype(dtype)[:config.m, :]
 
-    rmse_wavg, rmse_ts = plot_rmse(config, sim_y=y_test_sim,
-        test_y=test_y, test_error=test_y-y_test_sim, test_lq=test_lq, test_uq=test_uq)
-    rmse_wavg.savefig(os.path.join(
-        config.figures, 'test_error_width_avg.png'), dpi=400)
-    rmse_wavg.savefig(os.path.join(
-        config.figures, 'test_error_width_avg.pdf'), dpi=400)
+    # rmse_wavg, rmse_ts = plot_rmse(config, sim_y=y_test_sim,
+    #     test_y=test_y, test_error=test_y-y_test_sim, test_lq=test_lq, test_uq=test_uq)
+    # rmse_wavg.savefig(os.path.join(
+    #     config.figures, 'test_error_width_avg.png'), dpi=400)
+    # rmse_wavg.savefig(os.path.join(
+    #     config.figures, 'test_error_width_avg.pdf'), dpi=400)
 
-    rmse_ts.savefig(os.path.join(
-        config.figures, 'test_error_timeseries.png'), dpi=400)
-    rmse_ts.savefig(os.path.join(
-        config.figures, 'test_error_timeseries.pdf'), dpi=400)
+    # rmse_ts.savefig(os.path.join(
+    #     config.figures, 'test_error_timeseries.png'), dpi=400)
+    # rmse_ts.savefig(os.path.join(
+    #     config.figures, 'test_error_timeseries.pdf'), dpi=400)
 
     scatter_fig = plot_scatter(config, y_test_sim, test_y)
     scatter_fig.savefig(os.path.join(

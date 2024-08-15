@@ -237,9 +237,9 @@ def compute_scalar_indices(config, dtype=np.float32, recompute=True):
         pickle.dump(info, sobin)
     return info
 
-def plot_main_indices(config):
+def plot_all_indices(config):
     """
-    TODO
+    Plot general and PC sensitivity indices, separately scalar indices
     """
     data_dir = 'data'
     sensitivity_dir = os.path.join(data_dir, 'sensitivity/')
@@ -249,11 +249,16 @@ def plot_main_indices(config):
     scalar_indices = np.load(
         os.path.join(sensitivity_dir, 'scalar_indices.pkl'),
         allow_pickle=True)
-    alphabet = ['a', 'b', 'c', 'd']
+    alphabet = ['a', 'b', 'c', 'd', 'e', 'f']
+    pca_fpattern = os.path.join(data_dir, 'models/pca_{}_n{:03d}_S.npy')
+    S = np.load(pca_fpattern.format(config.exp, config.m))
+    pcvar = S**2/np.sum(S**2)
+    n_plot = len(pcvar[pcvar>0.01])
+    print('n_plot:', n_plot)
     fig = plt.figure(figsize=(6, 4))
-    gs = GridSpec(1, 4, bottom=0.15, left=0.05, right=0.95, top=.95,
+    gs = GridSpec(1, n_plot+1, bottom=0.15, left=0.05, right=0.95, top=.925,
         wspace=0.3)
-    axs = np.array([fig.add_subplot(gs[i]) for i in range(4)])
+    axs = np.array([fig.add_subplot(gs[i]) for i in range(n_plot+1)])
     dy = 0.2
     y1 = np.arange(8) - dy
     y2 = np.arange(8) + dy
@@ -267,23 +272,26 @@ def plot_main_indices(config):
         xerr=(indices['boostrap']['general_total_index']),
         ecolor='k', capsize=2, zorder=5,
         error_kw={'elinewidth':0.75, 'capthick':0.75})
-    axs[0].legend(bbox_to_anchor=(0, -0.375, 1, 0.3), frameon=False,
+    axs[0].legend(bbox_to_anchor=(-0.1, -0.375, 1, 0.3), frameon=False,
         loc='upper left', borderaxespad=0, borderpad=0)
+    
+    axs[0].set_title(r'$f_{\rm{w}}$')
 
-    for k in range(3):
+    for k in range(n_plot):
         ax = axs[k+1]
-        ax.barh(y1, scalar_indices['first_order'][k], height=0.32,
+        ax.barh(y1, indices['first_order'][k], height=0.32,
         color='#aaaaaa', label='First-order',
-        xerr=(scalar_indices['boostrap']['first_order'][:, k]),
+        xerr=(indices['boostrap']['first_order'][:, k]),
         ecolor='k', capsize=2, zorder=5,
         error_kw={'elinewidth':0.75, 'capthick':0.75})
 
-        ax.barh(y2, scalar_indices['total_index'][k], height=0.32,
+        ax.barh(y2, indices['total_index'][k], height=0.32,
         color='#555555', label='First-order',
-        xerr=(scalar_indices['boostrap']['total_index'][:, k]),
+        xerr=(indices['boostrap']['total_index'][:, k]),
         ecolor='k', capsize=2, zorder=5,
         error_kw={'elinewidth':0.75, 'capthick':0.75})
 
+        ax.set_title('PC{} ({:.1%})'.format(k+1, pcvar[k]))
 
     for i,ax in enumerate(axs):
         ax.set_ylim([-1, 7.5])
@@ -298,69 +306,55 @@ def plot_main_indices(config):
 
         ax.set_yticks(np.arange(8), config.theta_names)
     
-    fig.text(0.5, 0.05, 'Sensitivity', ha='center', va='bottom')
+    fig.text(0.5, 0.05, 'Sensitivity index', ha='center', va='bottom')
     
     for ax in axs[1:]:
         ax.set_yticklabels([])
-    fig.savefig(os.path.join(config.figures, 'sensitivity_indices.png'), dpi=400)
-    fig.savefig(os.path.join(config.figures, 'sensitivity_indices.pdf'))
+    fig.savefig(os.path.join(config.figures, 'sensitivity_indices_fw.png'), dpi=400)
+    fig.savefig(os.path.join(config.figures, 'sensitivity_indices_fw.pdf'))
 
+    # Now for scalar variables
+    fig = plt.figure(figsize=(3.25, 4))
+    gs = GridSpec(1, 3, bottom=0.15, left=0.1, right=0.95, top=.925,
+        wspace=0.3)
+    axs = np.array([fig.add_subplot(gs[i]) for i in range(3)])
+    labels = [r'$f_{\rm{c}}$', r'$T_{\rm{s}}$', r'$L_{\rm{c}}$']
+    for k in range(3):
+        ax = axs[k]
+        ax.barh(y1, scalar_indices['first_order'][k], height=0.32,
+        color='#aaaaaa', label='First-order',
+        xerr=(scalar_indices['boostrap']['first_order'][:, k]),
+        ecolor='k', capsize=2, zorder=5,
+        error_kw={'elinewidth':0.75, 'capthick':0.75})
 
-def plot_PC_indices(config):
-    data_dir = 'data'
-    sensitivity_dir = os.path.join(data_dir, 'sensitivity/')
-    indices = np.load(
-        os.path.join(sensitivity_dir, 'sobol_indices.pkl'),
-        allow_pickle=True)
-    alphabet = ['a', 'b', 'c', 'd', 'e']
-    fig = plt.figure(figsize=(6, 4))
-    S = np.load('data/models/pca_{}_n{:03d}_S.npy'.format(config.exp, config.m))
-    pcvar = S**2/np.sum(S**2)
-    n_pcs = len(pcvar[pcvar>0.01])
-    print('Plotting {} PCs...'.format(n_pcs))
-    gs = GridSpec(1, n_pcs, bottom=0.15, left=0.05, right=0.95, top=.95,
-        wspace=0.2)
-    axs = np.array([fig.add_subplot(gs[i]) for i in range(n_pcs)])
-    dy = 0.2
-    y1 = np.arange(8) - dy
-    y2 = np.arange(8) + dy
-    for k in range(n_pcs):
-        axs[k].barh(y1, indices['first_order'][k], height=0.35,
-            color='#aaaaaa', label='First-order',
-            xerr=(indices['boostrap']['first_order'][:,k]),
-            ecolor='k', capsize=2, zorder=5,
-            error_kw={'elinewidth':0.75, 'capthick':0.75})
-        axs[k].barh(y2, indices['total_index'][k], height=0.35,
-            color='#555555', label='Total',
-            xerr=(indices['boostrap']['total_index'][:,k]),
-            ecolor='k', capsize=2, zorder=5,
-            error_kw={'elinewidth':0.75, 'capthick':0.75})
-    axs[0].legend(bbox_to_anchor=(0, -0.375, 1, 0.3), frameon=False,
+        ax.barh(y2, scalar_indices['total_index'][k], height=0.32,
+        color='#555555', label='Total',
+        xerr=(scalar_indices['boostrap']['total_index'][:, k]),
+        ecolor='k', capsize=2, zorder=5,
+        error_kw={'elinewidth':0.75, 'capthick':0.75})
+        
+        ax.set_title(labels[k])
+    
+    axs[0].legend(bbox_to_anchor=(-0.1, -0.375, 1, 0.3), frameon=False,
         loc='upper left', borderaxespad=0, borderpad=0)
-
+    
+    axs[1].set_xlabel('Sensitivity index')
     for i,ax in enumerate(axs):
         ax.set_ylim([-1, 7.5])
         ax.grid(linestyle=':', which='both')
         ax.invert_yaxis()
         ax.set_xlim([0, 1])
         ax.set_xticks([0, 0.25, 0.5, 0.75, 1.], minor=True)
-        ax.set_xticks([0, 0.5, 1.], ['0', '0.5', '1'])
 
         ax.spines[['right', 'top']].set_visible(False)
-        ax.text(0.025, 1.0, alphabet[i], transform=ax.transAxes,
-            fontweight='bold', ha='left', va='bottom')
-        ax.text(0.5, 1.0, 'PC{} ({:.1f}%)'.format(i+1, pcvar[i]*100),
-            transform=ax.transAxes,
-            ha='center', va='bottom')
+        ax.text(0.025, 1., alphabet[i], transform=ax.transAxes,
+            fontweight='bold', ha='left', va='top')
 
         ax.set_yticks(np.arange(8), config.theta_names)
-    
-    fig.text(0.5, 0.05, 'Sensitivity', ha='center', va='bottom')
-    
     for ax in axs[1:]:
         ax.set_yticklabels([])
-    fig.savefig(os.path.join(config.figures, 'sensitivity_PC_indices.png'), dpi=400)
-    fig.savefig(os.path.join(config.figures, 'sensitivity_PC_indices.pdf'))
+    fig.savefig(os.path.join(config.figures, 'sensitivity_indices_scalars.png'), dpi=400)
+    fig.savefig(os.path.join(config.figures, 'sensitivity_indices_scalars.pdf'))
 
 def main():
     parser = argparse.ArgumentParser()
@@ -373,9 +367,7 @@ def main():
         compute_scalar_indices(train_config)
         compute_field_indices(train_config)
 
-    
-    plot_main_indices(train_config)
-    plot_PC_indices(train_config)
+    plot_all_indices(train_config)
     
 if __name__=='__main__':
     main()
