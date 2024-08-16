@@ -44,3 +44,5 @@ GP_*
 scratch/
 
 performance*.csv
+
+experiments/greenland
