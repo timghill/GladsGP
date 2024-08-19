@@ -137,6 +137,67 @@ def compute_mean_response_profiles(config):
     return
 
 
+def compute_mean_response_pairs(config, pairs):
+    # Load data and initialize model
+
+    scalar_defs = ['channel_frac', 'log_transit_time', 'channel_length']
+    def_thresholds = [6, 6, 0]
+    t_std = np.loadtxt(config.X_standard, delimiter=',', skiprows=1,
+        comments=None)[:config.m]
+    # Prediction points
+    ntarget = 11
+    nintegrate = 10
+    n_dim = t_std.shape[1]
+
+    # Xpred = np.zeros((ntarget**2, n_dim), dtype=np.float32)
+    xi = np.linspace(0, 1, ntarget)
+    xx1, xx2 = np.meshgrid(xi, xi)
+
+    sampler = stats.qmc.LatinHypercube(n_dim-2, 
+        optimization='random-cd', scramble=False, seed=20240418)
+    Xintegrate = sampler.random(n=nintegrate)
+
+    for k in range(len(scalar_defs)):
+        print(scalar_defs[k])
+        data_dir = os.path.join('data/scalars')
+        Y_fname = os.path.join(config.sim_dir, 
+            '{exp}_{qoi}.npy'.format(exp=config.exp, qoi=scalar_defs[k]))
+        y_sim = np.load(Y_fname).T[:config.m]
+        y_sim = (np.vstack(y_sim[:, def_thresholds[k]]))
+        data,model = init_model(t_std, y_sim, config.exp, data_dir='data/')
+        model_file = os.path.join(data_dir, 
+            '{exp}_{qoi}_n{m}_t{threshold}'.format( exp=config.exp,
+                qoi=scalar_defs[k], m=config.m, threshold=def_thresholds[k]))
+        model.restore_model_info(model_file)
+        samples = model.get_samples(nburn=256, numsamples=16)
+        print(model_file)
+
+        for i in range(len(pairs[k])):
+            d1,d2 = pairs[k][i]
+            print('Pair:', pairs[k][i])
+            dim_nums = np.arange(n_dim)
+            dim_nums[np.array([d1,d2])] = -1
+            dim_int = dim_nums[dim_nums>=0]
+            y_response_pair = np.zeros((ntarget, ntarget))
+            for i1 in range(ntarget):
+                for i2 in range(ntarget):
+                    xpred = np.zeros((nintegrate, n_dim), dtype=np.float32)
+                    xpred[:, dim_int] = Xintegrate
+                    xpred[:, d1] = xx1[i1,i2]
+                    xpred[:, d2] = xx2[i1, i2]
+
+                    preds = SepiaEmulatorPrediction(model=model,
+                        t_pred=xpred, samples=samples)
+                    ypred = preds.get_y()
+                    ymean = np.mean(ypred, axis=0)
+                    y_response_pair[i1,i2] = np.mean(ymean)
+            
+            np.save('data/scalars/{}_{}_n{}_pair_response_{}_{}.npy'.format(
+                config.exp, scalar_defs[k], config.m, d1, d2),
+                y_response_pair)
+
+
+
 def plot_mean_response_profiles(config):
     # Load data and initialize model
     scalar_defs = ['channel_frac', 'log_transit_time', 'channel_length']
@@ -198,7 +259,6 @@ def plot_mean_response_profiles(config):
     
 
     for k in range(len(scalar_defs)):
-    # for k in range(1):
         
         n_defs = len(thresholds[k])
 
@@ -247,11 +307,91 @@ def plot_mean_response_profiles(config):
     
     for i,ax in enumerate(axs[0]):
         ax.set_title(ylabels[i], fontsize=8)
-    # for ax in axs[:-1, :].flat:
-    #     ax.set_xticklabels([])
     fig.savefig(os.path.join(config.figures, 'scalar_response_profiles.png'), dpi=400)
     fig.savefig(os.path.join(config.figures, 'scalar_response_profiles.pdf'))
     return
+
+
+def plot_mean_response_pairs(config, pairs):
+    # Load data and initialize model
+
+    scalar_defs = ['channel_frac', 'log_transit_time', 'channel_length']
+    def_thresholds = [6, 6, 0]
+    t_std = np.loadtxt(config.X_standard, delimiter=',', skiprows=1,
+        comments=None)[:config.m]
+    t_names = np.loadtxt(config.X_physical, delimiter=',', max_rows=1,
+        dtype=str, comments=None)
+    t_names= [tn.strip('#') for tn in t_names]
+    print(t_names)
+    # Prediction points
+    ntarget = 11
+    nintegrate = 10
+    n_dim = t_std.shape[1]
+
+    xi = np.linspace(0, 1, ntarget)
+    xx1, xx2 = np.meshgrid(xi, xi)
+
+    fig = plt.figure(figsize=(8, 6.5))
+    pad = -30
+    gs = GridSpec(3, 6, width_ratios=(100, pad, 100, pad, 100, 10),
+        wspace=0.67, hspace=0.1, left=0.075, right=0.9, bottom=0.1, top=0.975)
+    axs = np.array([[fig.add_subplot(gs[i,2*j], projection='3d') for j in range(3)]
+        for i in range(3)])
+    caxs = np.array([fig.add_subplot(gs[i,-1]) for i in range(3)])
+
+    azim = np.array([[-90-15, -90+30, -90+60],
+                    [90-30, 90-30, 90+60],
+                    [30,-90+60,90+30]])
+    elev = np.array([[22.5, 22.5, 22.5],
+                    [22.5, 22.5, 22.5],
+                    [15, 22.5, 22.5]])
+    ylims = [[0, 1], [-1.5, 0.5], [0, 1500]]
+    ylabels = [r'$f_Q$', r'$\log T_{\rm{s}}$ (a)', r'$L_{\rm{c}}$ (km)']
+    units = [   r'$\rm{Pa}\,\rm{s}^{-1}$', 
+                r'$\rm{m^{3/2}} s^{-1}$', 
+                r'${\rm{m}}$',
+                '-',
+                r'${\rm{m}}$',
+                r'$\times 10^{-24} {\rm{s}}^{-1} {\rm{Pa}}^{-3}$',
+                r'$\times 10^4$',
+                r'$\times 10^4$',
+    ]
+
+    multipliers = np.array([1, 1, 1, 1, 1, 1e24, 1.e4, 1.e4])
+
+    for k in range(len(scalar_defs)):
+    # for k in range(1):
+        print(scalar_defs[k])
+
+        for i in range(len(pairs[k])):
+            d1,d2 = pairs[k][i]
+            y_response_pair = np.load('data/scalars/{}_{}_n{}_pair_response_{}_{}.npy'.format(
+                config.exp, scalar_defs[k], config.m, d1, d2))
+            
+            ax = axs[k][i]
+            xx1_phys = 10**(config.theta_bounds[d1][0] + 
+                (config.theta_bounds[d1][1] - config.theta_bounds[d1][0])*xx1)
+            xx2_phys = 10**(config.theta_bounds[d2][0] + 
+                (config.theta_bounds[d2][1] - config.theta_bounds[d2][0])*xx2)
+            pc = ax.plot_surface(xx1_phys*multipliers[d1], xx2_phys*multipliers[d2], y_response_pair,
+                vmin=ylims[k][0], vmax=ylims[k][1], cmap=cmocean.cm.ice,
+                edgecolor='none')
+            ax.set_zlim(ylims[k])
+            ax.view_init(azim=azim[k][i], elev=elev[k][i])
+            ax.set_xlabel(t_names[d1] + r' ({})'.format(units[d1]), labelpad=0)
+            ax.set_ylabel(t_names[d2] + r' ({})'.format(units[d2]), labelpad=0)
+            # ax.set_facecolor('none')
+
+            cb = fig.colorbar(pc, cax=caxs[k])
+            cb.set_label(ylabels[k])
+
+    for ax in axs.flat:
+        ax.set_facecolor('none')
+    
+    fig.savefig(os.path.join(config.figures, 'scalar_response_pairwise.png'), dpi=400)
+    fig.savefig(os.path.join(config.figures, 'scalar_response_pairwise.pdf'))
+    return
+
 
 
 def main():
@@ -263,10 +403,19 @@ def main():
     args = parser.parse_args()
     train_config = utils.import_config(args.train_config)
 
+    pairs = [   [ (0, 1), (4, 1), (2, 3) ],
+            [ (0, 5), (0, 2), (3, 5) ],
+            [ (0, 1), (2, 4), (3, 5) ],
+    ]
     if args.recompute:
-        compute_mean_response_profiles(train_config)
+        compute_mean_response_pairs(train_config, pairs)
     
-    plot_mean_response_profiles(train_config)
+    plot_mean_response_pairs(train_config, pairs)
+
+    # if args.recompute:
+    #     compute_mean_response_profiles(train_config)
+    
+    # plot_mean_response_profiles(train_config)
 
 if __name__=='__main__':
     main()
