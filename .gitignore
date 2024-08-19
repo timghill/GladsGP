@@ -25,6 +25,8 @@ make_zenodo.sh
 *STATUSES*
 *MISC*
 
+experiments/synthetic/analysis/submit_*.sh
+
 analysis/**/nsim/*csv
 
 .ipynb_checkpoints
