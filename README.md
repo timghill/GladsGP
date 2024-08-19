@@ -1,6 +1,7 @@
 # Gaussian Process emulation of GlaDS subglacial drainage model
 
 Tim Hill, 2024 (tim_hill_2@sfu.ca)
+https://github.com/timghill/GladsGP
 
 This project emulates Glacier Drainage System (GlaDS) model ([Werder et al., 2013](https://doi.org/10.1002/jgrf.20146)) outputs.
 

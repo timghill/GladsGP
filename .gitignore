@@ -17,6 +17,7 @@ build/
 
 set_paths.m
 env.sh
+make_zenodo.sh
 
 *OUTPUT*
 *TMP*
