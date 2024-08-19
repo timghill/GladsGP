@@ -1,3 +1,8 @@
+"""
+Compute the mean response of scalar variables to each model parameter
+usage: mean_response.py [-h] [--recompute] train_config
+"""
+
 
 import argparse
 
@@ -46,6 +51,9 @@ def init_model(t_std, y_sim, exp_name, data_dir='data/'):
     return data, model
 
 def compute_mean_response_profiles(config):
+    """
+    Compute mean response as a function of each individual input
+    """
     # Load data and initialize model
 
     scalar_defs = ['channel_frac', 'log_transit_time', 'channel_length']
@@ -138,6 +146,9 @@ def compute_mean_response_profiles(config):
 
 
 def compute_mean_response_pairs(config, pairs):
+    """
+    Compute mean response for each specified pair of inputs
+    """
     # Load data and initialize model
 
     scalar_defs = ['channel_frac', 'log_transit_time', 'channel_length']
@@ -199,6 +210,9 @@ def compute_mean_response_pairs(config, pairs):
 
 
 def plot_mean_response_profiles(config):
+    """
+    Plot mean response for individual inputs
+    """
     # Load data and initialize model
     scalar_defs = ['channel_frac', 'log_transit_time', 'channel_length']
     thresholds = [ np.array([5, 10, 15, 20, 25, 30, -1]),
@@ -313,6 +327,9 @@ def plot_mean_response_profiles(config):
 
 
 def plot_mean_response_pairs(config, pairs):
+    """
+    Plot response for each pair of inputs
+    """
     # Load data and initialize model
 
     scalar_defs = ['channel_frac', 'log_transit_time', 'channel_length']
@@ -396,6 +413,7 @@ def plot_mean_response_pairs(config, pairs):
 
 def main():
     """
+    usage: mean_response.py [-h] [--recompute] train_config
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('train_config')
@@ -403,19 +421,20 @@ def main():
     args = parser.parse_args()
     train_config = utils.import_config(args.train_config)
 
+    # Individual responses
+    if args.recompute:
+        compute_mean_response_profiles(train_config)
+    plot_mean_response_profiles(train_config)
+
+    # Pairwise responses
     pairs = [   [ (0, 1), (4, 1), (2, 3) ],
             [ (0, 5), (0, 2), (3, 5) ],
             [ (0, 1), (2, 4), (3, 5) ],
     ]
     if args.recompute:
         compute_mean_response_pairs(train_config, pairs)
-    
     plot_mean_response_pairs(train_config, pairs)
 
-    # if args.recompute:
-    #     compute_mean_response_profiles(train_config)
-    
-    # plot_mean_response_profiles(train_config)
 
 if __name__=='__main__':
     main()

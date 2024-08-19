@@ -297,6 +297,23 @@ def plot_num_sims_average(train_config, test_config, nsims):
     fig_small.savefig(os.path.join(train_config.figures, 'scalar_convergence.pdf'))
 
 def plot_GP_lengthscales(train_config, test_config, nsim):
+    """
+    Plot GP correlation rate parameters.
+
+    Allows interpretation of correlation parameters, and how they
+    change with respect to training ensemble size
+
+    Parameters
+    ----------
+    train_config : module
+                   Training ensemble configuration
+    
+    test_config: module
+                 Test ensemble configuration
+
+    nsims : array-like
+            Numbers of simulations to evaluate
+    """
     def_thresholds = [6, 6, 0]
     thresholds = [ np.array([5, 10, 15, 20, 25, 30, -1]),
                     np.array([5, 10, 15, 20, 25, 30, -1]),
@@ -340,7 +357,7 @@ def plot_GP_lengthscales(train_config, test_config, nsim):
                 beta_median[:, tindex, k] = np.median(beta_samples, axis=0)
                 beta_range[:, 0, tindex, k] = np.quantile(beta_samples, 0.025, axis=0)
                 beta_range[:, 1, tindex, k] = np.quantile(beta_samples, 0.975, axis=0)
-        print(beta_median.shape)
+        
         for i in range(8):
             ax = axs[i, j]
             for tindex in range(len(thresholds[j])):
@@ -364,8 +381,7 @@ def plot_GP_lengthscales(train_config, test_config, nsim):
     
     for i,ax in enumerate(axs[:, 0]):
         ax.set_ylabel(r'$\beta$ ({})'.format(t_names[i]))
-    # print(beta_median)
-    # plt.show()
+    
     axs[-1,0].legend(bbox_to_anchor=(0, -0.9, 2.5, 0.5), loc='upper center', 
             ncols=4, frameon=False, title='Fluxgate position')
 

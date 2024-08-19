@@ -1,7 +1,5 @@
 """
-Compute Sobol' indices for functional and scalar outputs
-
-TODO: Which version of sensitivity indices to use?
+Compute Sobol' indices for multivariate and scalar outputs
 """
 
 import os
