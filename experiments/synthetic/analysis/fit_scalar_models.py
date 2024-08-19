@@ -70,13 +70,13 @@ def plot_num_sims_average(train_config, test_config, nsims):
                 'Fluxgate (km)',
                 'Channel radius (m)',
     ]
-    ylabels = ['Channel fraction', 'log Transit time (a)', 'Channel length (km)']
+    ylabels = [r'$f_Q$', r'$\log T_{\rm{s}}$ (a)', r'$L_{\rm{c}}$ (km)']
 
     scalar_defs = ['channel_frac',
         'log_transit_time', 'channel_length',
     ]
-    thresholds = [ np.array([5, 10, 15, 20, 35, 30, -1]),
-                    np.array([5, 10, 15, 20, 35, 30, -1]),
+    thresholds = [ np.array([5, 10, 15, 20, 25, 30, -1]),
+                    np.array([5, 10, 15, 20, 25, 30, -1]),
                     np.array([0.5, 1.])
     ]
     def_thresholds = [-1, -1, 0]
@@ -181,20 +181,20 @@ def plot_num_sims_average(train_config, test_config, nsims):
         ax0.set_xticklabels([test_config.m])
         ax0.set_ylabel(ylabels[k])
         ax0.set_xlim([positions[-nthresh]-0.2, positions[-1]+0.2])
-        ax0.text(0, 1, alphabet[3*k], transform=ax0.transAxes,
+        ax0.text(0, 1, alphabet[0] + str(k+1), transform=ax0.transAxes,
             fontweight='bold', ha='right', va='bottom')
 
         ax1.set_xticks(np.arange(len(nsims)))
         ax1.set_xticklabels(nsims)
         ax1.set_xlim([positions[0]-0.25, positions[-1]+0.25])
-        ax1.text(0, 1, alphabet[3*k + 1], transform=ax1.transAxes,
+        ax1.text(0, 1, alphabet[1] + str(k+1), transform=ax1.transAxes,
             fontweight='bold', ha='right', va='bottom')
         
             
         ax2.grid(linestyle=':')
         ax2.set_xticks(np.arange(1, len(nsims)+1), nsims)
         ax2.set_xticklabels(nsims)
-        ax2.text(0, 1, alphabet[3*k+2], transform=ax.transAxes,
+        ax2.text(0, 1, alphabet[2] + str(k+1), transform=ax.transAxes,
             fontweight='bold', ha='right', va='bottom')
         ylim2 = ax2.get_ylim()
         ax2.set_ylim([0, ylim2[1]])
@@ -295,6 +295,86 @@ def plot_num_sims_average(train_config, test_config, nsims):
 
     fig_small.savefig(os.path.join(train_config.figures, 'scalar_convergence.png'), dpi=400)
     fig_small.savefig(os.path.join(train_config.figures, 'scalar_convergence.pdf'))
+
+def plot_GP_lengthscales(train_config, test_config, nsim):
+    def_thresholds = [6, 6, 0]
+    thresholds = [ np.array([5, 10, 15, 20, 25, 30, -1]),
+                    np.array([5, 10, 15, 20, 25, 30, -1]),
+                    np.array([0.5, 1.])
+    ]
+    scalar_defs = ['channel_frac',
+        'log_transit_time', 'channel_length']
+    # ylabels = [r'$f_Q$', r'$\log T_{\rm{s}}$ (a)', r'$L_{\rm{c}}$ (km)']
+    ylabels = [r'$f_Q$', r'$\log T_{\rm{s}}$ (a)', r'$L_{\rm{c}}$ (km)']
+    t_names = np.loadtxt(train_config.X_physical, delimiter=',', max_rows=1,
+        dtype=str, comments=None)
+    labels = ['{:.0f} km', '{:.0f} km', '{:.1f} m']
+
+    data_dir = 'data/scalars'
+    fig_dir = os.path.join(train_config.figures, 'scalars')
+    fig = plt.figure(figsize=(6, 8.5))
+    gs = GridSpec(8, 3, bottom=0.125, left=0.085, right=0.975, top=0.975,
+        hspace=0., wspace=0.25)
+    axs = np.array([[fig.add_subplot(gs[i,j]) for j in range(3)] for i in range(8)])
+
+    for j in range(3):
+        if thresholds[j][-1]==-1:
+            cticks = np.zeros(len(thresholds[j]))
+            cticks[:-1] = np.linspace(0.15, 0.85, len(thresholds[j])-1)
+            colors = cmocean.cm.delta(cticks)
+            colors[-1] = [0.4, 0.4, 0.4, 1.]
+            cticks = cticks[:-1]
+        else:
+            cticks = np.linspace(0.15, 0.85, len(thresholds[j]))
+            colors = cmocean.cm.delta(cticks)
+        nt = len(thresholds[j])
+        beta_median = np.zeros((8, nt, len(nsim)))
+        beta_range = np.zeros((8, 2, nt, len(nsim)))
+        for tindex in range(len(thresholds[j])):
+            for k,m in enumerate(nsim):
+                modelfile = os.path.join(data_dir, '{}_{}_n{}_t{}.pkl'.format(
+                    train_config.exp, scalar_defs[j], m, tindex)
+                )
+                modelj = np.load(modelfile, allow_pickle=True)
+                beta_samples = modelj['samples']['betaU'][:, 1:, 0]
+                beta_median[:, tindex, k] = np.median(beta_samples, axis=0)
+                beta_range[:, 0, tindex, k] = np.quantile(beta_samples, 0.025, axis=0)
+                beta_range[:, 1, tindex, k] = np.quantile(beta_samples, 0.975, axis=0)
+        print(beta_median.shape)
+        for i in range(8):
+            ax = axs[i, j]
+            for tindex in range(len(thresholds[j])):
+                label = labels[j].format(thresholds[j][tindex])
+                if thresholds[j][tindex]==-1:
+                    label = 'Mean'
+                ax.plot(np.arange(len(nsim)), beta_median[i, tindex], color=colors[tindex],
+                    label=label)
+                ax.fill_between(np.arange(len(nsim)), beta_range[i, 0, tindex], beta_range[i, 1, tindex],
+                    alpha=0.3, color=colors[tindex])
+
+            ax.set_xticks(np.arange(len(nsim)), nsim)
+            ax.grid(linestyle=':')
+            ax.spines[['right', 'top']].set_visible(False)
+        
+    for ax in axs[:-1, :].flat:
+        ax.set_xticklabels([])
+    
+    for ax in axs[-1,:]:
+        ax.set_xlabel('Number of simulations')
+    
+    for i,ax in enumerate(axs[:, 0]):
+        ax.set_ylabel(r'$\beta$ ({})'.format(t_names[i]))
+    # print(beta_median)
+    # plt.show()
+    axs[-1,0].legend(bbox_to_anchor=(0, -0.9, 2.5, 0.5), loc='upper center', 
+            ncols=4, frameon=False, title='Fluxgate position')
+
+    axs[-1,2].legend(bbox_to_anchor=(0, -0.9, 1, 0.5), loc='upper center', 
+            ncols=1, frameon=False, title='Channel radius')
+    for i,ax in enumerate(axs[0]):
+        ax.set_title(ylabels[i], fontsize=8)
+    fig.savefig('figures/scalar_lengthscale_convergence.png', dpi=400)
+    fig.savefig('figures/scalar_lengthscale_convergence.pdf')
     
 
 def fit(train_config, test_config, nsims, recompute=False):
@@ -465,6 +545,7 @@ def main():
         fit(train_config, test_config, nsims=args.nsim, recompute=args.recompute)
 
     plot_num_sims_average(train_config, test_config, args.nsim)
+    plot_GP_lengthscales(train_config, test_config, args.nsim)
     summarize_performance(train_config, test_config)
 
 if __name__=='__main__':

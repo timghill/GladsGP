@@ -318,7 +318,7 @@ def plot_all_indices(config):
     gs = GridSpec(1, 3, bottom=0.15, left=0.1, right=0.95, top=.925,
         wspace=0.3)
     axs = np.array([fig.add_subplot(gs[i]) for i in range(3)])
-    labels = [r'$f_{\rm{c}}$', r'$T_{\rm{s}}$', r'$L_{\rm{c}}$']
+    labels = [r'$f_Q$', r'$\log T_{\rm{s}}$ (a)', r'$L_{\rm{c}}$ (km)']
     for k in range(3):
         ax = axs[k]
         ax.barh(y1, scalar_indices['first_order'][k], height=0.32,
