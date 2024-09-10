@@ -36,6 +36,7 @@ from src.model import load_model
 
 # Settings for consistent boxplots
 flierprops = {'marker':'+', 'markersize':2, 'markeredgewidth':0.6}
+ylims = [(0, 0.35), (0, 15), (0, 0.3)]
 
 def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
     """
@@ -109,11 +110,7 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
             medianprops=medianprops, boxprops=boxprops, showcaps=False, showfliers=True,
             flierprops=flierprops, whiskerprops={'linewidth':0.65})
         ax.set_ylabel(labels[i], labelpad=labelpads[i])
-        ymax = np.max(metrics[i])
-        dy = dys[i]
-        upper = dy*np.ceil(ymax/dy)
-        ylim = ax.get_ylim()
-        ax.set_ylim([0, upper])
+        ax.set_ylim(ylims[i])
         ax.text(0.15, 0.9, alphabet[i], transform=ax.transAxes,
             ha='right', va='bottom', fontweight='bold')
         ax.spines[['right', 'top']].set_visible(False)
@@ -157,11 +154,7 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
             medianprops=medianprops, boxprops=boxprops, showcaps=False, showfliers=True,
             flierprops=flierprops, whiskerprops={'linewidth':0.65})
         ax.set_ylabel(labels[i], labelpad=labelpads[i])
-        ymax = np.max(metrics[i])
-        dy = dys[i]
-        upper = dy*np.ceil(ymax/dy)
-        ylim = ax.get_ylim()
-        ax.set_ylim([0, upper])
+        ax.set_ylim(ylims[i])
         ax.text(0.15, 0.9, alphabet[i+3], transform=ax.transAxes,
             ha='right', va='bottom', fontweight='bold')
         
