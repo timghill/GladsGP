@@ -356,6 +356,7 @@ def plot_joint_loss(path, n_sims, n_pcs):
             dy = dys[i]
             ub = dy*np.ceil(ymax/dy)
             ax.set_xlim([n_pcs[0]-0.5, n_pcs[-1]+0.5])
+            ax.set_xticks(n_pcs)
             ylim = ax.get_ylim()
             ax.set_ylim([0, ub])
 
@@ -381,7 +382,7 @@ def plot_joint_loss(path, n_sims, n_pcs):
         ax.text(0.05, 0.95, alphabet[i], transform=ax.transAxes,
             ha='left', va='top', fontweight='bold')
     
-    fig.text(0.5, 0.025, 'Number of PCs', ha='center')
+    fig.text(0.5, 0.025, 'Number of principal components', ha='center')
     ax1.legend(loc='upper right', frameon=False, ncols=2)
     fig.subplots_adjust(left=0.1, bottom=0.15, right=0.975, top=0.95, wspace=0.2)
     return fig
