@@ -113,7 +113,7 @@ def plot_PC_RMSE_variance(recompute=False):
         nsim_axis = cvar[:, 0]
         cvar = cvar[:, 1]
 
-        label = 'm = {:d}'.format(nsims[j])
+        label =nsims[j]
         ax1.plot(npcs, pca_rmse, label=label, color=colors[j])
         ax2.plot(nsim_axis, cvar, label=label, color=colors[j])
 
@@ -124,7 +124,7 @@ def plot_PC_RMSE_variance(recompute=False):
     
     ax1.set_ylabel('RMSE')
     ax2.set_ylabel('Cumulative proportion of variance')
-    ax1.legend(frameon=False)
+    ax1.legend(frameon=False, ncols=2, loc='upper right')
 
     ax1.set_xticklabels([])
     ax2.set_xlabel('Number of PCs')

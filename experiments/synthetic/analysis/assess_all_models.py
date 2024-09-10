@@ -303,7 +303,8 @@ def plot_joint_loss(path, n_sims, n_pcs):
     -------
     matplotlib.figure
     """
-    fig, axs = plt.subplots(figsize=(6, 3), ncols=2)
+    # fig, axs = plt.subplots(figsize=(6, 3), ncols=2)
+    fig, axs = plt.subplots(figsize=(3, 5), nrows=2)
     ax1,ax2 = axs
     RMSE = np.zeros((len(n_sims), len(n_pcs)))
     MAPE = np.zeros((len(n_sims), len(n_pcs)))
@@ -381,10 +382,12 @@ def plot_joint_loss(path, n_sims, n_pcs):
         ax.set_ylabel(labels[i])
         ax.text(0.05, 0.95, alphabet[i], transform=ax.transAxes,
             ha='left', va='top', fontweight='bold')
+        ax.spines[['right', 'top']].set_visible(False)
     
-    fig.text(0.5, 0.025, 'Number of principal components', ha='center')
+    # fig.text(0.5, 0.025, 'Number of principal components', ha='center')
     ax1.legend(loc='upper right', frameon=False, ncols=2)
-    fig.subplots_adjust(left=0.1, bottom=0.15, right=0.975, top=0.95, wspace=0.2)
+    ax2.set_xlabel('Number of principal components')
+    fig.subplots_adjust(left=0.175, bottom=0.1, right=0.95, top=0.95, wspace=0.2, hspace=0.15)
     return fig
 
 
