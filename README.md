@@ -27,10 +27,9 @@ source pyenv/bin/activate
 pip install -r requirements.txt
 ```
 
-To install the code for this project on your python path, navigate into the `src` directory and install in editable (`-e`) mode with pip:
+To install the code for this project on your python path, install in editable (`-e`) mode with pip:
 
 ```
-cd src
 pip install -e .
 ```
 
