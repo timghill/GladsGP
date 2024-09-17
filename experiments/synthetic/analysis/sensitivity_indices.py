@@ -249,8 +249,10 @@ def plot_all_indices(config):
         allow_pickle=True)
     alphabet = ['a', 'b', 'c', 'd', 'e', 'f']
     pca_fpattern = os.path.join(data_dir, 'models/pca_{}_n{:03d}_S.npy')
-    S = np.load(pca_fpattern.format(config.exp, config.m))
-    pcvar = S**2/np.sum(S**2)
+    # S = np.load(pca_fpattern.format(config.exp, config.m))
+    # pcvar = S**2/np.sum(S**2)
+    pc_cvar = np.loadtxt('data/architecture/pca_cvar_n{}.csv'.format(config.m))[:,1]
+    pcvar = np.diff(pc_cvar, prepend=0)
     n_plot = len(pcvar[pcvar>0.01])
     print('n_plot:', n_plot)
     fig = plt.figure(figsize=(6, 4))
