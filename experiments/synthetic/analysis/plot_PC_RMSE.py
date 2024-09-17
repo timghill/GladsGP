@@ -137,9 +137,8 @@ def plot_PC_RMSE_variance(recompute=False):
     ## Part 2: Plot basis vectors
     data, model = load_model(config, config.m, config.p, dtype=np.float32)
     K = data.sim_data.K.astype(np.float32)
-    S = np.load(os.path.join(config.data_dir, 
-        'models/pca_synthetic_n{:03d}_S.npy'.format(config.m)))
-    pcvar = S**2/np.sum(S**2)
+    pc_cumulative_var = np.loadtxt('data/architecture/pca_cvar_n{}.csv'.format(config.m))[:, 1]
+    pcvar = np.diff(pc_cumulative_var, prepend=0)
     nplot = 7
     ncols = 2
     nrows = int(np.ceil(nplot/ncols))
