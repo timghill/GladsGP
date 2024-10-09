@@ -67,7 +67,7 @@ def main(train_config, test_config, n_pcs, recompute=False, dtype=np.float32):
     pcaxs = np.array([fig.add_subplot(gs[i+1,0]) for i in range(len(n_pcs))])
     tsax = fig.add_subplot(gs[1:, 1])
     cax = fig.add_subplot(gs[0, 0])
-    alphabet = ['a', 'b', 'c', 'd',]
+    alphabet = ['(a)', '(b)', '(c)', '(d)',]
     colors = ['#000000', '#555555', '#aaaaaa']
 
     # Plot test error: width-averaged, space, and time error

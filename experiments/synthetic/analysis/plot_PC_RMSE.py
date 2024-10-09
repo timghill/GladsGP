@@ -129,9 +129,9 @@ def plot_PC_RMSE_variance(recompute=False):
     ax1.set_xticklabels([])
     ax2.set_xlabel('Number of PCs')
 
-    ax1.text(0.025, 1.025, 'a1', transform=ax1.transAxes,
+    ax1.text(0.025, 1.025, '(a1)', transform=ax1.transAxes,
         fontweight='bold', ha='left', va='top')
-    ax2.text(0.025, 1.025, 'a2', transform=ax2.transAxes,
+    ax2.text(0.025, 1.025, '(a2)', transform=ax2.transAxes,
         fontweight='bold', ha='left', va='top')
     
     ## Part 2: Plot basis vectors
@@ -178,7 +178,7 @@ def plot_PC_RMSE_variance(recompute=False):
         if i%2==1:
             ax.set_yticklabels([])
         
-        ax.text(0., 1.025, 'b{:d}'.format(i+1), transform=ax.transAxes,
+        ax.text(0., 1.025, '(b{:d})'.format(i+1), transform=ax.transAxes,
             fontweight='bold', ha='left', va='bottom')
         ax.text(0.5, 1.025, 'PC{:d} ({:.1f}%)'.format(i+1, 100*pcvar[i]), transform=ax.transAxes,
             ha='center', va='bottom')

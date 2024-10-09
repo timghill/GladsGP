@@ -200,7 +200,7 @@ def plot_rmse(config, sim_y, test_y, test_error, test_lq, test_uq):
         
         for j,ax in enumerate(axs[i, :]):
             col = 'w' if j<=1 else 'k'
-            ax.text(0.975, 0.8, alphabet[j] + str(i+1),
+            ax.text(0.975, 0.8, '({}{})'.format(alphabet[j],str(i+1)),
                 transform=ax.transAxes, fontweight='bold',
                 ha='right', va='bottom', color=col)
         axs[i,-1].text(0.975, 0.05, '$m_{{{}}}$ = {}'.format(qntls[i], ms[i]),
@@ -282,7 +282,7 @@ def plot_rmse(config, sim_y, test_y, test_error, test_lq, test_uq):
             for k in range(len(t_steps)):
                 ax.axvline(t_steps[k], linestyle=':', color='k', linewidth=0.75)
             
-            ax.text(0.025, 0.8, alphabet[j] + str(i+1), transform=ax.transAxes,
+            ax.text(0.025, 0.8, '({}{})'.format(alphabet[j],str(i+1)), transform=ax.transAxes,
                 fontweight='bold', ha='left', va='bottom')
             
             ax.spines[['right', 'top']].set_visible(False)
@@ -391,7 +391,7 @@ def plot_scatter(config, y_sim, test_y):
     axs[0].set_yticks(ff_ticks)
     axs[0].set_xlabel(r'$f_{\rm{w}}$ GlaDS')
     axs[0].set_ylabel(r'$f_{\rm{w}}$ emulator')
-    axs[0].text(0.025, 0.95, 'a', transform=axs[0].transAxes,
+    axs[0].text(0.025, 0.95, '(a)', transform=axs[0].transAxes,
         fontweight='bold', ha='left', va='top')
 
     axs[1].hexbin(N_sim_scatter/1e6, N_pred_scatter/1e6, norm=countnorm,
@@ -407,7 +407,7 @@ def plot_scatter(config, y_sim, test_y):
     axs[1].set_yticks(N_ticks)
     axs[1].set_xlabel('$N$ (MPa) GlaDS')
     axs[1].set_ylabel('$N$ (MPa) emulator')
-    axs[1].text(0.025, 0.95, 'b', transform=axs[1].transAxes,
+    axs[1].text(0.025, 0.95, '(b)', transform=axs[1].transAxes,
         fontweight='bold', ha='left', va='top')
 
     hb = axs[2].hexbin(phi_sim_scatter/1e6, phi_pred_scatter/1e6, norm=countnorm,
@@ -423,7 +423,7 @@ def plot_scatter(config, y_sim, test_y):
     axs[2].set_yticks(phi_ticks)
     axs[2].set_xlabel(r'$\phi$ (MPa) GlaDS')
     axs[2].set_ylabel(r'$\phi$ (MPa) emulator')
-    axs[2].text(0.025, 0.95, 'c', transform=axs[2].transAxes,
+    axs[2].text(0.025, 0.95, '(c)', transform=axs[2].transAxes,
         fontweight='bold', ha='left', va='top')
 
     cbar = fig.colorbar(hb, cax=cax)
@@ -500,17 +500,17 @@ def main(config, test_config, recompute=False, dtype=np.float32):
         test_lq = np.load(cv_lq_file).astype(dtype)[:config.m :]
         test_uq = np.load(cv_uq_file).astype(dtype)[:config.m, :]
 
-    # rmse_wavg, rmse_ts = plot_rmse(config, sim_y=y_test_sim,
-    #     test_y=test_y, test_error=test_y-y_test_sim, test_lq=test_lq, test_uq=test_uq)
-    # rmse_wavg.savefig(os.path.join(
-    #     config.figures, 'test_error_width_avg.png'), dpi=400)
-    # rmse_wavg.savefig(os.path.join(
-    #     config.figures, 'test_error_width_avg.pdf'), dpi=400)
+    rmse_wavg, rmse_ts = plot_rmse(config, sim_y=y_test_sim,
+        test_y=test_y, test_error=test_y-y_test_sim, test_lq=test_lq, test_uq=test_uq)
+    rmse_wavg.savefig(os.path.join(
+        config.figures, 'test_error_width_avg.png'), dpi=400)
+    rmse_wavg.savefig(os.path.join(
+        config.figures, 'test_error_width_avg.pdf'), dpi=400)
 
-    # rmse_ts.savefig(os.path.join(
-    #     config.figures, 'test_error_timeseries.png'), dpi=400)
-    # rmse_ts.savefig(os.path.join(
-    #     config.figures, 'test_error_timeseries.pdf'), dpi=400)
+    rmse_ts.savefig(os.path.join(
+        config.figures, 'test_error_timeseries.png'), dpi=400)
+    rmse_ts.savefig(os.path.join(
+        config.figures, 'test_error_timeseries.pdf'), dpi=400)
 
     scatter_fig = plot_scatter(config, y_test_sim, test_y)
     scatter_fig.savefig(os.path.join(

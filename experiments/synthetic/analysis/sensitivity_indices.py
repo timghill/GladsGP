@@ -247,7 +247,7 @@ def plot_all_indices(config):
     scalar_indices = np.load(
         os.path.join(sensitivity_dir, 'scalar_indices.pkl'),
         allow_pickle=True)
-    alphabet = ['a', 'b', 'c', 'd', 'e', 'f']
+    alphabet = ['(a)', '(b)', '(c)', '(d)', '(e)', '(f)']
     pca_fpattern = os.path.join(data_dir, 'models/pca_{}_n{:03d}_S.npy')
     # S = np.load(pca_fpattern.format(config.exp, config.m))
     # pcvar = S**2/np.sum(S**2)

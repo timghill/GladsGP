@@ -48,7 +48,7 @@ axs[0,0].set_xlim([4, 10])
 axs[0,0].set_xticklabels(['May', 'July', 'Sep', 'Nov'])
 axs[0,0].grid(linestyle=':')
 axs[0,0].set_ylabel(r'Temperature ($^{\circ}{\rm{C}}$)')
-axs[0,0].text(0.025, 0.95, 'a', transform=axs[0,0].transAxes,
+axs[0,0].text(0.025, 0.95, '(a)', transform=axs[0,0].transAxes,
     fontweight='bold', ha='left', va='top')
 
 # (b) 3D Domain perspective
@@ -68,7 +68,7 @@ ax3d.set_zlim([300, 2000])
 ax3d.set_xlabel('Distance from terminus (km)', labelpad=12)
 ax3d.zaxis.set_rotate_label(False)
 ax3d.set_zlabel('Elevation (m asl.)', rotation=90, labelpad=0)
-fig.text(0.085, 0.35, 'b',
+fig.text(0.085, 0.35, '(b)',
     fontweight='bold', ha='left', va='top')
 
 # (c) Flotation fraction timeseries
@@ -110,7 +110,7 @@ axs[0,1].set_xlim([4, 10])
 axs[0,1].set_xticklabels(['May', 'July', 'Sep', 'Nov'])
 axs[0,1].grid(linestyle=':')
 axs[0,1].set_ylabel(r'$p_{\rm{w}}/p_{\rm{i}}$',)
-axs[0,1].text(0.025, 0.95, 'c', transform=axs[0,1].transAxes,
+axs[0,1].text(0.025, 0.95, '(c)', transform=axs[0,1].transAxes,
     fontweight='bold', ha='left', va='top')
 axs[0,1].axvline(tstep*12/365, color='k', linestyle='dashed')
 
@@ -128,7 +128,7 @@ ax.set_aspect('equal')
 ax.set_xlim([0, 100])
 ax.set_ylim([0, 25])
 ax.set_yticks([0, 12.5, 25])
-ax.text(0.025, 0.95, 'd', transform=ax.transAxes,
+ax.text(0.025, 0.95, '(d)', transform=ax.transAxes,
     fontweight='bold', ha='left', va='top')
 for i in range(3):
     node = nodes[i]

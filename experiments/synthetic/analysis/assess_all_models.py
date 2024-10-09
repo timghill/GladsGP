@@ -91,7 +91,7 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
 
     metrics = (RMSE.T, 100*MAPE.T, CI.T)
     labels = ('RMSE', 'MAPE (%)', '95% prediction interval')
-    alphabet = ('a', 'b', 'c', 'd', 'e', 'f')
+    alphabet = ('(a)', '(b)', '(c)', '(d)', '(e)', '(f)')
     dys = (0.05, 5, 0.1)
     labelpads = [2, 2, 0]
     medianprops = {'color':'#000000'}
@@ -111,7 +111,7 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
             flierprops=flierprops, whiskerprops={'linewidth':0.65})
         ax.set_ylabel(labels[i], labelpad=labelpads[i])
         ax.set_ylim(ylims[i])
-        ax.text(0.15, 0.9, alphabet[i], transform=ax.transAxes,
+        ax.text(0.15, 1., alphabet[i], transform=ax.transAxes,
             ha='right', va='bottom', fontweight='bold')
         ax.spines[['right', 'top']].set_visible(False)
         ax.tick_params(axis='both', labelsize=fs)
@@ -155,7 +155,7 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
             flierprops=flierprops, whiskerprops={'linewidth':0.65})
         ax.set_ylabel(labels[i], labelpad=labelpads[i])
         ax.set_ylim(ylims[i])
-        ax.text(0.15, 0.9, alphabet[i+3], transform=ax.transAxes,
+        ax.text(0.15, 1., alphabet[i+3], transform=ax.transAxes,
             ha='right', va='bottom', fontweight='bold')
         
         ax.spines[['right', 'top']].set_visible(False)
@@ -175,7 +175,7 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
         color='#000000', marker='.', markersize=3, linewidth=0.65)
     ax2.set_ylabel('CPU-hours', rotation=-90, labelpad=8)
     ax2.tick_params(axis='both', labelsize=fs)
-    fig.subplots_adjust(left=0.085, bottom=0.125, right=0.92, top=0.975, wspace=0.35, hspace=0.4)
+    fig.subplots_adjust(left=0.085, bottom=0.125, right=0.92, top=0.95, wspace=0.35, hspace=0.4)
     return fig
 
 
@@ -344,7 +344,7 @@ def plot_joint_loss(path, n_sims, n_pcs):
     upper = (RMSE_upper, 100*MAPE_upper)
     labels = ('RMSE', 'MAPE (%)', 'Max error')
     dys = (0.05, 2.5)
-    alphabet = ('a', 'b')
+    alphabet = ('(a)', '(b)')
     cbars = [0, 0, 0]
     colors = cmocean.cm.deep(np.linspace(0.15, 0.9, len(n_sims)))
     for i in range(len(metrics)):

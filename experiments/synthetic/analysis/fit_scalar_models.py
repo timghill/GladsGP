@@ -181,20 +181,20 @@ def plot_num_sims_average(train_config, test_config, nsims):
         ax0.set_xticklabels([test_config.m])
         ax0.set_ylabel(ylabels[k])
         ax0.set_xlim([positions[-nthresh]-0.2, positions[-1]+0.2])
-        ax0.text(0, 1, alphabet[0] + str(k+1), transform=ax0.transAxes,
+        ax0.text(0, 1, '({}{})'.format(alphabet[0], str(k+1)), transform=ax0.transAxes,
             fontweight='bold', ha='right', va='bottom')
 
         ax1.set_xticks(np.arange(len(nsims)))
         ax1.set_xticklabels(nsims)
         ax1.set_xlim([positions[0]-0.25, positions[-1]+0.25])
-        ax1.text(0, 1, alphabet[1] + str(k+1), transform=ax1.transAxes,
+        ax1.text(0, 1, '({}{})'.format(alphabet[1], str(k+1)), transform=ax1.transAxes,
             fontweight='bold', ha='right', va='bottom')
         
             
         ax2.grid(linestyle=':')
         ax2.set_xticks(np.arange(1, len(nsims)+1), nsims)
         ax2.set_xticklabels(nsims)
-        ax2.text(0, 1, alphabet[2] + str(k+1), transform=ax.transAxes,
+        ax2.text(0, 1, '({}{})'.format(alphabet[2], str(k+1)), transform=ax.transAxes,
             fontweight='bold', ha='right', va='bottom')
         ylim2 = ax2.get_ylim()
         ax2.set_ylim([0, ylim2[1]])
@@ -282,8 +282,8 @@ def plot_num_sims_average(train_config, test_config, nsims):
         for i,ax in enumerate(axs):
             ax.grid(linestyle=':')
             ax.spines[['right', 'top']].set_visible(False)
-            ax.text(0.035, 0.95, alphabet[i] + str(k+1), transform=ax.transAxes,
-                fontweight='bold', ha='left', va='top')
+            ax.text(0.035, 0.98, '({}{})'.format(alphabet[i], str(k+1)), transform=ax.transAxes,
+                fontweight='bold', ha='left', va='bottom')
             if k<2:
                 ax.set_xticklabels([])
         
