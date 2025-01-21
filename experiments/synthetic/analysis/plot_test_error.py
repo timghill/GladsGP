@@ -32,6 +32,8 @@ from sepia.SepiaModel import SepiaModel
 from sepia.SepiaData import SepiaData
 from sepia.SepiaPredict import SepiaEmulatorPrediction
 
+import scipy
+
 
 def compute_test_predictions(model, samples, t_pred, quantile=0.025):
     """
@@ -383,8 +385,10 @@ def plot_scatter(config, y_sim, test_y):
         extent=(ff_min, ff_max, ff_min, ff_max), rasterized=True)
     axs[0].set_xlim([ff_min, ff_max])
     axs[0].set_ylim([ff_min, ff_max])
-    R2 = np.corrcoef(y_sim_scatter.flatten(), y_pred_scatter.flatten())[0,1]**2
-    axs[0].text(0.95, 0.025, '$r^2={:.3f}$'.format(R2),
+    RSS = np.sum((y_sim_scatter.flatten() - y_pred_scatter.flatten())**2)
+    TSS = np.sum((y_sim_scatter.flatten() - np.mean(y_sim_scatter.flatten()))**2)
+    R2 = 1 - RSS/TSS
+    axs[0].text(0.95, 0.025, '$R^2={:.3f}$'.format(R2),
         ha='right', va='bottom', transform=axs[0].transAxes)
     axs[0].set_aspect('equal')
     axs[0].set_xticks(ff_ticks)
@@ -399,8 +403,10 @@ def plot_scatter(config, y_sim, test_y):
         extent=(N_min, N_max, N_min, N_max), rasterized=True)
     axs[1].set_xlim([N_min, N_max])
     axs[1].set_ylim([N_min, N_max])
-    R2 = np.corrcoef(N_sim_scatter, N_pred_scatter)[0,1]**2
-    axs[1].text(0.95, 0.025, '$r^2={:.3f}$'.format(R2),
+    RSS = np.sum((N_sim_scatter.flatten() - N_pred_scatter.flatten())**2)
+    TSS = np.sum((N_sim_scatter.flatten() - np.mean(N_sim_scatter.flatten()))**2)
+    R2 = 1 - RSS/TSS
+    axs[1].text(0.95, 0.025, '$R^2={:.3f}$'.format(R2),
         ha='right', va='bottom', transform=axs[1].transAxes)
     axs[1].set_aspect('equal')
     axs[1].set_xticks(N_ticks)
@@ -415,8 +421,10 @@ def plot_scatter(config, y_sim, test_y):
         extent=(phi_min, phi_max, phi_min, phi_max))
     axs[2].set_xlim([phi_min, phi_max])
     axs[2].set_ylim([phi_min, phi_max])
-    R2 = np.corrcoef(phi_sim_scatter, phi_pred_scatter)[0,1]**2
-    axs[2].text(0.95, 0.025, '$r^2={:.3f}$'.format(R2),
+    RSS = np.sum((phi_sim_scatter.flatten() - phi_pred_scatter.flatten())**2)
+    TSS = np.sum((phi_sim_scatter.flatten() - np.mean(phi_sim_scatter.flatten()))**2)
+    R2 = 1 - RSS/TSS
+    axs[2].text(0.95, 0.025, '$R^2={:.3f}$'.format(R2),
         ha='right', va='bottom', transform=axs[2].transAxes)
     axs[2].set_aspect('equal')
     axs[2].set_xticks(phi_ticks)
