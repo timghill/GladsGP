@@ -22,16 +22,16 @@ import cmocean
 surf = np.load('geom/synthetic_surface.npy')
 bed = np.load('geom/synthetic_bed.npy')
 temp = np.loadtxt('melt/KAN_L_2014_temp_clipped.txt', delimiter=',')
-moulins = np.loadtxt('moulins/moulin_indices.csv')
+moulins = np.loadtxt('moulins/moulin_indices.csv', dtype=int)
 with open('geom/synthetic_mesh.pkl', 'rb') as meshin:
     mesh = pickle.load(meshin)
 mtri = Triangulation(mesh['x']/1e3, mesh['y']/1e3, mesh['elements']-1)
 
 ff = np.load('../train/synthetic_ff.npy', mmap_mode='r')
 
-fig = plt.figure(figsize=(6, 3))
+fig = plt.figure(figsize=(6.5, 3))
 gs = GridSpec(2, 2, left=0.085, right=0.975, bottom=0.1, top=0.95,
-    hspace=0.2, wspace=0.3,
+    hspace=0.2, wspace=0.55,
     height_ratios=(100, 75))
 axs = np.array([
     [fig.add_subplot(gs[i,j]) for j in range(2)]
@@ -40,6 +40,8 @@ axs = np.array([
 # (a) Temperature timeseries
 tt = temp[:, 0]
 T = temp[:, 1] - 0.005*390
+DDF = 0.01/86400    # 0.01 m w.e./K/day
+meltrate = DDF*T * 3600*24
 axs[0,0].plot(tt*12/365, T, color='k')
 axs[0,0].set_ylim([0, 12])
 axs[0,0].set_yticks([0, 4, 8, 12])
@@ -48,8 +50,14 @@ axs[0,0].set_xlim([4, 10])
 axs[0,0].set_xticklabels(['May', 'July', 'Sep', 'Nov'])
 axs[0,0].grid(linestyle=':')
 axs[0,0].set_ylabel(r'Temperature ($^{\circ}{\rm{C}}$)')
-axs[0,0].text(0.025, 0.95, '(a)', transform=axs[0,0].transAxes,
-    fontweight='bold', ha='left', va='top')
+# axs[0,0].text(0.025, 0.95, '(a)', transform=axs[0,0].transAxes,
+#     fontweight='bold', ha='left', va='top')
+fig.text(0.0875, 0.925, '(a)', fontweight='bold', ha='left', va='top')
+
+ax2 = axs[0,0].twinx()
+# ax2.plot(tt*12/365, meltrate, color='gray')
+ax2.set_ylim([0, 12*DDF * 86400 * 100])
+ax2.set_ylabel(r'Melt rate ($\rm{cm\,w.e.\,a}^{-1}$)')
 
 # (b) 3D Domain perspective
 axs[1,0].set_visible(False)
@@ -58,7 +66,7 @@ ax3d = fig.add_subplot(projection='3d', computed_zorder=False, facecolor='none')
 ax3d.set_position(Bbox.from_extents(-0.2, -0.05, 0.75, 0.6))
 ax3d.plot_trisurf(mtri, bed, cmap=cmocean.cm.turbid, vmin=300, vmax=365,
     edgecolor='none', linewidth=0., antialiased=False)
-ax3d.plot_trisurf(mtri, surf, cmap=cmocean.cm.ice, edgecolor='#444444', linewidth=0.025, alpha=1,
+tripc3d = ax3d.plot_trisurf(mtri, surf, cmap=cmocean.cm.ice, edgecolor='#444444', linewidth=0.025, alpha=1,
     antialiased=True, vmin=0, vmax=2000, zorder=3)
 ax3d.view_init(elev=20, azim=-125) #Works!
 ax3d.set_box_aspect((4, 1, 1))
@@ -68,7 +76,7 @@ ax3d.set_zlim([300, 2000])
 ax3d.set_xlabel('Distance from terminus (km)', labelpad=12)
 ax3d.zaxis.set_rotate_label(False)
 ax3d.set_zlabel('Elevation (m asl.)', rotation=90, labelpad=0)
-fig.text(0.085, 0.35, '(b)',
+fig.text(0.0875, 0.35, '(b)',
     fontweight='bold', ha='left', va='top')
 
 # (c) Flotation fraction timeseries
@@ -103,6 +111,9 @@ ax3d.xaxis._axinfo['grid'].update({'linestyle':':', 'linewidth':0.5})
 ax3d.yaxis._axinfo['grid'].update({'linestyle':':', 'linewidth':0.5})
 ax3d.zaxis._axinfo['grid'].update({'linestyle':':', 'linewidth':0.5})
 
+ax3d.plot(mesh['x'][moulins]/1e3, mesh['y'][moulins]/1e3, surf[moulins],
+    linestyle='', marker='.', markersize=1, color='k', zorder=10)
+
 axs[0,1].plot(np.arange(nt)*12/365, ff[:, 10].reshape((nx, nt))[nodes[1],:], color=colors[1])
 axs[0,1].set_ylim([0, 1.5])
 axs[0,1].set_xticks([4, 6, 8, 10])
@@ -110,7 +121,7 @@ axs[0,1].set_xlim([4, 10])
 axs[0,1].set_xticklabels(['May', 'July', 'Sep', 'Nov'])
 axs[0,1].grid(linestyle=':')
 axs[0,1].set_ylabel(r'$p_{\rm{w}}/p_{\rm{i}}$',)
-axs[0,1].text(0.025, 0.95, '(c)', transform=axs[0,1].transAxes,
+fig.text(0.63, 0.925, '(c)',
     fontweight='bold', ha='left', va='top')
 axs[0,1].axvline(tstep*12/365, color='k', linestyle='dashed')
 
@@ -128,19 +139,29 @@ ax.set_aspect('equal')
 ax.set_xlim([0, 100])
 ax.set_ylim([0, 25])
 ax.set_yticks([0, 12.5, 25])
-ax.text(0.025, 0.95, '(d)', transform=ax.transAxes,
+fig.text(0.63, 0.35, '(d)',
     fontweight='bold', ha='left', va='top')
 for i in range(3):
     node = nodes[i]
     ax.plot(mesh['x'][node]/1e3, mesh['y'][node]/1e3,
         's', markersize=5, color=colors[i],
         markeredgewidth='1', markeredgecolor='w')
+
+ax.plot(mesh['x'][moulins]/1e3, mesh['y'][moulins]/1e3,
+    marker='.', linestyle='', markersize=3, zorder=1, color='k')
+
 ax.set_xlabel('Distance from terminus (km)', labelpad=0)
 # ax.set_rasterized(True)
 cbar = fig.colorbar(tripc, cax=cax, orientation='horizontal')
 cax.xaxis.tick_top()
 cax.xaxis.set_label_position('top')
 cbar.set_label(r'$p_{\rm{w}}/p_{\rm{i}}$')
+
+
+cax = axs[0,0].inset_axes((1.025, -1., 0.03, 0.8))
+cax.set_visible(True)
+cbar = fig.colorbar(tripc3d, cax=cax)
+cbar.set_label('Elevation (m asl.)')
 
 fig.savefig('domain_summary.png', dpi=400)
 fig.savefig('domain_summary.pdf', dpi=400)
