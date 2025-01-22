@@ -23,6 +23,7 @@ surf = np.load('geom/synthetic_surface.npy')
 bed = np.load('geom/synthetic_bed.npy')
 temp = np.loadtxt('melt/KAN_L_2014_temp_clipped.txt', delimiter=',')
 moulins = np.loadtxt('moulins/moulin_indices.csv', dtype=int)
+print('Moulins:', len(moulins))
 with open('geom/synthetic_mesh.pkl', 'rb') as meshin:
     mesh = pickle.load(meshin)
 mtri = Triangulation(mesh['x']/1e3, mesh['y']/1e3, mesh['elements']-1)
