@@ -45,7 +45,7 @@ base = pathlib.Path(__file__).parent.resolve()
 sim_dir = os.path.join(base, 'issm/train/')
 analysis_dir = os.path.join(base, 'analysis/')
 exp_dir = os.path.join(base, 'expdesign/')
-mesh = os.path.join('../data/geom/synthetic_mesh.pkl')
+mesh = os.path.join(sim_dir, '../data/geom/synthetic_mesh.pkl')
 
 # Paths to use for parameter design
 X_physical = os.path.join(exp_dir, '{exp}_train_physical.csv'.format(exp=exp))
