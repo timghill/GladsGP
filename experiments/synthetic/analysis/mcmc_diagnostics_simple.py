@@ -51,6 +51,7 @@ def mcmc_trace(train_config, recompute=True):
 
     for i,ax in enumerate(axs):
         ax.set_xlim([0, n_samples])
+        ax.set_xticks([0, 128, 256, 256+128, 512])
         ax.grid(linestyle=':')
 
     axs[-1].set_xlabel('Iteration')
@@ -61,6 +62,7 @@ def mcmc_trace(train_config, recompute=True):
     # for pc in range(train_config.p):
     accept_rate = np.zeros((8, train_config.p))
     Rhat = np.zeros((8, train_config.p))
+    Neff = np.zeros((8, train_config.p))
     nburn = 256
     for para in range(8):
         for pc in range(train_config.p):
@@ -71,40 +73,17 @@ def mcmc_trace(train_config, recompute=True):
             acceptance = np.ones((n_samples-nburn-1))
             acceptance[b2[1:]==b2[:-1]] = 0
             accept_rate[para, pc] = acceptance.sum()/len(acceptance)
-    
-    print('Acceptance:', accept_rate)
-    print('Mean:', accept_rate.mean())
-    print('Median:', np.median(accept_rate))
-    print('Min/max:', accept_rate.min(), accept_rate.max())
-    print('Median for each parameter:', np.median(accept_rate, axis=1))
-    print('Median for each PC:', np.median(accept_rate, axis=0))
-
-    bad_chains = np.where(np.abs(accept_rate-0.45)>0.25)
-    print(bad_chains)
-    print(accept_rate[bad_chains])
 
     # 3. GELMAN CONVERGENCE STATISTIC R^HAT
-
+    chains = []
+    n_repeats = 4
+    n_samples = 256
+    n_burn = 256
+    d = 8
     if recompute:
         data,model = mtools.load_model(train_config, train_config.m, train_config.p)
         model.clear_samples()
-        chains = []
-        n_repeats = 4
-        n_samples = 256
-        n_burn = 256
-        d = 8
-        sim_data = data.sim_data
 
-        # w = np.dot(np.linalg.pinv(sim_data.K).T, sim_data.y_std.T).T
-        # y_sim_std_hat = np.dot(w, sim_data.K)
-        # pc_resid = sim_data.y_std - y_sim_std_hat
-        # pc_var = np.var(pc_resid)
-        # pc_prec = 1/pc_var
-        # print('pc variance:', pc_var)
-        # print('pc precision:', pc_prec)
-        
-        # model.print_value_info()
-        # model.print_mcmc_info()
         beta_start = model.params.betaU.val.copy()
         rng = np.random.default_rng()
         for repeat in range(n_repeats):
@@ -131,7 +110,6 @@ def mcmc_trace(train_config, recompute=True):
 
         for para in range(8):
             for pc in range(train_config.p):
-            # for pc in range(8):
                 phi = betas_split[:, :, para, pc]
 
                 # between-chain variance
@@ -146,20 +124,64 @@ def mcmc_trace(train_config, recompute=True):
 
                 varhat = (n-1)*W/n + B/n
                 Rhat[para, pc] = np.sqrt(varhat/W)
+
+                rhot = np.zeros(n)
+                for ti in range(1,n):
+                    phiss = phi[:, ti:]
+                    philag = phi[:, :-ti]
+                    Vt = np.sum((phiss-philag)**2)/m/(n-ti)
+                    rhot[ti] = 1 - Vt/2/varhat
+                T = 1
+                for ti in range(1, n-1):
+                    if ti%2==1:
+                        if (rhot[ti]+rhot[ti+1])<0:
+                            T = ti
+                            break
+                else:
+                    T = n-1
+
+                rhotsum = np.sum(rhot[:T])
+                n_eff = m*n/(1 + 2*rhotsum)
+                Neff[para, pc] = n_eff
         
-
         np.savetxt('data/Rhat.txt', Rhat, delimiter=',', fmt='%.3e')
-    
+        np.savetxt('data/Neff.txt', Neff, delimiter=',', fmt='%.3e')
+        
     Rhat = np.loadtxt('data/Rhat.txt', delimiter=',')
+    Neff = np.loadtxt('data/Neff.txt', delimiter=',')
 
-    print('Rhat:', Rhat)
+    print()
+    print('Using m={} chains'.format(n_repeats))
+    print('Using n={} samples per full chain'.format(n_samples))
+    print('Warm-up period of {} samples'.format(n_burn))
+
+    print()
+    print('Acceptance:')
+    print(accept_rate)
+    print('Mean:', accept_rate.mean())
+    print('Median:', np.median(accept_rate))
+    print('Min/max:', accept_rate.min(), accept_rate.max())
+    print('Median for each parameter:', np.median(accept_rate, axis=1))
+    print('Median for each PC:', np.median(accept_rate, axis=0))
+
+    print()
+    print('Rhat:')
+    print(Rhat)
     print('Mean:', Rhat.mean())
     print('Median:', np.median(Rhat))
     print('Min/max:', Rhat.min(), Rhat.max())
     print('Median for each parameter:', np.median(Rhat, axis=1))
     print('Median for each PC:', np.median(Rhat, axis=0))
 
-    # fig,ax = plt.subplots(figsize=(6, 6))
+    print()
+    print('Neff:')
+    print(Neff)
+    print('Mean:', Neff.mean())
+    print('Median:', np.median(Neff))
+    print('Min/max:', Neff.min(), Neff.max())
+    print('Median for each parameter:', np.median(Neff, axis=1))
+    print('Median for each PC:', np.median(Neff, axis=0))
+
     fig = plt.figure(figsize=(6, 6))
     gs = GridSpec(2, 3, height_ratios=(5, 100), width_ratios=(10, 100, 10),
         left=0.1, bottom=0.1, right=0.95, top=0.9,
@@ -180,6 +202,7 @@ def mcmc_trace(train_config, recompute=True):
     cbar.set_label(r'$\hat R$')
     cax.xaxis.tick_top()
     cax.xaxis.set_label_position('top')
+    cax.axvline(1.10, color='k')
     cbar.set_ticks([1, 1.05, 1.1, 1.15, 1.2])
 
     for para in range(8):
@@ -191,6 +214,37 @@ def mcmc_trace(train_config, recompute=True):
     fig.savefig('figures/Rhat.png', dpi=400)
 
 
+
+    fig = plt.figure(figsize=(6, 6))
+    gs = GridSpec(2, 3, height_ratios=(5, 100), width_ratios=(10, 100, 10),
+        left=0.1, bottom=0.1, right=0.95, top=0.9,
+        hspace=0.05)
+    ax = fig.add_subplot(gs[1,:])
+    cax = fig.add_subplot(gs[0,1])
+    thetas = np.arange(8)
+    pcs = np.arange(train_config.p)
+    [pp, tt] = np.meshgrid(pcs, thetas)
+
+    pcolor = ax.pcolormesh(pp, tt, Neff, vmin=0, vmax=20*n_repeats, cmap=cmocean.cm.balance_r)
+    ax.set_yticks(np.arange(8), train_config.theta_names)
+    xticks = ['PC{}'.format(ii) for ii in range(1, train_config.p+1)]
+    ax.set_xticks(np.arange(train_config.p), xticks)
+    ax.invert_yaxis()
+
+    cbar = fig.colorbar(pcolor, cax=cax, orientation='horizontal', extend='max')
+    cbar.set_label(r'$N_{\rm{eff}}$')
+    cax.xaxis.tick_top()
+    cax.xaxis.set_label_position('top')
+    cax.axvline(10*n_repeats, color='k')
+    # cbar.set_ticks([1, 1.05, 1.1, 1.15, 1.2])
+
+    for para in range(8):
+        for pc in range(train_config.p):
+            Ni = Neff[para,pc]
+            tcol = 'k' if (np.abs(Ni-10*n_repeats)<=5*n_repeats) else 'w'
+            ax.text(pc, para, '{:.2f}'.format(Ni), color=tcol, ha='center', va='center')
+    
+    fig.savefig('figures/Neff.png', dpi=400)
 
 def main():
     parser = argparse.ArgumentParser()
