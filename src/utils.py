@@ -349,3 +349,96 @@ def reorder_edges(md):
 
     edges = edges[:, :2]
     return edges
+
+def mcmc_accept_rate(chains, burn=None):
+    """
+    chains : array of repeated MCMC samples
+        (repeats, samples, *)
+
+    burn : integer number of samples to discard.
+           None discards the first half of the chain
+    """
+    nrepeats = chains.shape[0]
+
+    if burn is None:
+        burn = int(chains.shape[1]/2)
+        chains = chains[:, burn:]
+    else:
+        chains = chains[:, burn:]
+
+    nsamples = chains.shape[1]
+
+    m = 2*nrepeats
+    n = int(nsamples/2)
+    phis = chains.reshape((m, n, *chains.shape[2:]))
+
+    accept = np.ones((phis.shape[0], phis.shape[1]-1, *phis.shape[2:]))
+    accept[phis[:, :-1]==phis[:, 1:]] = 0
+    acceptrate = np.mean(accept, axis=(0,1))
+    return acceptrate
+
+def mcmc_rhat_ess(chains, burn=None):
+    """
+    chains : array of repeated MCMC samples
+        (repeats, samples, *)
+
+    burn : integer number of samples to discard.
+           None discards the first half of the chain
+    """
+    nrepeats = chains.shape[0]
+
+    if burn is None:
+        burn = int(chains.shape[1]/2)
+        chains = chains[:, burn:]
+    else:
+        chains = chains[:, burn:]
+    
+
+    nsamples = chains.shape[1]
+
+    m = 2*nrepeats
+    n = int(nsamples/2)
+    phi = chains.reshape((m, n, *chains.shape[2:]))
+
+    Rhat = np.zeros(chains.shape[2:])
+    ESS = np.zeros(chains.shape[2:])
+
+    phibar_j = np.mean(phi, axis=1)
+    phibar = np.mean(phibar_j, axis=(0))
+    sj2 = 1/(n-1)*np.sum((phi-phibar_j[:, None])**2, axis=1)
+
+    B = n/(m-1)*np.sum((phibar_j - phibar)**2, axis=0)
+    W = np.mean(sj2, axis=0)
+    varhat = (n-1)*W/n + B/n
+    Rhat = np.sqrt(varhat/W)
+    
+    orig_shape = chains.shape[2:]
+    
+    phi = phi.reshape((*phi.shape[:2], -1))
+    ESS = np.zeros(phi.shape[2])
+    for i in range(phi.shape[2]):
+        rhot = np.zeros(n)
+        for ti in range(1,n):
+            phiss = phi[:, ti:, i]
+            philag = phi[:, :-ti, i]
+            Vt = np.sum((phiss-philag)**2)/m/(n-ti)
+            rhot[ti] = 1 - Vt/2/varhat.flatten()[i]
+        T = 1
+        for ti in range(1, n-1):
+            if ti%2==1:
+                if (rhot[ti]+rhot[ti+1])<0:
+                    T = ti
+                    break
+        else:
+            T = n-1
+        ESS[i] = m*n/(1 + 2*np.sum(rhot[:T]))
+    
+    ESS = ESS.reshape(orig_shape)
+
+    return Rhat, ESS
+
+
+            
+
+
+    
