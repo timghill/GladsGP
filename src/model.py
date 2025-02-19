@@ -211,7 +211,7 @@ def fit_models(train_config, n_sims, n_pcs,
             m_name = '{}_n{:03d}'.format(train_config.exp, m)
             sepia_data, model = init_model(t_std=ti_std, y_sim=yi_phys, 
                 exp=m_name, 
-                p=p, data_dir=data_dir, recompute=recompute)
+                p=p, data_dir=data_dir, recompute=False)
             t1 = time.perf_counter()
             dts_pca.append(t1 - t0)
 
