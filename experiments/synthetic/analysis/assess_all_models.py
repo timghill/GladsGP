@@ -428,7 +428,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
     t_names = np.loadtxt(train_config.X_standard, delimiter=',', max_rows=1,
         dtype=str, comments=None)
 
-    y_sim = np.load(train_config.Y_physical).T.astype(dtype)
+    y_sim = np.load(train_config.Y_physical, mmap_mode='r').T
 
     x_pred = np.loadtxt(test_config.X_standard, delimiter=',', skiprows=1,
         comments=None)[:test_config.m].astype(dtype)
@@ -456,7 +456,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
             p = n_pcs[k]
             print('m={}, p={}'.format(m,p))
             ti_std = t_std[:m, :]
-            yi_phys = y_sim[:m, :]
+            # yi_phys = y_sim[:m, :]
             sepia_data, model = load_model(train_config, m, p)
             print(sepia_data)
 
@@ -472,9 +472,9 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
             
             for key in samples.keys():
                 samples[key] = samples[key].astype(dtype)
-            ypred_mean = np.zeros((test_config.m, yi_phys.shape[1]), dtype=dtype)
-            ypred_lq = np.zeros((test_config.m, yi_phys.shape[1]), dtype=dtype)
-            ypred_uq = np.zeros((test_config.m, yi_phys.shape[1]), dtype=dtype)
+            ypred_mean = np.zeros((test_config.m, y_sim.shape[1]), dtype=dtype)
+            ypred_lq = np.zeros((test_config.m, y_sim.shape[1]), dtype=dtype)
+            ypred_uq = np.zeros((test_config.m, y_sim.shape[1]), dtype=dtype)
 
             # First loop over test points, make predictions in batches (reduce
             # memory usage, probably a little slower)
