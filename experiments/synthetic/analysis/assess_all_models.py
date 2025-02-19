@@ -466,7 +466,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
             sd_y[sd_y<1e-6] = 1e-6
 
             if test:
-                samples = model.get_samples(6, nburn=2500)
+                samples = model.get_samples(6, nburn=0)
             else:
                 samples = model.get_samples(512, nburn=2500)
             
@@ -499,26 +499,26 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
                 ypred_lq[batch_indices[j]] = np.quantile(ypreds + error_preds, quantile, axis=0)
                 ypred_uq[batch_indices[j]] = np.quantile(ypreds + error_preds, 1-quantile, axis=0)
 
-            # Second loop over integration points, make predictions in batches (reduce
-            # memory usage, probably a little slower)
-            test_confint = np.zeros(len(t_integrate), dtype=dtype)
-            n_batches = int(np.ceil(len(t_integrate)/n_per_batch))
-            batch_indices = np.array_split(np.arange(len(t_integrate)), n_batches)
-            for j in range(n_batches):
-                print('Integrate Batch {}/{}'.format(j+1, n_batches))
-                tj_integrate = t_integrate[batch_indices[j], :]
-                preds = SepiaEmulatorPrediction(t_pred=tj_integrate, 
-                    samples=samples, model=model)
-                preds.w = preds.w.astype(np.float32)
-                ypreds = preds.get_y()
-                error_preds = np.zeros(ypreds.shape, dtype=np.float32)
-                for l_pred in range(len(batch_indices[j])):
-                    for l_sample in range(error_preds.shape[0]):
-                        err_sd = 1/np.sqrt(samples['lamWOs'][l_sample])
-                        error_preds[l_sample][l_pred] = sd_y*np.random.normal(scale=err_sd)
-                yint_lq = np.quantile(ypreds + error_preds, quantile, axis=0)
-                yint_uq = np.quantile(ypreds + error_preds, 1-quantile, axis=0)
-                test_confint[batch_indices[j]] = np.mean(yint_uq - yint_lq)
+            # # Second loop over integration points, make predictions in batches (reduce
+            # # memory usage, probably a little slower)
+            # test_confint = np.zeros(len(t_integrate), dtype=dtype)
+            # n_batches = int(np.ceil(len(t_integrate)/n_per_batch))
+            # batch_indices = np.array_split(np.arange(len(t_integrate)), n_batches)
+            # for j in range(n_batches):
+            #     print('Integrate Batch {}/{}'.format(j+1, n_batches))
+            #     tj_integrate = t_integrate[batch_indices[j], :]
+            #     preds = SepiaEmulatorPrediction(t_pred=tj_integrate, 
+            #         samples=samples, model=model)
+            #     preds.w = preds.w.astype(np.float32)
+            #     ypreds = preds.get_y()
+            #     error_preds = np.zeros(ypreds.shape, dtype=np.float32)
+            #     for l_pred in range(len(batch_indices[j])):
+            #         for l_sample in range(error_preds.shape[0]):
+            #             err_sd = 1/np.sqrt(samples['lamWOs'][l_sample])
+            #             error_preds[l_sample][l_pred] = sd_y*np.random.normal(scale=err_sd)
+            #     yint_lq = np.quantile(ypreds + error_preds, quantile, axis=0)
+            #     yint_uq = np.quantile(ypreds + error_preds, 1-quantile, axis=0)
+            #     test_confint[batch_indices[j]] = np.mean(yint_uq - yint_lq)
 
             # Compute statistics and save results
             pred_resid = ypred_mean - y_test
@@ -535,15 +535,15 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
 
             pred_lq = np.mean(ypred_lq, axis=1)
             pred_uq = np.mean(ypred_uq, axis=1)
-            integrated_ci = np.mean(test_confint)
-            confint = integrated_ci*np.ones(pred_rmse.shape)
+            # integrated_ci = np.mean(test_confint)
+            # confint = integrated_ci*np.ones(pred_rmse.shape)
 
             pred_arr = np.array([
                 pred_rmse, 
                 pred_mape, 
                 pred_lq, 
                 pred_uq, 
-                confint, 
+                # confint, 
                 frac_covered
             ]).T
             csv_file = csv_pattern.format(m, p)
