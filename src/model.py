@@ -150,7 +150,7 @@ def load_model(train_config, m, p, dtype=np.float32):
     return sepia_data, model
 
 def fit_models(train_config, n_sims, n_pcs, 
-    dtype=np.float32, recompute=False):
+    dtype=np.float32, recompute=False, samples=5000):
     """
     Fit GP model using Metropolis MCMC sampling and save to
     data directory. Saves time to compute PCA and do MCMC
@@ -185,7 +185,7 @@ def fit_models(train_config, n_sims, n_pcs,
     t_names = np.loadtxt(train_config.X_standard, delimiter=',', max_rows=1,
         dtype=str, comments=None)
 
-    y_sim = np.load(train_config.Y_physical).T.astype(dtype)
+    y_sim = np.load(train_config.Y_physical, mmap_mode='r').T.astype(dtype)
 
     data_dir = os.path.join(train_config.data_dir, 'models')
     print(train_config.data_dir)
@@ -231,8 +231,8 @@ def fit_models(train_config, n_sims, n_pcs,
                 model.params.lamUz, model.params.lamWs, model.params.lamWOs]
 
             t0 = time.perf_counter()
-            model.tune_step_sizes(100, 5)
-            model.do_mcmc(512)
+            model.tune_step_sizes(250, 5)
+            model.do_mcmc(samples)
             t1 = time.perf_counter()
             dts_mcmc.append(t1 - t0)
             model.save_model_info(os.path.join(data_dir, model_name))
