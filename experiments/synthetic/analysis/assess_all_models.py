@@ -552,8 +552,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
                 delimiter=',', fmt='%.6e')
     return
 
-def main(train_config, test_config, n_sims, n_pcs, 
-    recompute=False, test=False):
+def main(train_config, test_config, n_sims, n_pcs):
     """
     Compute and plot test error.
 
@@ -570,18 +569,7 @@ def main(train_config, test_config, n_sims, n_pcs,
     
     n_pcs : array
              List of numbers of PCs
-    
-    recompute : bool, optional
-                Force to recompute error and overwrite on disk?
-    
-    test : bool, optional
-           Development only! Use only a few MCMC samples and integration points
-           to enable faster development. Do not use for making real predictions!
     """
-
-    if recompute:
-        compute_test_error(train_config, test_config, n_sims, n_pcs, test=test)
-
     path = os.path.join(train_config.data_dir, 'architecture/performance_n{:03d}_p{:02d}.csv')
     print('path:', path)
     fig1 = plot_joint_loss(path, n_sims, n_pcs)
@@ -606,13 +594,8 @@ if __name__=='__main__':
     parser.add_argument('test_conf')
     parser.add_argument('--npc', nargs='+', type=int, required=True)
     parser.add_argument('--nsim', nargs='+', type=int, required=True)
-    parser.add_argument('--recompute', '-r', 
-        help='Refit models and recompute prediction error',
-        action='store_true')
-    parser.add_argument('--test', '-t', action='store_true')
     args = parser.parse_args()
     train_config = utils.import_config(args.train_conf)
     test_config = utils.import_config(args.test_conf)
-    main(train_config, test_config, n_sims=args.nsim, n_pcs=args.npc,
-        recompute=args.recompute, test=args.test)
+    main(train_config, test_config, n_sims=args.nsim, n_pcs=args.npc)
     
