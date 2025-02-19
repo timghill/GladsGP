@@ -231,7 +231,15 @@ def fit_models(train_config, n_sims, n_pcs,
                 model.params.lamUz, model.params.lamWs, model.params.lamWOs]
 
             t0 = time.perf_counter()
-            model.tune_step_sizes(250, 5)
+            model.tune_step_sizes(500, 5)
+
+            # set minimum step size to get better acceptance rate
+            for i,p in enumerate(model.params.mcmcList):
+                if p.name=='betaU':
+                    step = p.mcmc.stepParam.copy()
+                    step[step<1e-2] = 1e-2
+                    p.mcmc.stepParam = step
+
             model.do_mcmc(samples)
             t1 = time.perf_counter()
             dts_mcmc.append(t1 - t0)
