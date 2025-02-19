@@ -466,9 +466,9 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
             sd_y[sd_y<1e-6] = 1e-6
 
             if test:
-                samples = model.get_samples(6, nburn=0)
+                samples = model.get_samples(6, nburn=2500)
             else:
-                samples = model.get_samples(64, nburn=256)
+                samples = model.get_samples(512, nburn=2500)
             
             for key in samples.keys():
                 samples[key] = samples[key].astype(dtype)
@@ -478,7 +478,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
 
             # First loop over test points, make predictions in batches (reduce
             # memory usage, probably a little slower)
-            n_per_batch = 4
+            n_per_batch = 1
             n_batches = int(np.ceil(len(x_pred)/n_per_batch))
             batch_indices = np.array_split(np.arange(len(x_pred)), n_batches)
             print(batch_indices)
