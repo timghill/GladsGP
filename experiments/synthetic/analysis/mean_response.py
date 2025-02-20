@@ -404,8 +404,8 @@ def plot_mean_response_pairs(config, pairs):
     for ax in axs.flat:
         ax.set_facecolor('none')
     
-    fig.savefig(os.path.join(config.figures, 'appendix/B02.png'), dpi=400)
-    fig.savefig(os.path.join(config.figures, 'appendix/B02.pdf'))
+    fig.savefig(os.path.join(config.figures, 'appendix/B05.png'), dpi=400)
+    fig.savefig(os.path.join(config.figures, 'appendix/B05.pdf'))
     return
 
 

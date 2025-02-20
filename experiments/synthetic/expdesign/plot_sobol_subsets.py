@@ -96,4 +96,6 @@ if __name__=='__main__':
     para_names = config.theta_names
     bounds = config.theta_bounds
     plot_subsets(design, bounds, para_names, 
-        os.path.join(config.figures, 'sobol_subsets.png'))
+        os.path.join(config.figures, 'appendix/B01.png'))
+    plot_subsets(design, bounds, para_names, 
+        os.path.join(config.figures, 'appendix/B01.pdf'))
