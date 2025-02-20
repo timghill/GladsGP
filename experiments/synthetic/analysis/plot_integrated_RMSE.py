@@ -1,13 +1,14 @@
 """
 Compute and plot space- and/or time-integrated RMSE patterns
 
-usage: plot_integrated_RMSE.py [-h] [--recompute] train_config test_config
+usage: plot_integrated_RMSE.py [-h]train_config test_config
 
 """
 
 import os
 import sys
 import pickle
+import argparse
 
 import numpy as np
 import matplotlib
@@ -21,9 +22,10 @@ import cmocean
 from sepia.SepiaPredict import SepiaEmulatorPrediction
 
 from src.model import load_model
+from src.utils import import_config
 
 
-def main(train_config, test_config, n_pcs, recompute=False, dtype=np.float32):
+def main(train_config, test_config, n_pcs):
     """
     Compute and plot space- and/or time-integrated RMSE patterns
 
@@ -34,32 +36,9 @@ def main(train_config, test_config, n_pcs, recompute=False, dtype=np.float32):
     
     test_config: module
                  Test ensemble configuration
-    
-    recompute : bool, optional
-                Force to recompute integrated RMSE values and overwrite on disk?
-
-    dtype : type, optional
-            Type to cast simulation outputs into, e.g. np.float32
         
     """
     # Load data and initialize model
-    t_std = np.loadtxt(train_config.X_standard, delimiter=',', skiprows=1,
-        comments=None).astype(dtype)
-    t_names = np.loadtxt(train_config.X_physical, delimiter=',', max_rows=1,
-        dtype=str, comments=None)
-    t_names= [tn.strip('#') for tn in t_names]
-    t_phys = np.loadtxt(train_config.X_physical, delimiter=',', skiprows=1).astype(dtype)
-    t_std = t_std[:train_config.m, :]
-    t_phys = t_phys[:train_config.m, :]
-    y_sim = np.load(train_config.Y_physical).T[:train_config.m, :].astype(dtype)
-    exp_name = train_config.exp
-
-    t_test_std = np.loadtxt(test_config.X_standard, delimiter=',', skiprows=1,
-        comments=None).astype(dtype)[:test_config.m :]
-    t_test_phys = np.loadtxt(test_config.X_physical, delimiter=',',
-        skiprows=1).astype(dtype)[:test_config.m, :]
-    y_test_sim = np.load(test_config.Y_physical).T[:test_config.m, :].astype(dtype)
-
     fig = plt.figure(figsize=(6, 3))
     gs = GridSpec(len(n_pcs)+1, 2, height_ratios=[10] + len(n_pcs)*[100],
         width_ratios=(100, 100), left=0.1, bottom=0.125, 
@@ -87,40 +66,9 @@ def main(train_config, test_config, n_pcs, recompute=False, dtype=np.float32):
             'rmse_timeseries_n{}_p{}.npy'.format(train_config.m, p))
         spatial_fname = os.path.join(data_dir, 
             'rmse_spatial_n{}_p{}.npy'.format(train_config.m, p))
-        if not os.path.exists(timeseries_fname) or not os.path.exists(spatial_fname) or recompute:
-            data, model = load_model(train_config, train_config.m, p)
 
-            # Compute test predictions and error
-            samples = model.get_samples(numsamples=32, nburn=256)
-            for key in samples.keys():
-                samples[key] = samples[key].astype(dtype)
-            Y_preds = np.zeros_like(y_test_sim)
-            for k in range(test_config.m):
-                print('k:', k)
-                xi = t_test_std[k:k+1]
-                pred = SepiaEmulatorPrediction(samples=samples, model=model,
-                    t_pred=xi)
-                pred.w = pred.w.astype(np.float32)
-                y_pred = pred.get_y()
-                y_pred = y_pred.mean(axis=0)
-                Y_preds[k] = y_pred
-
-            test_error = Y_preds - y_test_sim
-            # Integrated over time and space
-            nx = nodexy.shape[0]
-            nt = int(test_error.shape[1]/nx)
-            dim_separated_test_error = np.zeros((test_config.m, nx, nt), dtype=dtype)
-            for k in range(test_config.m):
-                dim_separated_test_error[k, :, :] = test_error[k, :].reshape((nx, nt))
-            rmse_x = np.sqrt(np.nanmean(dim_separated_test_error**2, axis=(0,2)))
-            rmse_t = np.sqrt(np.nanmean(dim_separated_test_error**2, axis=(0, 1)))
-
-            np.save(timeseries_fname, rmse_t)
-            np.save(spatial_fname, rmse_x)
-        
-        rmse_t = np.load(timeseries_fname)
         rmse_x = np.load(spatial_fname)
-
+        rmse_t = np.load(timeseries_fname)
 
         mtri = Triangulation(nodexy[:, 0]/1e3, nodexy[:, 1]/1e3, connect)
         ax2 = pcaxs[i]
@@ -159,20 +107,17 @@ def main(train_config, test_config, n_pcs, recompute=False, dtype=np.float32):
     ax1.set_ylim([0.0, ylim[1]])
     ax1.legend(loc='upper right', frameon=False)
     fig.savefig(os.path.join(train_config.figures, 
-        'rmse_timeseries_spatial.png'), dpi=400)
+        'main/fig06.png'), dpi=400)
     fig.savefig(os.path.join(train_config.figures, 
-        'rmse_timeseries_spatial.pdf'), dpi=400)
+        'main/fig06.pdf'), dpi=400)
 
 
 if __name__=='__main__':
-    import argparse
-    from src.utils import import_config
     parser = argparse.ArgumentParser()
     parser.add_argument('train_config')
     parser.add_argument('test_config')
-    parser.add_argument('--recompute', '-r', action='store_true')
     args = parser.parse_args()
     train_config = import_config(args.train_config)
     test_config = import_config(args.test_config)
     npcs = [2, 5, 8]
-    main(train_config, test_config, npcs, recompute=args.recompute)
+    main(train_config, test_config, npcs)

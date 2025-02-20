@@ -34,61 +34,6 @@ from sepia.SepiaPredict import SepiaEmulatorPrediction
 
 import scipy
 
-
-def compute_test_predictions(model, samples, t_pred, quantile=0.025):
-    """
-    Test-set prediction error
-
-    Compute mean predictions and prediction intervals on
-    test samples. This is intentionally written as a
-    CPU-inefficient 'for' loop to manage memory usage.
-
-    Parameters
-    ----------
-    model : SepiaModel
-
-    samples : dict
-                   Posterior samples to use in predictions
-    
-    t_pred : array
-             Test settings for predictions
-    
-    quantile : float [0, 1]
-               Prediction intervals are computed for the
-               interval [quantile, 1-quantile]
-    
-    Returns
-    -------
-    mean, lower_quantile, upper_quantile : array
-        (number of predictions, nx*nt) arrays
-    """
-
-    m = model.data.sim_data.y.shape[0]
-    m_pred = t_pred.shape[0]
-    n = model.data.sim_data.y.shape[1]
-    mu_y = np.mean(model.data.sim_data.y, axis=0)
-    sd_y = np.std(model.data.sim_data.y, ddof=1, axis=0)
-    sd_y[sd_y<1e-6] = 1e-6
-
-    pred_mean = np.zeros((m_pred, n), dtype=model.data.sim_data.y.dtype)
-    pred_lower = np.zeros((m_pred, n), dtype=model.data.sim_data.y.dtype)
-    pred_upper = np.zeros((m_pred, n), dtype=model.data.sim_data.y.dtype)
-    for i in range(m_pred):
-        xi = t_pred[i:i+1]
-        print('Sample {}/{}:'.format(i+1, m_pred))
-        pred = SepiaEmulatorPrediction(samples=samples,
-            model=model, t_pred=xi)
-        pred.w = pred.w.astype(model.data.sim_data.y.dtype)
-        emulator_preds = pred.get_y()
-        error_preds = np.zeros(emulator_preds.shape, dtype=np.float32)
-        for j in range(error_preds.shape[0]):
-            error_preds[j] = sd_y*np.random.normal(scale=1/np.sqrt(samples['lamWOs'][j]), size=n)
-
-        pred_mean[i, :] = np.mean(emulator_preds, axis=0)
-        pred_lower[i, :] = np.quantile(emulator_preds + error_preds, quantile, axis=0)
-        pred_upper[i, :] = np.quantile(emulator_preds + error_preds, 1-quantile, axis=0)
-    return pred_mean, pred_lower, pred_upper
-
 def plot_rmse(config, sim_y, test_y, test_error, test_lq, test_uq):
     """
     Make all test error figures
@@ -441,7 +386,7 @@ def plot_scatter(config, y_sim, test_y):
         ax.grid(linestyle=':', linewidth=0.5)
     return fig
 
-def main(config, test_config, recompute=False, dtype=np.float32):
+def main(test_config):
     """
     Fit GP, compute and save CV prediction error, make basic figures
 
@@ -457,84 +402,39 @@ def main(config, test_config, recompute=False, dtype=np.float32):
             Data type for GP predictions and CV error calculations            
     """
     # Load data and initialize model
-    t_std = np.loadtxt(config.X_standard, delimiter=',', skiprows=1,
-        comments=None).astype(dtype)
-    t_names = np.loadtxt(config.X_physical, delimiter=',', max_rows=1,
-        dtype=str, comments=None)
-    t_names= [tn.strip('#') for tn in t_names]
-    t_phys = np.loadtxt(config.X_physical, delimiter=',', skiprows=1).astype(dtype)
-    t_std = t_std[:config.m, :]
-    t_phys = t_phys[:config.m, :]
-    y_train_sim = np.load(config.Y_physical).T[:config.m, :].astype(dtype)
-
-    t_test_std = np.loadtxt(test_config.X_standard, delimiter=',', skiprows=1,
-        comments=None).astype(dtype)[:test_config.m :]
-    t_test_phys = np.loadtxt(test_config.X_physical, delimiter=',',
-        skiprows=1).astype(dtype)[:test_config.m, :]
-    y_test_sim = np.load(test_config.Y_physical).T[:test_config.m, :].astype(dtype)
-
-    cputime = {}
-    t_orig = time.perf_counter()
-    data,model = load_model(config, config.m, config.p)
-    print('main::model', model)
+    y_test_sim = np.load(test_config.Y_physical).T
     
+    if not os.path.exists(test_config.figures):
+        os.makedirs(test_config.figures)
+
+    # Load test-set predictions and error
     data_dir = 'data/reference/'
-    if not os.path.exists(data_dir):
-        os.makedirs(data_dir)
-    if not os.path.exists(config.figures):
-        os.makedirs(config.figures)
+    test_y = np.load(os.path.join(data_dir, 'pred_mean.npy'))
+    test_lq = np.load(os.path.join(data_dir, 'pred_lower.npy'))
+    test_uq = np.load(os.path.join(data_dir, 'pred_upper.npy'))
 
-    # Compute CV predictions and error
-
-    # Binary for full space-time resolved fields
-    cv_y_file = os.path.join(data_dir, 'cv_mean.npy')
-    cv_lq_file = os.path.join(data_dir, 'cv_lower.npy')
-    cv_uq_file = os.path.join(data_dir, 'cv_upper.npy')
-    if recompute or not os.path.exists(cv_y_file):
-        samples = model.get_samples(numsamples=128, nburn=256)
-        for key in samples.keys():
-            samples[key] = samples[key].astype(dtype)
-        t0_cv = time.perf_counter()
-        test_y, test_lq, test_uq = compute_test_predictions(model, 
-            samples, t_test_std, quantile=0.025)
-        t1_cv = time.perf_counter()
-        cputime['preds'] = t1_cv - t0_cv
-        np.save(cv_y_file, test_y)
-        np.save(cv_lq_file, test_lq)
-        np.save(cv_uq_file, test_uq)
-        
-    else:
-        test_y = np.load(cv_y_file).astype(dtype)[:config.m, :]
-        test_lq = np.load(cv_lq_file).astype(dtype)[:config.m :]
-        test_uq = np.load(cv_uq_file).astype(dtype)[:config.m, :]
-
-    rmse_wavg, rmse_ts = plot_rmse(config, sim_y=y_test_sim,
+    rmse_wavg, rmse_ts = plot_rmse(test_config, sim_y=y_test_sim,
         test_y=test_y, test_error=test_y-y_test_sim, test_lq=test_lq, test_uq=test_uq)
     rmse_wavg.savefig(os.path.join(
-        config.figures, 'test_error_width_avg.png'), dpi=400)
+        test_config.figures, 'main/fig07.png'), dpi=400)
     rmse_wavg.savefig(os.path.join(
-        config.figures, 'test_error_width_avg.pdf'), dpi=400)
+        test_config.figures, 'main/fig07.pdf'), dpi=400)
 
     rmse_ts.savefig(os.path.join(
-        config.figures, 'test_error_timeseries.png'), dpi=400)
+        test_config.figures, 'main/fig08.png'), dpi=400)
     rmse_ts.savefig(os.path.join(
-        config.figures, 'test_error_timeseries.pdf'), dpi=400)
+        test_config.figures, 'main/fig08.pdf'), dpi=400)
 
-    scatter_fig = plot_scatter(config, y_test_sim, test_y)
+    scatter_fig = plot_scatter(test_config, y_test_sim, test_y)
     scatter_fig.savefig(os.path.join(
-        config.figures, 'test_error_scatter.png'), dpi=400)
+        test_config.figures, 'main/fig09.png'), dpi=400)
     scatter_fig.savefig(os.path.join(
-        config.figures, 'test_error_scatter.pdf'), dpi=400)
-
-    print('Timing (seconds):', cputime)
+        test_config.figures, 'main/fig09.pdf'), dpi=400)
     return
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('conf_file')
-    parser.add_argument('test_file')
-    parser.add_argument('--recompute', '-r', action='store_true')
+    parser.add_argument('test_config')
     args = parser.parse_args()
-    config = import_config(args.conf_file)
-    test_config = import_config(args.test_file)
-    main(config, test_config, recompute=args.recompute)
+    test_config = import_config(args.test_config)
+    main(test_config)

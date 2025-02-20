@@ -1,5 +1,5 @@
 """
-Plot original GlaDS simulations, PC low-rank represetnation and GP predictions
+Plot original GlaDS simulations, PC low-rank representation and GP predictions
 """
 
 
@@ -59,7 +59,7 @@ def main(train_config, test_config, p, m):
     Y_test_lowrank = mu + sd*Z_test_lowrank
     print(Y_test_lowrank.shape)
 
-    mean_pred = np.load('data/reference/cv_mean.npy')
+    mean_pred = np.load('data/reference/pred_mean.npy')
     print('mean:', mean_pred.shape)
 
     mesh = np.load('../issm/data/geom/synthetic_mesh.pkl', allow_pickle=True)
@@ -78,6 +78,7 @@ def main(train_config, test_config, p, m):
         cmap=cmocean.cm.dense,
         vmin=0,
         vmax=1,
+        rasterized=True,
     )
 
     diffargs = dict(
@@ -144,9 +145,8 @@ def main(train_config, test_config, p, m):
     plt.subplots_adjust(bottom=0.1, left=0.065, right=0.95, top=0.9,
         hspace=0.05, wspace=0.05)
 
-    fig.savefig('figures/glads_pc_gp_comparison.png', dpi=400)
-
-
+    fig.savefig('figures/appendix/B03.png', dpi=400)
+    fig.savefig('figures/appendix/B03.pdf', dpi=400)
     return
 
 

@@ -4,6 +4,7 @@ Plot singular value proportion of variance, RMSE, and basis vectors
 
 import os
 import pickle
+import argparse
 
 import numpy as np
 import scipy
@@ -21,6 +22,7 @@ import cmocean
 from src.utils import import_config, width_average
 from src.svd import randomized_svd
 from src.model import load_model
+from src import utils
 
 def compute_truncation_error(usv, y_mean, y_sd, y_sim):
     """
@@ -45,11 +47,9 @@ def compute_truncation_error(usv, y_mean, y_sd, y_sim):
     y_rmse = np.linalg.norm(y_error, ord='fro')/np.sqrt(y_sim.size)
     return y_rmse
 
-def plot_PC_RMSE_variance(recompute=False):
+def plot_PC_RMSE_variance(train_config, n_sims, recompute=False):
     """
     Plot PC RMSE, cumulative proportion of variance and first 7 basis vectors.
-
-    This function (c.f. others) assumes config file positions.
 
     Parameters
     ----------
@@ -57,15 +57,11 @@ def plot_PC_RMSE_variance(recompute=False):
                 Force recompute PC error and overwrite on disk?
     """
     ## Part 1: plot RMSE and cumulative proportion of variance
-    config = import_config('../train_config.py')
-    y_fname = config.Y_physical
-    nsims = [16, 32, 64, 128, 256, 512]
     npcs = list(np.arange(1, 12)) + list((np.linspace(1, 10, 21)**2).astype(int))
     npcs = np.unique(npcs)
     pmax = 100
 
-    # colors = cmocean.cm.haline(np.linspace(0.2, 0.85, len(nsims)))
-    colors = cmocean.cm.deep(np.linspace(0.15, 0.9, len(nsims)))
+    colors = cmocean.cm.deep(np.linspace(0.15, 0.9, len(n_sims)))
     fig = plt.figure(figsize=(6, 3.75))
     gs_global = GridSpec(1, 2, left=0.1, bottom=0.125, top=0.95, right=0.95,
         hspace=0.0, wspace=0.15,
@@ -75,19 +71,19 @@ def plot_PC_RMSE_variance(recompute=False):
     ax2 = fig.add_subplot(gs_left[1])
     axs = np.array([ax1,ax2])
 
-    y_full = np.load(y_fname, mmap_mode='r')
-    y_full = y_full[:, :nsims[-1]].T.astype(np.float32)
-    for j in range(len(nsims)):
-        cvar_fname = 'data/architecture/pca_cvar_n{}.csv'.format(nsims[j])
-        rmse_fname = 'data/architecture/pca_rmse_n{}.csv'.format(nsims[j])
+    y_full = np.load(train_config.Y_physical, mmap_mode='r')
+    y_full = y_full[:, :n_sims[-1]].T.astype(np.float32)
+    for j in range(len(n_sims)):
+        cvar_fname = 'data/architecture/pca_cvar_n{}.csv'.format(n_sims[j])
+        rmse_fname = 'data/architecture/pca_rmse_n{}.csv'.format(n_sims[j])
         if not os.path.exists(rmse_fname) or recompute:
-            y_sim = y_full[:nsims[j]]
+            y_sim = y_full[:n_sims[j]]
             print('y_sim.shape', y_sim.shape)
             y_mean = np.mean(y_sim, axis=0)
             y_sd = np.std(y_sim, ddof=1, axis=0)
             y_sd[y_sd<1e-6] = 1e-6
             y_std = (y_sim - y_mean)/y_sd
-            pj = min(pmax, nsims[j])
+            pj = min(pmax, n_sims[j])
             usv = randomized_svd(y_std, p=pj, k=0, q=1)
             U,S,Vh = usv
             cvar = np.cumsum(S**2)/np.sum(S**2)
@@ -113,7 +109,7 @@ def plot_PC_RMSE_variance(recompute=False):
         nsim_axis = cvar[:, 0]
         cvar = cvar[:, 1]
 
-        label =nsims[j]
+        label =n_sims[j]
         ax1.plot(npcs, pca_rmse, label=label, color=colors[j])
         ax2.plot(nsim_axis, cvar, label=label, color=colors[j])
 
@@ -135,9 +131,9 @@ def plot_PC_RMSE_variance(recompute=False):
         fontweight='bold', ha='left', va='top')
     
     ## Part 2: Plot basis vectors
-    data, model = load_model(config, config.m, config.p, dtype=np.float32)
+    data, model = load_model(train_config, train_config.m, train_config.p, dtype=np.float32)
     K = data.sim_data.K.astype(np.float32)
-    pc_cumulative_var = np.loadtxt('data/architecture/pca_cvar_n{}.csv'.format(config.m))[:, 1]
+    pc_cumulative_var = np.loadtxt('data/architecture/pca_cvar_n{}.csv'.format(n_sims[-1]))[:, 1]
     pcvar = np.diff(pc_cumulative_var, prepend=0)
     nplot = 7
     ncols = 2
@@ -149,7 +145,7 @@ def plot_PC_RMSE_variance(recompute=False):
     axs = np.array([[fig.add_subplot(gs_right[i,j]) for j in range(ncols)]
         for i in range(nrows)])
     
-    with open(os.path.join(config.sim_dir, config.mesh), 'rb') as meshin:
+    with open(os.path.join(train_config.sim_dir, train_config.mesh), 'rb') as meshin:
         mesh = pickle.load(meshin)
     
     for i in range(nplot):
@@ -189,10 +185,14 @@ def plot_PC_RMSE_variance(recompute=False):
     cbar = fig.colorbar(pcol, cax=cax, orientation='horizontal')
     cbar.set_label('PC coefficients')
 
-    fig.savefig('figures/pca_rmse_var.png', dpi=600)
-    fig.savefig('figures/pca_rmse_var.pdf', dpi=600)
+    fig.savefig('figures/main/fig03.png', dpi=600)
+    fig.savefig('figures/main/fig03.pdf', dpi=600)
     
 
 if __name__=='__main__':
-    plot_PC_RMSE_variance(recompute=False)
-
+    parser = argparse.ArgumentParser()
+    parser.add_argument('train_conf')
+    parser.add_argument('--nsim', nargs='+', type=int, required=True)
+    args = parser.parse_args()
+    train_config = utils.import_config(args.train_conf)
+    plot_PC_RMSE_variance(train_config, args.nsim, recompute=False)

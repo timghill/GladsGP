@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name="mcmc-diagnostics"
-#SBATCH --time=00-00:30
-#SBATCH --mem=8G
+#SBATCH --time=00-02:30
+#SBATCH --mem=10G
 #SBATCH --account=def-gflowers
 #SBATCH --mail-user=tha111@sfu.ca
 #SBATCH --mail-type=FAIL,END,BEGIN

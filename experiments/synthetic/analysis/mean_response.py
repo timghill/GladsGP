@@ -321,8 +321,7 @@ def plot_mean_response_profiles(config):
     
     for i,ax in enumerate(axs[0]):
         ax.set_title(ylabels[i], fontsize=8)
-    fig.savefig(os.path.join(config.figures, 'scalar_response_profiles.png'), dpi=400)
-    fig.savefig(os.path.join(config.figures, 'scalar_response_profiles.pdf'))
+    fig.savefig(os.path.join(config.figures, 'scratch/scalar_response_pairwise.png'), dpi=400)
     return
 
 
@@ -405,8 +404,8 @@ def plot_mean_response_pairs(config, pairs):
     for ax in axs.flat:
         ax.set_facecolor('none')
     
-    fig.savefig(os.path.join(config.figures, 'scalar_response_pairwise.png'), dpi=400)
-    fig.savefig(os.path.join(config.figures, 'scalar_response_pairwise.pdf'))
+    fig.savefig(os.path.join(config.figures, 'appendix/B02.png'), dpi=400)
+    fig.savefig(os.path.join(config.figures, 'appendix/B02.pdf'))
     return
 
 

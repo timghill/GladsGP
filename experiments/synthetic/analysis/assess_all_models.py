@@ -71,7 +71,7 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
     RMSE = None
     MAPE = None
     CI = None
-    full_cis = np.zeros(len(n_pcs))
+    # full_cis = np.zeros(len(n_pcs))
     labelsize = 6
     for i in range(len(n_pcs)):
         p = n_pcs[i]
@@ -87,7 +87,7 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
         lower = performance[:, 2]
         upper = performance[:, 3]
         CI[i,:] = upper - lower
-        full_cis[i] = performance[0, 4]
+        # full_cis[i] = performance[0, 4]
 
     metrics = (RMSE.T, 100*MAPE.T, CI.T)
     labels = ('RMSE', 'MAPE (%)', '95% prediction interval')
@@ -120,15 +120,15 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
         ax.set_xticks(n_pcs, xtlabels)
         ax.set_xlabel('Number of PCs')
     
-    axs[0,2].plot(np.arange(1, len(n_pcs)+1), full_cis, 
-        linestyle='', marker='.', color='#000000', markersize=4, zorder=10)
+    # axs[0,2].plot(np.arange(1, len(n_pcs)+1), full_cis, 
+    #     linestyle='', marker='.', color='#000000', markersize=4, zorder=10)
 
     # 2 Number of simulations
     ax1,ax2,ax3 = axs[1]
     RMSE = None
     MAPE = None
     CI = None
-    full_cis = np.zeros(len(n_sims))
+    # full_cis = np.zeros(len(n_sims))
     for i in range(len(n_sims)):
         m = n_sims[i]
         performance = np.loadtxt(path.format(m,p_ref), delimiter=',')
@@ -143,7 +143,7 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
         lower = performance[:, 2]
         upper = performance[:, 3]
         CI[i,:] = upper - lower
-        full_cis[i] = performance[0, 4]
+        # full_cis[i] = performance[0, 4]
 
     metrics = (RMSE.T, 100*MAPE.T, CI.T)
     for i in range(len(metrics)):
@@ -165,8 +165,8 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
         ax.set_xticks(np.arange(1,len(n_sims)+1), xtlabels)
         ax.set_xlabel('Number of simulations')
         
-    axs[1,2].plot(np.arange(1, len(n_sims)+1), full_cis, 
-        linestyle='', marker='.', color='#000000', markersize=4, zorder=10)
+    # axs[1,2].plot(np.arange(1, len(n_sims)+1), full_cis, 
+    #     linestyle='', marker='.', color='#000000', markersize=4, zorder=10)
 
     ax2 = axs[1,-1].twinx()
     ax2.spines['top'].set_visible(False)
@@ -215,7 +215,7 @@ def plot_coverage(path, n_sims, n_pcs, m_ref, p_ref):
         if cov is None:
             n_train = performance.shape[0]
             cov = np.zeros((len(n_pcs), n_train))
-        cov[i,:] = performance[:,5]
+        cov[i,:] = performance[:,-1]
         coverage[i] = np.mean(cov[i])
 
     medianprops = {'color':'#000000'}
@@ -235,7 +235,7 @@ def plot_coverage(path, n_sims, n_pcs, m_ref, p_ref):
 
     # 2 Number of simulations
     cov = None
-    full_cis = np.zeros(len(n_sims))
+    # full_cis = np.zeros(len(n_sims))
     coverage = np.zeros(len(n_sims))
     for i in range(len(n_sims)):
         m = n_sims[i]
@@ -243,7 +243,7 @@ def plot_coverage(path, n_sims, n_pcs, m_ref, p_ref):
         if cov is None:
             n_train = performance.shape[0]
             cov = np.zeros((len(n_sims), n_train))
-        cov[i,:] = performance[:,5]
+        cov[i,:] = performance[:,-1]
         coverage[i] = np.mean(cov[i])
 
     ax = axs[1]
@@ -390,168 +390,6 @@ def plot_joint_loss(path, n_sims, n_pcs):
     fig.subplots_adjust(left=0.175, bottom=0.1, right=0.95, top=0.95, wspace=0.2, hspace=0.15)
     return fig
 
-
-def compute_test_error(train_config, test_config, n_sims, n_pcs, 
-    quantile=0.025, dtype=np.float32, test=False):
-    """
-    Compute test error for specified GPs.
-
-    Produces the CSV files read by the various plotting functions.
-
-    Parameters
-    ----------
-    train_config : module
-                   Training ensemble configuration
-    
-    test_config: module
-                 Test ensemble configuration
-                
-    n_sims : array
-             List of numbers of simulations
-    
-    n_pcs : array
-             List of numbers of PCs
-    
-    quantile : float, optional
-               Compute prediction uncertainty between [quantile, 1-quantile]
-    
-    dtype : type, optional
-            Type to cast simulation outputs into, e.g. np.float32
-    
-    test : bool, optional
-           Development only! Use only a few MCMC samples and integration points
-           to enable faster development. Do not use for making real predictions!
-    """
-
-    t_std = np.loadtxt(train_config.X_standard, delimiter=',', skiprows=1,
-        comments=None).astype(dtype)
-    t_names = np.loadtxt(train_config.X_standard, delimiter=',', max_rows=1,
-        dtype=str, comments=None)
-
-    y_sim = np.load(train_config.Y_physical, mmap_mode='r').T
-
-    x_pred = np.loadtxt(test_config.X_standard, delimiter=',', skiprows=1,
-        comments=None)[:test_config.m].astype(dtype)
-    y_test = np.load(test_config.Y_physical).T.astype(dtype)
-    y_test = y_test[:test_config.m]
-    
-    data_dir = os.path.join(train_config.data_dir, 'architecture')
-    if not os.path.exists(data_dir):
-        os.makedirs(data_dir)
-    csv_pattern = os.path.join(data_dir, 'performance_n{:03d}_p{:02d}.csv')
-    txtargs = dict(delimiter=',')
-
-    scale = 'columnwise'
-    n_dim = t_std.shape[1]
-    sampler = stats.qmc.LatinHypercube(n_dim, 
-        optimization='random-cd', scramble=True, seed=42186)
-    if test:
-        t_integrate = sampler.random(n=16)
-    else:
-        t_integrate = sampler.random(n=200)
-
-    for i in range(len(n_sims)):
-        for k in range(len(n_pcs)):
-            m = n_sims[i]
-            p = n_pcs[k]
-            print('m={}, p={}'.format(m,p))
-            ti_std = t_std[:m, :]
-            # yi_phys = y_sim[:m, :]
-            sepia_data, model = load_model(train_config, m, p)
-            print(sepia_data)
-
-            n = model.data.sim_data.y.shape[1]
-            mu_y = np.mean(model.data.sim_data.y, axis=0)
-            sd_y = np.std(model.data.sim_data.y, ddof=1, axis=0)
-            sd_y[sd_y<1e-6] = 1e-6
-
-            if test:
-                samples = model.get_samples(6, nburn=0)
-            else:
-                samples = model.get_samples(512, nburn=2500)
-            
-            for key in samples.keys():
-                samples[key] = samples[key].astype(dtype)
-            ypred_mean = np.zeros((test_config.m, y_sim.shape[1]), dtype=dtype)
-            ypred_lq = np.zeros((test_config.m, y_sim.shape[1]), dtype=dtype)
-            ypred_uq = np.zeros((test_config.m, y_sim.shape[1]), dtype=dtype)
-
-            # First loop over test points, make predictions in batches (reduce
-            # memory usage, probably a little slower)
-            n_per_batch = 1
-            n_batches = int(np.ceil(len(x_pred)/n_per_batch))
-            batch_indices = np.array_split(np.arange(len(x_pred)), n_batches)
-            print(batch_indices)
-            print('Using {} batches of ~{}'.format(n_batches, n_per_batch))
-            for j in range(n_batches):
-                print('Test Batch {}/{}'.format(j+1, n_batches))
-                tj_pred = x_pred[batch_indices[j],:]
-                preds = SepiaEmulatorPrediction(t_pred=tj_pred, 
-                    samples=samples, model=model)
-                preds.w = preds.w.astype(np.float32)
-                ypreds = preds.get_y()
-                error_preds = np.zeros(ypreds.shape, dtype=np.float32)
-                for l_pred in range(len(batch_indices[j])):
-                    for l_sample in range(error_preds.shape[0]):
-                        err_sd = 1/np.sqrt(samples['lamWOs'][l_sample])
-                        error_preds[l_sample][l_pred] = sd_y*np.random.normal(scale=err_sd)
-                ypred_mean[batch_indices[j]] = np.mean(ypreds, axis=0)
-                ypred_lq[batch_indices[j]] = np.quantile(ypreds + error_preds, quantile, axis=0)
-                ypred_uq[batch_indices[j]] = np.quantile(ypreds + error_preds, 1-quantile, axis=0)
-
-            # # Second loop over integration points, make predictions in batches (reduce
-            # # memory usage, probably a little slower)
-            # test_confint = np.zeros(len(t_integrate), dtype=dtype)
-            # n_batches = int(np.ceil(len(t_integrate)/n_per_batch))
-            # batch_indices = np.array_split(np.arange(len(t_integrate)), n_batches)
-            # for j in range(n_batches):
-            #     print('Integrate Batch {}/{}'.format(j+1, n_batches))
-            #     tj_integrate = t_integrate[batch_indices[j], :]
-            #     preds = SepiaEmulatorPrediction(t_pred=tj_integrate, 
-            #         samples=samples, model=model)
-            #     preds.w = preds.w.astype(np.float32)
-            #     ypreds = preds.get_y()
-            #     error_preds = np.zeros(ypreds.shape, dtype=np.float32)
-            #     for l_pred in range(len(batch_indices[j])):
-            #         for l_sample in range(error_preds.shape[0]):
-            #             err_sd = 1/np.sqrt(samples['lamWOs'][l_sample])
-            #             error_preds[l_sample][l_pred] = sd_y*np.random.normal(scale=err_sd)
-            #     yint_lq = np.quantile(ypreds + error_preds, quantile, axis=0)
-            #     yint_uq = np.quantile(ypreds + error_preds, 1-quantile, axis=0)
-            #     test_confint[batch_indices[j]] = np.mean(yint_uq - yint_lq)
-
-            # Compute statistics and save results
-            pred_resid = ypred_mean - y_test
-            pred_rmse = np.sqrt(np.mean(pred_resid**2, axis=1))
-            print('RMSE:', np.sqrt(np.mean(pred_rmse**2)))
-            lq = np.quantile(y_test, 0.1)
-            inner_mape = np.abs(pred_resid/y_test)
-            inner_mape[y_test<lq] = np.nan
-            pred_mape = np.nanmean(inner_mape, axis=1)
-
-            is_covered = np.logical_and(
-                y_test>=ypred_lq, y_test<=ypred_uq)
-            frac_covered = is_covered.sum(axis=1)/is_covered.shape[1]
-
-            pred_lq = np.mean(ypred_lq, axis=1)
-            pred_uq = np.mean(ypred_uq, axis=1)
-            # integrated_ci = np.mean(test_confint)
-            # confint = integrated_ci*np.ones(pred_rmse.shape)
-
-            pred_arr = np.array([
-                pred_rmse, 
-                pred_mape, 
-                pred_lq, 
-                pred_uq, 
-                # confint, 
-                frac_covered
-            ]).T
-            csv_file = csv_pattern.format(m, p)
-            pred_header = 'RMSE,MAPE,Lower quantile,Upper quantile,Integrated confidence interval,Fraction covered'
-            np.savetxt(csv_file, pred_arr, header=pred_header,
-                delimiter=',', fmt='%.6e')
-    return
-
 def main(train_config, test_config, n_sims, n_pcs):
     """
     Compute and plot test error.
@@ -575,17 +413,17 @@ def main(train_config, test_config, n_sims, n_pcs):
     fig1 = plot_joint_loss(path, n_sims, n_pcs)
     if not os.path.exists(train_config.figures):
         os.makedirs(train_config.figures)
-    fig1.savefig(os.path.join(train_config.figures, 'nsim_npcs_error.png'),
+    fig1.savefig(os.path.join(train_config.figures, 'main/fig04.png'),
         dpi=400)
-    fig1.savefig(os.path.join(train_config.figures, 'nsim_npcs_error.pdf'))
+    fig1.savefig(os.path.join(train_config.figures, 'main/fig04.pdf'))
     
     fig3 = plot_marginal_loss(path, np.array(n_sims), np.array(n_pcs), train_config.m, train_config.p)
-    fig3.savefig(os.path.join(train_config.figures, 'nsim_boxplot.png'), dpi=400)
-    fig3.savefig(os.path.join(train_config.figures, 'nsim_boxplot.pdf'))
+    fig3.savefig(os.path.join(train_config.figures, 'main/fig05.png'), dpi=400)
+    fig3.savefig(os.path.join(train_config.figures, 'main/fig05.pdf'))
 
     sfig = plot_coverage(path, np.array(n_sims), np.array(n_pcs), train_config.m, train_config.p)
-    sfig.savefig(os.path.join(train_config.figures, 'coverage_boxplot.png'), dpi=400)
-    sfig.savefig(os.path.join(train_config.figures, 'coverage_boxplot.pdf'))
+    sfig.savefig(os.path.join(train_config.figures, 'appendix/B04.png'), dpi=400)
+    sfig.savefig(os.path.join(train_config.figures, 'appendix/B04.pdf'))
         
 
 if __name__=='__main__':

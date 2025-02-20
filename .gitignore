@@ -44,9 +44,11 @@ GP_*
 *.err
 *.out
 
-scratch/
 
 performance*.csv
+pca*csv
+
 
 experiments/greenland
+figures.scratch
 docs/

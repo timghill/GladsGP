@@ -244,9 +244,6 @@ def plot_all_indices(config):
     indices = np.load(
         os.path.join(sensitivity_dir, 'sobol_indices.pkl'),
         allow_pickle=True)
-    scalar_indices = np.load(
-        os.path.join(sensitivity_dir, 'scalar_indices.pkl'),
-        allow_pickle=True)
     alphabet = ['(a)', '(b)', '(c)', '(d)', '(e)', '(f)']
     pca_fpattern = os.path.join(data_dir, 'models/pca_{}_n{:03d}_S.npy')
     # S = np.load(pca_fpattern.format(config.exp, config.m))
@@ -310,10 +307,13 @@ def plot_all_indices(config):
     
     for ax in axs[1:]:
         ax.set_yticklabels([])
-    fig.savefig(os.path.join(config.figures, 'sensitivity_indices_fw.png'), dpi=400)
-    fig.savefig(os.path.join(config.figures, 'sensitivity_indices_fw.pdf'))
+    fig.savefig(os.path.join(config.figures, 'main/fig11.png'), dpi=400)
+    fig.savefig(os.path.join(config.figures, 'main/fig11.pdf'))
 
     # Now for scalar variables
+    scalar_indices = np.load(
+        os.path.join(sensitivity_dir, 'scalar_indices.pkl'),
+        allow_pickle=True)
     fig = plt.figure(figsize=(3.25, 4))
     gs = GridSpec(1, 3, bottom=0.15, left=0.1, right=0.95, top=.925,
         wspace=0.3)
@@ -353,8 +353,8 @@ def plot_all_indices(config):
         ax.set_yticks(np.arange(8), config.theta_names)
     for ax in axs[1:]:
         ax.set_yticklabels([])
-    fig.savefig(os.path.join(config.figures, 'sensitivity_indices_scalars.png'), dpi=400)
-    fig.savefig(os.path.join(config.figures, 'sensitivity_indices_scalars.pdf'))
+    fig.savefig(os.path.join(config.figures, 'main/fig12.png'), dpi=400)
+    fig.savefig(os.path.join(config.figures, 'main/fig12.pdf'))
 
 def main():
     parser = argparse.ArgumentParser()
@@ -364,7 +364,7 @@ def main():
     train_config = utils.import_config(args.train_config)
 
     if args.recompute:
-        compute_scalar_indices(train_config)
+        # compute_scalar_indices(train_config)
         compute_field_indices(train_config)
 
     plot_all_indices(train_config)

@@ -52,18 +52,19 @@ def mcmc_diagnostics(train_config, recompute=True):
 
     for i,ax in enumerate(axs):
         ax.set_xlim([0, n_samples])
-        ax.set_xticks([0, 128, 256, 256+128, 512])
+        # ax.set_xticks([0, 128, 256, 256+128, 512])
         ax.grid(linestyle=':')
 
     axs[-1].set_xlabel('Iteration')
     fig.subplots_adjust(bottom=0.05, top=0.975, left=0.1, right=0.95)
-    fig.savefig('figures/mcmc_trace.png', dpi=400)
+    fig.savefig('figures/appendix/B02.png', dpi=400)
+    fig.savefig('figures/appendix/B02.pdf')
 
     # 2. CONVERGENCE DIAGNOSTICS
     chains = []
     n_repeats = 4
-    n_samples = 256
-    n_burn = 256
+    n_samples = 2500
+    n_burn = 2500
     d = 8
     if recompute:
         data,model = mtools.load_model(train_config, train_config.m, train_config.p)
@@ -110,18 +111,6 @@ def mcmc_diagnostics(train_config, recompute=True):
     phi = betas.reshape((2*n_repeats, -1, *betas.shape[2:]))
     Rhat, ESS = utils.mcmc_rhat_ess(betas, burn=0)
     accept_rate = utils.mcmc_accept_rate(betas, burn=0)
-    for para in range(8):
-        for pc in range(train_config.p):
-            if accept_rate[para,pc]<0.2 or accept_rate[para,pc]>0.45 or Rhat[para,pc]>1.1 or ESS[para,pc]/n_repeats<10:
-                fig,ax = plt.subplots()
-                ax.plot(phi[:, :, para, pc].T)
-                ax.set_title('Para {} PC {}'.format(para, pc+1))
-                ax.text(0.02, 1.02, 'accept={:.3f}\nRhat={:.3f}\nESS={:.1f}'.format(
-                    accept_rate[para,pc], Rhat[para, pc], ESS[para, pc]), 
-                    transform=ax.transAxes, ha='left', va='bottom',
-                )
-                fig.savefig('data/traces/trace_{}_{}.png'.format(para, pc+1), dpi=300)
-                plt.close(fig)
 
     print()
     print('Using m={} chains'.format(n_repeats))
@@ -183,7 +172,7 @@ def mcmc_diagnostics(train_config, recompute=True):
             tcol = 'k' if (np.abs(ri-0.5)<=0.25) else 'w'
             ax.text(pc, para, '{:.2f}'.format(ri), color=tcol, ha='center', va='center')
     
-    fig.savefig('figures/accept.png', dpi=400)
+    fig.savefig('figures/scratch/accept.png', dpi=400)
 
     fig = plt.figure(figsize=(6, 6))
     gs = GridSpec(2, 3, height_ratios=(5, 100), width_ratios=(10, 100, 10),
@@ -216,10 +205,10 @@ def mcmc_diagnostics(train_config, recompute=True):
     for para in range(8):
         for pc in range(train_config.p):
             Ri = Rhat[para,pc]
-            tcol = 'k' if Ri<=1.15 else 'w'
+            tcol = 'k' if Ri<=1.08 else 'w'
             ax.text(pc, para, '{:.2f}'.format(Ri), color=tcol, ha='center', va='center')
     
-    fig.savefig('figures/Rhat.png', dpi=400)
+    fig.savefig('figures/scratch/Rhat.png', dpi=400)
 
 
 
@@ -254,11 +243,11 @@ def mcmc_diagnostics(train_config, recompute=True):
 
     for para in range(8):
         for pc in range(train_config.p):
-            Ni = ESS[para,pc]
-            tcol = 'k' if ((Ni)>=5*n_repeats) else 'w'
+            Ni = ESS[para,pc]/n_repeats
+            tcol = 'k' if ((Ni)>=5) else 'w'
             ax.text(pc, para, '{:.2f}'.format(Ni), color=tcol, ha='center', va='center')
     
-    fig.savefig('figures/ESS.png', dpi=400)
+    fig.savefig('figures/scratch/ESS.png', dpi=400)
 
 def main():
     parser = argparse.ArgumentParser()
