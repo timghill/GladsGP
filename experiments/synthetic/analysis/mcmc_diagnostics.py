@@ -1,7 +1,7 @@
 """
 Assess MCMC sampling chain convergence, posterior sampling
 
-usage: mcmc_diagnostics_simple.py [-h] train_config
+usage: mcmc_diagnostics.py [-h] [--recompute -r] train_config
 """
 
 import os
@@ -18,7 +18,7 @@ import cmocean
 from src import utils
 from src import model as mtools
 
-def mcmc_trace(train_config, recompute=True):
+def mcmc_diagnostics(train_config, recompute=True):
     """
     MCMC diagnostic plots
         1. Trace plots
@@ -62,27 +62,27 @@ def mcmc_trace(train_config, recompute=True):
     # 2. CONVERGENCE DIAGNOSTICS
     chains = []
     n_repeats = 4
-    n_samples = 2000
-    n_burn = 2000
+    n_samples = 256
+    n_burn = 256
     d = 8
     if recompute:
         data,model = mtools.load_model(train_config, train_config.m, train_config.p)
         model.clear_samples()
 
         model.print_mcmc_info()
-        for i,p in enumerate(model.params.mcmcList):
-            if p.name=='betaU':
-                # print('betaU:', p, p.name)
-                step = p.mcmc.stepParam.copy()
-                print('min:', np.min(step))
-                # Cap step size between [1e-2, 1]
-                step[step<1e-2] = 1e-2
-                # step[step>1] = 1
+        # for i,p in enumerate(model.params.mcmcList):
+        #     if p.name=='betaU':
+        #         # print('betaU:', p, p.name)
+        #         step = p.mcmc.stepParam.copy()
+        #         print('min:', np.min(step))
+        #         # Cap step size between [1e-2, 1]
+        #         step[step<1e-2] = 1e-2
+        #         # step[step>1] = 1
 
-                # Tune k_C step size
-                # step[2, 2] = 3
-                # step[2, 4] = 0.1
-                p.mcmc.stepParam = step
+        #         # Tune k_C step size
+        #         # step[2, 2] = 3
+        #         # step[2, 4] = 0.1
+        #         p.mcmc.stepParam = step
         
         beta_start = model.params.betaU.val.copy()
 
@@ -266,7 +266,7 @@ def main():
     parser.add_argument('--recompute', required=False, action='store_true')
     args = parser.parse_args()
     train_config = utils.import_config(args.train_config)
-    mcmc_trace(train_config, recompute=args.recompute)
+    mcmc_diagnostics(train_config, recompute=args.recompute)
 
 if __name__=='__main__':
     main()

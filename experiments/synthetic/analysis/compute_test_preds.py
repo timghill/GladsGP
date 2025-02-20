@@ -154,7 +154,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
                 frac_covered
             ]).T
             csv_file = csv_pattern.format(m, p)
-            pred_header = 'RMSE,MAPE,Lower quantile,Upper quantile,Integrated confidence interval,Fraction covered'
+            pred_header = 'RMSE,MAPE,Lower quantile,Upper quantile,Fraction covered'
             np.savetxt(csv_file, pred_arr, header=pred_header,
                 delimiter=',', fmt='%.6e')
     return

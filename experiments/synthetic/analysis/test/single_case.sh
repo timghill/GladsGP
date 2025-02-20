@@ -34,6 +34,7 @@ METAJOB_ID=${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}
 
 # mkdir -p RUN$ID
 # cd RUN$ID
+curdir = $(pwd)
 
 cd ../
 echo "Case $ID:"
@@ -41,7 +42,7 @@ echo "Case $ID:"
 # Executing the command (a line from table.dat)
 # It's allowed to use more than one shell command (separated by semi-columns) on a single line
 eval "$COMM"
-cd assess/
+cd curdir
 
 # Exit status of the code:
 STATUS=$?
