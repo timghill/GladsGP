@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name="sensitivity"
-#SBATCH --time=0-02:00
-#SBATCH --mem=10G
+#SBATCH --time=0-12:00
+#SBATCH --mem=16G
 #SBATCH --account=def-gflowers
 #SBATCH --mail-user=tha111@sfu.ca
 #SBATCH --mail-type=FAIL,END

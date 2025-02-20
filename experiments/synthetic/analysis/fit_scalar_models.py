@@ -482,7 +482,7 @@ def fit(train_config, test_config, nsims, recompute=False):
 
                 samples = model.get_samples(nburn=256, numsamples=64)
 
-                # Compute CV predictions and error                
+                # Compute test-set predictions and error                
                 print('Predicting on test set...')
                 test_preds = SepiaEmulatorPrediction(model=model,
                     t_pred=t_pred, samples=samples)

@@ -21,7 +21,7 @@ from sepia.SepiaPredict import SepiaEmulatorPrediction
 from src import model as md
 from src import utils
 
-def compute_field_indices(config, dtype=np.float32, recompute=True):
+def compute_field_indices(config, dtype=np.float32, keval=8):
     """
     Compute sensitivity indices using homemade code that mimics the
     scipy.stats.sobol_indices function. This version works on multivariate
@@ -34,12 +34,12 @@ def compute_field_indices(config, dtype=np.float32, recompute=True):
     
     dtype : type, optional
             Type to cast simulation outputs into, e.g. np.float32
-
-    recompute : bool, optional
-                Force to recompute sensitivity indices and overwrite on disk?
+    
+    keval : int, optional
+            Use 2**keval samples
     
     Returns
-    -------
+    -------, 4
     dict : sensitivity indices
     """
     # Load data and initialize model
@@ -93,7 +93,7 @@ def compute_field_indices(config, dtype=np.float32, recompute=True):
     pcvar = S2/np.sum(S2)
     pcvar = pcvar[:p]
     print('Starting sensitivity calculation...')
-    indices = utils.PCA_saltelli_sensitivity_indices(func, n_dim, 8, pcvar, bootstrap=True)
+    indices = utils.PCA_saltelli_sensitivity_indices(func, n_dim, keval, pcvar, bootstrap=True)
     print('Done computing sensitivity indices')
     first_order = indices[0]
     total_index = indices[1]
@@ -125,7 +125,7 @@ def compute_field_indices(config, dtype=np.float32, recompute=True):
         pickle.dump(info, sobin)
     return info
 
-def compute_scalar_indices(config, dtype=np.float32, recompute=True):
+def compute_scalar_indices(config, dtype=np.float32, keval=8):
     """
     Compute sensitivity indices using homemade code that mimics the
     scipy.stats.sobol_indices function. This version works on scalar outputs,
@@ -138,10 +138,10 @@ def compute_scalar_indices(config, dtype=np.float32, recompute=True):
     
     dtype : type, optional
             Type to cast simulation outputs into, e.g. np.float32
-
-    recompute : bool, optional
-                Force to recompute sensitivity indices and overwrite on disk?
     
+    keval : int, optional
+            Use 2**keval samples
+
     Returns
     -------
     dict : sensitivity indices
@@ -211,7 +211,7 @@ def compute_scalar_indices(config, dtype=np.float32, recompute=True):
             y[:, k] = y_mean
         return y
         
-    indices = utils.saltelli_sensitivity_indices(func, n_dim, 8, bootstrap=True)
+    indices = utils.saltelli_sensitivity_indices(func, n_dim, keval, bootstrap=True)
     print('Done computing sensitivity indices')
     first_order = indices[0]
     total_index = indices[1]
@@ -364,7 +364,7 @@ def main():
     train_config = utils.import_config(args.train_config)
 
     if args.recompute:
-        # compute_scalar_indices(train_config)
+        compute_scalar_indices(train_config)
         compute_field_indices(train_config)
 
     plot_all_indices(train_config)
