@@ -1,10 +1,14 @@
 # Analysis contents
 
+## Table of contents
 File | Description
 ---- | ---------------
-`fit_all_models.py`         | Fit GP models for different subsets of training data and different choices for the number of principal components.
-`fit_scalar_models.py`      | Fit GP models for different subsets of training data and different choices for the number of principal components for scalar variables make scalar variable performance boxplots.
-`assess_all_models.py`      | Compute prediction error for different numbers of simulations and different choices for the number of principal components given a common test set
+`fit/`                      | Directory for parallel emulator fitting
+`test/`                     | Directory for parallel emulator predictions on the test set
+`fit_all_models.py`         | Fit GP models for different subsets of training data and different choices for the number of principal components (called from `fit/` directory)
+`fit_scalar_models.py`      | Fit GP models for different subsets of training data and different choices for the number of principal components for scalar variables make scalar variable performance boxplots
+`compute_test_error.py`     | Compute prediction error for different numbers of simulations and different choices for the number of principal components (called from `test/` directory)
+`assess_all_models.py`      | Plot and sssess prediction error for different numbers of simulations and different choices for the number of principal components given a common test set 
 `plot_test_error.py`        | Evaluate GP for GlaDS ensembles: timeseries, width-averaged test errors
 `plot_PC_RMSE.py`           | Plot singular value proportion of variance, RMSE, and basis vectors
 `plot_PC_maps.py`           | Plot GlaDS output, PC low-rank representation, and GP predictions
@@ -26,13 +30,13 @@ rm -rf MISC OUTPUT STATUSES TMP
 submit.run 6
 ```
 
-Then we need to evaluate the MCMC sampling to ensure that the chains have converged (~2 h):
+Then evaluate the MCMC sampling to ensure that the chains have converged (~2 h):
 
 ```bash
 sbatch mcmc_diagnostics.sh
 ```
 
-Once those jobs are completed, we can make test predictions and store RMSE, MAPE, etc (~12 h):
+Once those jobs are completed, compute test predictions and store RMSE, MAPE, etc (~12 h):
 
 ```bash
 cd test
@@ -42,7 +46,7 @@ submit.run 12
 
 ### Fit scalar emulators and compute test predictions
 
-At the same time as the flotation-fraction jobs, we can fit the scalar emulators (~12 h):
+At the same time as the flotation-fraction jobs, fit the scalar emulators (~12 h):
 
 ```bash
 sbatch fit_scalar_models.sh
@@ -63,7 +67,7 @@ sbatch runme.sh
 
 ### Sensitivity analysis
 
-Last, if all the assessments look good, we can compute the sensitivity indices (~12 h):
+Last, if all the assessments look good, compute the sensitivity indices (~12 h):
 
 ```
 sbatch sensitivity_indices.sh
