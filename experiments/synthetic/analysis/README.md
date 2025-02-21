@@ -36,7 +36,7 @@ Then evaluate the MCMC sampling to ensure that the chains have converged (~2 h):
 sbatch mcmc_diagnostics.sh
 ```
 
-Once those jobs are completed, compute test predictions and store RMSE, MAPE, etc (~12 h):
+Once those jobs are completed, compute test predictions and store RMSE, MAPE, etc (~6 h):
 
 ```bash
 cd test
@@ -46,7 +46,7 @@ submit.run 12
 
 ### Fit scalar emulators and compute test predictions
 
-At the same time as the flotation-fraction jobs, fit the scalar emulators (~12 h):
+At the same time as the flotation-fraction jobs, fit the scalar emulators (~3 h):
 
 ```bash
 sbatch fit_scalar_models.sh
@@ -54,7 +54,7 @@ sbatch fit_scalar_models.sh
 
 Then compute the mean response surfaces:
 ```bash
-python mean_response.py ../train_config.py --recompute
+sbatch mean_response.sh
 ```
 
 ### Run GP assessment/evaluation
