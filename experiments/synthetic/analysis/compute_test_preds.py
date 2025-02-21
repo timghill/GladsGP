@@ -101,7 +101,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
             if test:
                 samples = model.get_samples(16, nburn=2500)
             else:
-                samples = model.get_samples(256, nburn=2500)
+                samples = model.get_samples(512, nburn=2500)
             
             for key in samples.keys():
                 samples[key] = samples[key].astype(dtype)

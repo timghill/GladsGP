@@ -21,7 +21,7 @@ from sepia.SepiaPredict import SepiaEmulatorPrediction
 from src import model as md
 from src import utils
 
-def compute_field_indices(config, dtype=np.float32, keval=8):
+def compute_field_indices(config, dtype=np.float32, keval=9):
     """
     Compute sensitivity indices using homemade code that mimics the
     scipy.stats.sobol_indices function. This version works on multivariate
@@ -125,7 +125,7 @@ def compute_field_indices(config, dtype=np.float32, keval=8):
         pickle.dump(info, sobin)
     return info
 
-def compute_scalar_indices(config, dtype=np.float32, keval=8):
+def compute_scalar_indices(config, dtype=np.float32, keval=9):
     """
     Compute sensitivity indices using homemade code that mimics the
     scipy.stats.sobol_indices function. This version works on scalar outputs,
