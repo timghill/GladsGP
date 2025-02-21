@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name="mean-response"
 #SBATCH --time=00-01:00
-#SBATCH --mem=4G
+#SBATCH --mem=2G
 #SBATCH --account=def-gflowers
 #SBATCH --mail-user=tha111@sfu.ca
-#SBATCH --mail-type=FAIL,END,BEGIN
+#SBATCH --mail-type=FAIL,END
 #SBATCH --output=mean_response.out
 #SBATCH --error=mean_response.err
 

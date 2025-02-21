@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=scalar
 #SBATCH --account=def-gflowers
-#SBATCH --time=0-12:00
-#SBATCH --mem=8G
+#SBATCH --time=0-03:00
+#SBATCH --mem=1G
 #SBATCH --mail-user=tha111@sfu.ca
 #SBATCH --mail-type=FAIL,END
 #SBATCH --output=fit_scalar_models.out
