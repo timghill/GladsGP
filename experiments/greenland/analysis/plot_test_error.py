@@ -32,69 +32,7 @@ from sepia.SepiaModel import SepiaModel
 from sepia.SepiaData import SepiaData
 from sepia.SepiaPredict import SepiaEmulatorPrediction
 
-
-def compute_test_predictions(model, samples, t_pred, n_folds=100, quantile=0.025):
-    """
-    Cross-validation error
-
-    Compute mean predictions and prediction intervals on
-    test samples. This is intentionally written as a
-    CPU-inefficient 'for' loop to minimize memory usage.
-
-    Parameters
-    ----------
-    model : SepiaModel
-
-    samples : dict
-                   Posterior samples to use in predictions
-    
-    t_pred : array
-             Test settings for predictions
-    
-    quantile : float [0, 1]
-               Prediction intervals are computed for the
-               interval [quantile, 1-quantile]
-    
-    Returns
-    -------
-    mean, lower_quantile, upper_quantile : array
-        (number of predictions, nx*nt) arrays
-    """
-
-    print('mean simulator precision:')
-    print(np.mean(samples['lamWOs']))
-
-    m = model.data.sim_data.y.shape[0]
-    m_pred = t_pred.shape[0]
-    n = model.data.sim_data.y.shape[1]
-    mu_y = np.mean(model.data.sim_data.y, axis=0)
-    sd_y = np.std(model.data.sim_data.y, ddof=1, axis=0)
-    sd_y[sd_y<1e-6] = 1e-6
-
-    print('mean, median sd:')
-    print(np.mean(sd_y))
-    print(np.median(sd_y))
-
-    pred_mean = np.zeros((m_pred, n), dtype=model.data.sim_data.y.dtype)
-    pred_lower = np.zeros((m_pred, n), dtype=model.data.sim_data.y.dtype)
-    pred_upper = np.zeros((m_pred, n), dtype=model.data.sim_data.y.dtype)
-    for i in range(m_pred):
-        xi = t_pred[i:i+1]
-        print('Sample {}/{}:'.format(i+1, m_pred))
-        pred = SepiaEmulatorPrediction(samples=samples,
-            model=model, t_pred=xi)
-        pred.w = pred.w.astype(model.data.sim_data.y.dtype)
-        emulator_preds = pred.get_y()
-        error_preds = np.zeros(emulator_preds.shape, dtype=np.float32)
-        for j in range(error_preds.shape[0]):
-            error_preds[j] = sd_y*np.random.normal(scale=1/np.sqrt(samples['lamWOs'][j]), size=n)
-
-        pred_mean[i, :] = np.mean(emulator_preds, axis=0)
-        pred_lower[i, :] = np.quantile(emulator_preds + error_preds, quantile, axis=0)
-        pred_upper[i, :] = np.quantile(emulator_preds + error_preds, 1-quantile, axis=0)
-    return pred_mean, pred_lower, pred_upper
-
-def plot_error_samples(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
+def plot_error_samples(config, sim_y, ypred_mean, cv_error, ypred_lq, ypred_uq):
     figs = []
 
     with open(os.path.join(config.sim_dir,config.mesh), 'rb') as meshin:
@@ -112,9 +50,9 @@ def plot_error_samples(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     ymax = np.max(mesh['y'][surf<=zmax])/1e3
 
     # Pick ensemble members, nodes, and time steps
-    m_test = cv_y.shape[0]
+    m_test = ypred_mean.shape[0]
     nx = len(mesh['x'])
-    nt = int(cv_y.shape[1]/nx)
+    nt = int(ypred_mean.shape[1]/nx)
     dim_separated_cv_error = np.zeros((m_test, nx, nt), dtype=np.float32)
     for i in range(m_test):
         dim_separated_cv_error[i, :, :] = cv_error[i, :].reshape((nx, nt))
@@ -153,9 +91,9 @@ def plot_error_samples(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     for j,node in enumerate(nodes):
         for i,mi in enumerate(sim_indices):
             yi_sim = sim_y[mi].reshape((nx, nt))[node, :]
-            yi_pred = cv_y[mi].reshape((nx, nt))[node, :]
-            yi_lq = cv_lq[mi].reshape((nx, nt))[node, :]
-            yi_uq = cv_uq[mi].reshape((nx, nt))[node, :]
+            yi_pred = ypred_mean[mi].reshape((nx, nt))[node, :]
+            yi_lq = ypred_lq[mi].reshape((nx, nt))[node, :]
+            yi_uq = ypred_uq[mi].reshape((nx, nt))[node, :]
             ax = axs[i,j]
             ax.fill_between(tt, yi_lq, yi_uq,
                 color=colors[j], alpha=0.5, edgecolor=colors[j])
@@ -204,7 +142,7 @@ def plot_error_samples(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
         mi = sim_indices[i]
         (ax1,ax2,ax3) = axs[i, :]
         y_sim_spatial = sim_y[mi].reshape((nx, nt))[:, timestep]
-        y_pred_spatial = cv_y[mi].reshape((nx, nt))[:, timestep]
+        y_pred_spatial = ypred_mean[mi].reshape((nx, nt))[:, timestep]
         pc1 = ax1.tripcolor(mtri, y_sim_spatial, 
             vmin=0, vmax=2., cmap=cmap, rasterized=True)
         pc2 = ax2.tripcolor(mtri, y_pred_spatial, 
@@ -266,7 +204,7 @@ def plot_error_samples(config, sim_y, cv_y, cv_error, cv_lq, cv_uq):
     return figs
 
 
-def plot_scatter(config, y_sim, cv_y):
+def plot_scatter(config, y_sim, ypred_mean):
     with open(os.path.join(config.sim_dir, config.mesh), 'rb') as meshin:
         mesh = pickle.load(meshin)
     nodexy = np.array([mesh['x'], mesh['y']]).T
@@ -280,7 +218,7 @@ def plot_scatter(config, y_sim, cv_y):
     rng = np.random.default_rng()
     rng_inds = rng.choice(np.arange(int(np.prod(y_sim.shape)/2)), size=int(1e6), replace=False)
     y_sim_scatter = y_sim.flat[rng_inds]
-    y_pred_scatter = cv_y.flat[rng_inds]
+    y_pred_scatter = ypred_mean.flat[rng_inds]
 
     # surf = 390 + 6*( (np.sqrt(nodexy[:, 0] + 5e3) - np.sqrt(5e3)))
     # bed = 350
@@ -305,7 +243,7 @@ def plot_scatter(config, y_sim, cv_y):
     bed_scatter = bed.flat[rng_inds]
 
     print('y_sim.shape:', y_sim.shape)
-    print('cv_y.shape:', cv_y.shape)
+    print('ypred_mean.shape:', ypred_mean.shape)
     print('p_i.shape:', p_i.shape)
 
     p_i_scatter = p_i.flat[rng_inds]
@@ -414,46 +352,13 @@ def main(config, test_config, recompute=False, dtype=np.float32):
         skiprows=1).astype(dtype)[:test_config.m, :]
     y_test_sim = np.load(test_config.Y_physical).T[:test_config.m, :].astype(dtype)
 
-    cputime = {}
-    t_orig = time.perf_counter()
-    # data, model, pca_basis_fig = init_model(t_std, y_sim, config.exp, p, 
-    #     data_dir=config.data_dir, scale=scale, recompute=recompute, plot=True)
-    data,model = load_model(config, config.m, config.p)
-    print('main::model', model)
-    
-    data_dir = 'data/reference/'
-    if not os.path.exists(data_dir):
-        os.makedirs(data_dir)
-    if not os.path.exists(config.figures):
-        os.makedirs(config.figures)
+    ypred_mean = np.load(cv_y_file, mmap_mode='r')[:test_config.m, :]
+    ypred_lq = np.load(cv_lq_file, mmap_mode='r')[:test_config.m :]
+    ypred_uq = np.load(cv_uq_file, mmap_mode='r')[:test_config.m, :]
 
-    # Compute CV predictions and error
-
-    # Binary for full space-time resolved fields
-    cv_y_file = os.path.join(data_dir, 'cv_mean.npy')
-    cv_lq_file = os.path.join(data_dir, 'cv_lower.npy')
-    cv_uq_file = os.path.join(data_dir, 'cv_upper.npy')
-    if recompute or not os.path.exists(cv_y_file):
-        samples = model.get_samples(numsamples=128, nburn=256)
-        for key in samples.keys():
-            samples[key] = samples[key].astype(dtype)
-        t0_cv = time.perf_counter()
-        cv_y, cv_lq, cv_uq = compute_test_predictions(model, 
-            samples, t_test_std, n_folds=64, quantile=0.025)
-        t1_cv = time.perf_counter()
-        cputime['preds'] = t1_cv - t0_cv
-        np.save(cv_y_file, cv_y)
-        np.save(cv_lq_file, cv_lq)
-        np.save(cv_uq_file, cv_uq)
-        
-    else:
-        cv_y = np.load(cv_y_file, mmap_mode='r')[:test_config.m, :]
-        cv_lq = np.load(cv_lq_file, mmap_mode='r')[:test_config.m :]
-        cv_uq = np.load(cv_uq_file, mmap_mode='r')[:test_config.m, :]
-
-    print('cv_y.shape:', cv_y.shape)
+    print('ypred_mean.shape:', ypred_mean.shape)
     rmse_ts, rmse_map = plot_error_samples(config, 
-        sim_y=y_test_sim, cv_y=cv_y, cv_error=cv_y-y_test_sim, cv_lq=cv_lq, cv_uq=cv_uq)
+        sim_y=y_test_sim, ypred_mean=ypred_mean, cv_error=ypred_mean-y_test_sim, ypred_lq=ypred_lq, ypred_uq=ypred_uq)
     rmse_ts.savefig(os.path.join(
         config.figures, 'test_error_timeseries.png'), dpi=400)
     rmse_ts.savefig(os.path.join(
@@ -465,11 +370,9 @@ def main(config, test_config, recompute=False, dtype=np.float32):
         config.figures, 'test_error_map.pdf'), dpi=400)
 
 
-    scatter_fig = plot_scatter(test_config, y_test_sim, cv_y)
+    scatter_fig = plot_scatter(test_config, y_test_sim, ypred_mean)
     scatter_fig.savefig(os.path.join(
         config.figures, 'test_error_scatter.png'), dpi=400)
-
-    print('Timing (seconds):', cputime)
 
     return
 
