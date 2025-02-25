@@ -94,7 +94,7 @@ def main(train_config, test_config, m, p):
                 perf[statistics_labels[j] + '_' + quantiles_labels[k]].append(statq[k])
     
     df = pd.DataFrame(perf, index=mask_labels)
-    with open('table_summary.txt', 'w') as table:
+    with open('tabulate_performance.txt', 'w') as table:
         table.writelines(df.to_string() + '\n')
 
     # subsets

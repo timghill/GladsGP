@@ -4,7 +4,7 @@
 #SBATCH --mem=12G
 #SBATCH --account=def-gflowers
 #SBATCH --mail-user=tha111@sfu.ca
-#SBATCH --mail-type=FAIL,END
+#SBATCH --mail-type=FAIL,END,BEGIN
 
 # Don't change this line:
 

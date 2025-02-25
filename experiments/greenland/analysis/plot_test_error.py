@@ -320,7 +320,7 @@ def plot_scatter(config, y_sim, ypred_mean):
         ax.grid(linestyle=':', linewidth=0.5)
     return fig
 
-def main(config, test_config, recompute=False, dtype=np.float32):
+def main(config, test_config, dtype=np.float32):
     """
     Fit GP, compute and save CV prediction error, make basic figures
 
@@ -328,9 +328,6 @@ def main(config, test_config, recompute=False, dtype=np.float32):
     ----------
     config : module
              Configuration file loaded as a module
-    
-    recompute : bool, optional
-                Force recompute fields even if file already exists
     
     dtype : optional (np.float32)
             Data type for GP predictions and CV error calculations            
@@ -380,8 +377,7 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('conf_file')
     parser.add_argument('test_file')
-    parser.add_argument('--recompute', '-r', action='store_true')
     args = parser.parse_args()
     config = import_config(args.conf_file)
     test_config = import_config(args.test_file)
-    main(config, test_config, recompute=args.recompute)
+    main(config, test_config)
