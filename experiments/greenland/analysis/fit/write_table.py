@@ -1,10 +1,10 @@
 import numpy as np
 
-# npc = np.arange(1, 11+1)[::-1]
-# nsim = np.array([512, 256, 128, 64, 32, 16])
+npc = np.arange(1, 11+1)[::-1]
+nsim = np.array([512, 256, 128, 64, 32, 16])
 
-npc = np.arange(2, 5+1)
-nsim = np.array([64, 32, 16])
+# npc = np.arange(2, 5+1)
+# nsim = np.array([64, 32, 16])
 
 xx,yy = np.meshgrid(nsim, npc)
 
