@@ -291,10 +291,8 @@ def plot_scatter(config, y_sim, test_y):
     axs = np.array([fig.add_subplot(gs[2*i,0]) for i in range(3)])
     # cax = fig.add_subplot(gs[-1,0])
     cax = fig.add_subplot(gs[2,1])
-    rng = np.random.default_rng()
-    rng_inds = rng.choice(np.arange(np.prod(y_sim.shape)), size=int(1e6), replace=False)
-    y_sim_scatter = y_sim.flat[rng_inds]
-    y_pred_scatter = test_y.flat[rng_inds]
+    y_sim_scatter = y_sim.flatten()
+    y_pred_scatter = test_y.flatten()
 
     surf = 390 + 6*( (np.sqrt(nodexy[:, 0] + 5e3) - np.sqrt(5e3)))
     bed = 350
@@ -303,7 +301,7 @@ def plot_scatter(config, y_sim, test_y):
     p_i = np.tile(np.vstack(p_i_spatial), (1, 365))
     p_i = np.tile(p_i, (config.m, 1, 1))
 
-    p_i_scatter = p_i.flat[rng_inds]
+    p_i_scatter = p_i.flatten()
     N_sim_scatter = p_i_scatter*(1 - y_sim_scatter)
     N_pred_scatter = p_i_scatter*(1 - y_pred_scatter)
 
@@ -323,15 +321,15 @@ def plot_scatter(config, y_sim, test_y):
     phi_max = 2e7/1e6
     phi_ticks = [5, 10, 15, 20]
 
-    countnorm = mpc.LogNorm(vmin=1e0, vmax=1e4, clip=True)
+    countnorm = mpc.LogNorm(vmin=1e0, vmax=1e6, clip=True)
 
     axs[0].hexbin(y_sim_scatter, y_pred_scatter, norm=countnorm,
         cmap=cmocean.cm.rain, gridsize=100, edgecolors='none',
         extent=(ff_min, ff_max, ff_min, ff_max), rasterized=True)
     axs[0].set_xlim([ff_min, ff_max])
     axs[0].set_ylim([ff_min, ff_max])
-    RSS = np.sum((y_sim_scatter.flatten() - y_pred_scatter.flatten())**2)
-    TSS = np.sum((y_sim_scatter.flatten() - np.mean(y_sim_scatter.flatten()))**2)
+    RSS = np.sum((y_sim_scatter - y_pred_scatter)**2)
+    TSS = np.sum((y_sim_scatter - np.mean(y_sim_scatter))**2)
     R2 = 1 - RSS/TSS
     axs[0].text(0.95, 0.025, '$R^2={:.3f}$'.format(R2),
         ha='right', va='bottom', transform=axs[0].transAxes)
@@ -348,8 +346,8 @@ def plot_scatter(config, y_sim, test_y):
         extent=(N_min, N_max, N_min, N_max), rasterized=True)
     axs[1].set_xlim([N_min, N_max])
     axs[1].set_ylim([N_min, N_max])
-    RSS = np.sum((N_sim_scatter.flatten() - N_pred_scatter.flatten())**2)
-    TSS = np.sum((N_sim_scatter.flatten() - np.mean(N_sim_scatter.flatten()))**2)
+    RSS = np.sum((N_sim_scatter - N_pred_scatter)**2)
+    TSS = np.sum((N_sim_scatter - np.mean(N_sim_scatter))**2)
     R2 = 1 - RSS/TSS
     axs[1].text(0.95, 0.025, '$R^2={:.3f}$'.format(R2),
         ha='right', va='bottom', transform=axs[1].transAxes)
@@ -366,8 +364,8 @@ def plot_scatter(config, y_sim, test_y):
         extent=(phi_min, phi_max, phi_min, phi_max))
     axs[2].set_xlim([phi_min, phi_max])
     axs[2].set_ylim([phi_min, phi_max])
-    RSS = np.sum((phi_sim_scatter.flatten() - phi_pred_scatter.flatten())**2)
-    TSS = np.sum((phi_sim_scatter.flatten() - np.mean(phi_sim_scatter.flatten()))**2)
+    RSS = np.sum((phi_sim_scatter - phi_pred_scatter)**2)
+    TSS = np.sum((phi_sim_scatter - np.mean(phi_sim_scatter))**2)
     R2 = 1 - RSS/TSS
     axs[2].text(0.95, 0.025, '$R^2={:.3f}$'.format(R2),
         ha='right', va='bottom', transform=axs[2].transAxes)
@@ -380,7 +378,7 @@ def plot_scatter(config, y_sim, test_y):
         fontweight='bold', ha='left', va='top')
 
     cbar = fig.colorbar(hb, cax=cax)
-    cbar.set_label('Count (n=$10^{}$)'.format(int(np.log10(len(rng_inds)))))
+    cbar.set_label('Count (n=$10^{}$)'.format(int(np.log10(len(y_sim_scatter)))))
 
     for ax in axs:
         ax.grid(linestyle=':', linewidth=0.5)
