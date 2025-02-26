@@ -52,7 +52,7 @@ At the same time as the flotation-fraction jobs, fit the scalar emulators (~3 h)
 sbatch fit_scalar_models.sh
 ```
 
-Then compute the mean response surfaces:
+Then compute the mean response surfaces (~minutes):
 ```bash
 sbatch mean_response.sh
 ```
@@ -67,7 +67,7 @@ sbatch runme.sh
 
 ### Sensitivity analysis
 
-Last, if all the assessments look good, compute the sensitivity indices (~12 h):
+Last, if all the assessments look good, compute the sensitivity indices (~6 h):
 
 ```
 sbatch sensitivity_indices.sh

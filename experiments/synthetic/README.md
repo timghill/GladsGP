@@ -16,4 +16,4 @@ Emulator fitting is done from `analysis/`. `fit_all_models.py` fits models for v
 
 ## Analysis and plotting scripts
 
-The remaining scripts in `analysis` do various plotting and analysis tasks. Some of these are computationally intensive enough that they have corresponding `submit_*.sh` scripts to run on HPC resources. In particular, `assess_all_models.py` computes RMSE, MAPE and prediction uncertainty for models with various m and p values.
+The remaining scripts in `analysis` do various plotting and analysis tasks. See `analysis/README.md` for a summary.

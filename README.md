@@ -1,9 +1,9 @@
 # Gaussian Process emulation of GlaDS subglacial drainage model
 
-Tim Hill, 2024 (tim_hill_2@sfu.ca)
+Tim Hill, 2025 (tim_hill_2@sfu.ca)
 https://github.com/timghill/GladsGP
 
-Code corresponding to "Computationally efficient subglacial drainage modeling using Gaussian Process emulators".
+Code corresponding to "Computationally efficient subglacial drainage modeling using Gaussian Process emulators: GlaDS-GP v1.0".
 
 This project emulates Glacier Drainage System (GlaDS) model ([Werder et al., 2013](https://doi.org/10.1002/jgrf.20146)) outputs.
 
@@ -36,3 +36,7 @@ pip install -e .
 This code also depends on a fork of the SEPIA package ([timghill/SEPIA](https://github.com/timghill/SEPIA)) that that can be installed using `pip install -e .`, and simulations are run with the Ice-sheet and Sea-level System Model ([ISSM](https://github.com/ISSMteam/ISSM)).
 
 Your python environment and installation can be verified by running `test_install.sh`. This script should run with no errors and should update several figures in `experiments/synthetic/analysis/figures/`.
+
+## Getting started
+
+The best way to get started is to explore the notebooks in the `examples/` directory.
