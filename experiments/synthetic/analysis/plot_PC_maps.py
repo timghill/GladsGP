@@ -1,5 +1,16 @@
 """
+usage: plot_PC_maps.py [-h] train_config test_config npc nsim
+
 Plot original GlaDS simulations, PC low-rank representation and GP predictions
+
+positional arguments:
+  train_config
+  test_config
+  npc
+  nsim
+
+options:
+  -h, --help    show this help message and exit
 """
 
 
@@ -152,7 +163,9 @@ def main(train_config, test_config, p, m):
 
 if __name__=='__main__':
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=''
+    'Plot original GlaDS simulations, PC low-rank representation and GP predictions'
+    )
     parser.add_argument('train_config')
     parser.add_argument('test_config')
     parser.add_argument('npc', type=int)

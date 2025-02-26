@@ -1,10 +1,18 @@
 """
-Compute prediction error for different numbers of simulations and different
-choices for the number of principal components given a common test set
+usage: compute_test_preds.py [-h] --npc NPC [NPC ...] --nsim NSIM [NSIM ...] [--test] train_conf test_conf
 
-usage: assess_all_models.py [-h] --npc NPC [NPC ...] --nsim NSIM [NSIM ...] [--recompute] [--test]
-                            train_conf test_conf
+Compute prediction error for different numbers of simulationsand different choices for the number of principal
+components given a common test set
 
+positional arguments:
+  train_conf
+  test_conf
+
+options:
+  -h, --help            show this help message and exit
+  --npc NPC [NPC ...]
+  --nsim NSIM [NSIM ...]
+  --test, -t
 """
 
 import os
@@ -65,8 +73,9 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
             Type to cast simulation outputs into, e.g. np.float32
     
     test : bool, optional
-           Development only! Use only a few MCMC samples and integration points
-           to enable faster development. Do not use for making real predictions!
+           Development only! Use only a few MCMC samples
+           to enable faster development. 
+           Do not use for making real predictions!
     """
 
     t_std = np.loadtxt(train_config.X_standard, delimiter=',', skiprows=1,
@@ -195,7 +204,10 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
         
 
 if __name__=='__main__':
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description='Compute prediction error for different numbers of simulations'
+        'and different choices for the number of principal components given a common test set'
+    )
     parser.add_argument('train_conf')
     parser.add_argument('test_conf')
     parser.add_argument('--npc', nargs='+', type=int, required=True)

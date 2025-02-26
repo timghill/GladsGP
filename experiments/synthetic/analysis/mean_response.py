@@ -1,6 +1,14 @@
 """
-Compute the mean response of scalar variables to each model parameter
 usage: mean_response.py [-h] [--recompute] train_config
+
+Compute the mean response of scalar variables to each model parameter
+
+positional arguments:
+  train_config
+
+options:
+  -h, --help       show this help message and exit
+  --recompute, -r
 """
 
 
@@ -414,7 +422,9 @@ def main():
     """
     usage: mean_response.py [-h] [--recompute] train_config
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=''
+    'Compute the mean response of scalar variables to each model parameter'
+    )
     parser.add_argument('train_config')
     parser.add_argument('--recompute', '-r', action='store_true')
     args = parser.parse_args()

@@ -1,8 +1,16 @@
 """
-Fit GP models for different subsets of training data and different
-choices for the number of principal components.
+usage: fit_all_models.py [-h] --npc NPC [NPC ...] --nsim NSIM [NSIM ...] [--recompute] config_file
 
-usage: fit_all_models.py --npc NPC [NPC ...] --nsim NSIM [NSIM ...] [--recompute] config_file
+Fit GP models for differentsubsets of training data and different choices for the number of principal components
+
+positional arguments:
+  config_file
+
+options:
+  -h, --help            show this help message and exit
+  --npc NPC [NPC ...]
+  --nsim NSIM [NSIM ...]
+  --recompute, -r
 """
 
 import argparse
@@ -26,7 +34,9 @@ def main():
         --nsim NSIM [NSIM ...]  list of numbers of simulations
         --recompute, -r         Force to recompute PCs and overwrite on disk? Optional
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='Fit GP models for different'
+    'subsets of training data and different choices for the number of principal components'
+    )
     parser.add_argument('config_file')
     parser.add_argument('--npc', nargs='+', type=int, required=True)
     parser.add_argument('--nsim', nargs='+', type=int, required=True)

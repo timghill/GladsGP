@@ -1,5 +1,16 @@
 """
-Plot singular value proportion of variance, RMSE, and basis vectors
+usage: plot_PC_maps.py [-h] train_config test_config npc nsim
+
+Plot original GlaDS simulations, PC low-rank representation and GP predictions
+
+positional arguments:
+  train_config
+  test_config
+  npc
+  nsim
+
+options:
+  -h, --help    show this help message and exit
 """
 
 import os
@@ -190,7 +201,9 @@ def plot_PC_RMSE_variance(train_config, n_sims, recompute=False):
     
 
 if __name__=='__main__':
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=''
+    'Plot singular value proportion of variance, RMSE, and basis vectors'
+    )
     parser.add_argument('train_conf')
     parser.add_argument('--nsim', nargs='+', type=int, required=True)
     args = parser.parse_args()

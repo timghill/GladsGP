@@ -1,7 +1,14 @@
 """
-Assess MCMC sampling chain convergence, posterior sampling
+usage: mcmc_diagnostics.py [-h] [--recompute] train_config
 
-usage: mcmc_diagnostics.py [-h] [--recompute -r] train_config
+Assess MCMC sampling chainconvergence by re-sampling with multiple chains
+
+positional arguments:
+  train_config
+
+options:
+  -h, --help    show this help message and exit
+  --recompute
 """
 
 import os
@@ -71,19 +78,6 @@ def mcmc_diagnostics(train_config, recompute=True):
         model.clear_samples()
 
         model.print_mcmc_info()
-        # for i,p in enumerate(model.params.mcmcList):
-        #     if p.name=='betaU':
-        #         # print('betaU:', p, p.name)
-        #         step = p.mcmc.stepParam.copy()
-        #         print('min:', np.min(step))
-        #         # Cap step size between [1e-2, 1]
-        #         step[step<1e-2] = 1e-2
-        #         # step[step>1] = 1
-
-        #         # Tune k_C step size
-        #         # step[2, 2] = 3
-        #         # step[2, 4] = 0.1
-        #         p.mcmc.stepParam = step
         
         beta_start = model.params.betaU.val.copy()
 
@@ -250,7 +244,9 @@ def mcmc_diagnostics(train_config, recompute=True):
     fig.savefig('figures/scratch/ESS.png', dpi=400)
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='Assess MCMC sampling chain'
+    'convergence by re-sampling with multiple chains'
+    )
     parser.add_argument('train_config')
     parser.add_argument('--recompute', required=False, action='store_true')
     args = parser.parse_args()

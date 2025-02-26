@@ -1,5 +1,14 @@
 """
-Compute Sobol' indices for multivariate and scalar outputs
+usage: sensitivity_indices.py [-h] [--recompute] train_config
+
+Compute Sobolindices for multivariate and scalar outputs
+
+positional arguments:
+  train_config
+
+options:
+  -h, --help       show this help message and exit
+  --recompute, -r
 """
 
 import os
@@ -357,7 +366,8 @@ def plot_all_indices(config):
     fig.savefig(os.path.join(config.figures, 'main/fig12.pdf'))
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='Compute Sobol'
+    'indices for multivariate and scalar outputs')
     parser.add_argument('train_config')
     parser.add_argument('--recompute', '-r', action='store_true')
     args = parser.parse_args()

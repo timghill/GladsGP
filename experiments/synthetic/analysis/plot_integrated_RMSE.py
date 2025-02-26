@@ -1,8 +1,14 @@
 """
+usage: plot_integrated_RMSE.py [-h] train_config test_config
+
 Compute and plot space- and/or time-integrated RMSE patterns
 
-usage: plot_integrated_RMSE.py [-h]train_config test_config
+positional arguments:
+  train_config
+  test_config
 
+options:
+  -h, --help    show this help message and exit
 """
 
 import os
@@ -113,7 +119,9 @@ def main(train_config, test_config, n_pcs):
 
 
 if __name__=='__main__':
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=''
+    'Compute and plot space- and/or time-integrated RMSE patterns'
+    )
     parser.add_argument('train_config')
     parser.add_argument('test_config')
     args = parser.parse_args()

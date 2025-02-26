@@ -1,7 +1,13 @@
 """
-Evaluate GP for GlaDS ensembles: timeseries, width-averaged test errors.
+usage: plot_test_error.py [-h] test_config
 
-usage: plot_test_error.py [-h] [--recompute] conf_file test_file
+Evaluate GP for GlaDS ensembles:timeseries, width-averaged, scatter plot test errors
+
+positional arguments:
+  test_config
+
+options:
+  -h, --help   show this help message and exit
 """
 
 import os
@@ -431,7 +437,9 @@ def main(test_config):
     return
 
 if __name__=='__main__':
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='Evaluate GP for GlaDS ensembles:'
+        'timeseries, width-averaged, scatter plot test errors'
+    )
     parser.add_argument('test_config')
     args = parser.parse_args()
     test_config = import_config(args.test_config)

@@ -1,10 +1,17 @@
 """
-Compute prediction error for different numbers of simulations and different
-choices for the number of principal components given a common test set
+usage: assess_all_models.py [-h] --npc NPC [NPC ...] --nsim NSIM [NSIM ...] train_conf test_conf
 
-usage: assess_all_models.py [-h] --npc NPC [NPC ...] --nsim NSIM [NSIM ...] [--recompute] [--test]
-                            train_conf test_conf
+Evaluate prediction error for different numbers of simulationsand different choices for the number of principal
+components given a common test set
 
+positional arguments:
+  train_conf
+  test_conf
+
+options:
+  -h, --help            show this help message and exit
+  --npc NPC [NPC ...]
+  --nsim NSIM [NSIM ...]
 """
 
 import os
@@ -71,7 +78,6 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
     RMSE = None
     MAPE = None
     CI = None
-    # full_cis = np.zeros(len(n_pcs))
     labelsize = 6
     for i in range(len(n_pcs)):
         p = n_pcs[i]
@@ -87,7 +93,6 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
         lower = performance[:, 2]
         upper = performance[:, 3]
         CI[i,:] = upper - lower
-        # full_cis[i] = performance[0, 4]
 
     metrics = (RMSE.T, 100*MAPE.T, CI.T)
     labels = ('RMSE', 'MAPE (%)', '95% prediction interval')
@@ -119,9 +124,6 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
         xtlabels[1::2] = ''
         ax.set_xticks(n_pcs, xtlabels)
         ax.set_xlabel('Number of PCs')
-    
-    # axs[0,2].plot(np.arange(1, len(n_pcs)+1), full_cis, 
-    #     linestyle='', marker='.', color='#000000', markersize=4, zorder=10)
 
     # 2 Number of simulations
     ax1,ax2,ax3 = axs[1]
@@ -427,7 +429,10 @@ def main(train_config, test_config, n_sims, n_pcs):
         
 
 if __name__=='__main__':
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description='Evaluate prediction error for different numbers of simulations'
+        'and different choices for the number of principal components given a common test set'
+    )
     parser.add_argument('train_conf')
     parser.add_argument('test_conf')
     parser.add_argument('--npc', nargs='+', type=int, required=True)

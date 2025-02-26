@@ -1,5 +1,14 @@
 """
-Tabulate emulator performance: Table X
+usage: mcmc_diagnostics.py [-h] [--recompute] train_config
+
+Assess MCMC sampling chainconvergence by re-sampling with multiple chains
+
+positional arguments:
+  train_config
+
+options:
+  -h, --help    show this help message and exit
+  --recompute
 """
 
 import argparse
@@ -91,7 +100,8 @@ def main(test_config):
         table.writelines(df.to_string() + '\n')
 
 if __name__=='__main__':
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description='Tabulate emulator performance')
     parser.add_argument('test_config')
     args = parser.parse_args()
     main(args.test_config)

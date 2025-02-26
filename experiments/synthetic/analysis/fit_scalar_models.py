@@ -1,9 +1,18 @@
 """
-Fit GP models for different subsets of training data and different
-choices for the number of principal components for scalar variables,
-make scalar variable performance boxplots.
-
 usage: fit_scalar_models.py [-h] --nsim NSIM [NSIM ...] [--recompute] train_config test_config
+
+Fit GP models fordifferent subsets of training data and different choices for thenumber of principal components for
+scalar variables,make scalar variable performance boxplots
+
+positional arguments:
+  train_config
+  test_config
+
+options:
+  -h, --help            show this help message and exit
+  --nsim NSIM [NSIM ...]
+  --recompute, -r
+
 """
 
 import argparse
@@ -554,7 +563,10 @@ def main():
     """
     usage: fit_scalar_models.py [-h] --nsim NSIM [NSIM ...] [--recompute] train_config test_config
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='Fit GP models for'
+    'different subsets of training data and different choices for the'
+    'number of principal components for scalar variables,'
+    'make scalar variable performance boxplots')
     parser.add_argument('train_config')
     parser.add_argument('test_config')
     parser.add_argument('--nsim', nargs='+', type=int, required=True)
