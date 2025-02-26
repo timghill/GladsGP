@@ -1,66 +1,66 @@
-1 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 1 --nsim 512 -t
-2 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 2 --nsim 512 -t
-3 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 3 --nsim 512 -t
-4 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 4 --nsim 512 -t
-5 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 5 --nsim 512 -t
-6 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 6 --nsim 512 -t
-7 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 7 --nsim 512 -t
-8 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 8 --nsim 512 -t
-9 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 9 --nsim 512 -t
-10 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 10 --nsim 512 -t
-11 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 11 --nsim 512 -t
-12 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 1 --nsim 256 -t
-13 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 2 --nsim 256 -t
-14 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 3 --nsim 256 -t
-15 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 4 --nsim 256 -t
-16 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 5 --nsim 256 -t
-17 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 6 --nsim 256 -t
-18 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 7 --nsim 256 -t
-19 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 8 --nsim 256 -t
-20 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 9 --nsim 256 -t
-21 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 10 --nsim 256 -t
-22 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 11 --nsim 256 -t
-23 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 1 --nsim 128 -t
-24 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 2 --nsim 128 -t
-25 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 3 --nsim 128 -t
-26 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 4 --nsim 128 -t
-27 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 5 --nsim 128 -t
-28 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 6 --nsim 128 -t
-29 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 7 --nsim 128 -t
-30 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 8 --nsim 128 -t
-31 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 9 --nsim 128 -t
-32 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 10 --nsim 128 -t
-33 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 11 --nsim 128 -t
-34 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 1 --nsim 64 -t
-35 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 2 --nsim 64 -t
-36 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 3 --nsim 64 -t
-37 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 4 --nsim 64 -t
-38 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 5 --nsim 64 -t
-39 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 6 --nsim 64 -t
-40 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 7 --nsim 64 -t
-41 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 8 --nsim 64 -t
-42 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 9 --nsim 64 -t
-43 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 10 --nsim 64 -t
-44 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 11 --nsim 64 -t
-45 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 1 --nsim 32 -t
-46 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 2 --nsim 32 -t
-47 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 3 --nsim 32 -t
-48 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 4 --nsim 32 -t
-49 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 5 --nsim 32 -t
-50 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 6 --nsim 32 -t
-51 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 7 --nsim 32 -t
-52 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 8 --nsim 32 -t
-53 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 9 --nsim 32 -t
-54 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 10 --nsim 32 -t
-55 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 11 --nsim 32 -t
-56 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 1 --nsim 16 -t
-57 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 2 --nsim 16 -t
-58 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 3 --nsim 16 -t
-59 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 4 --nsim 16 -t
-60 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 5 --nsim 16 -t
-61 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 6 --nsim 16 -t
-62 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 7 --nsim 16 -t
-63 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 8 --nsim 16 -t
-64 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 9 --nsim 16 -t
-65 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 10 --nsim 16 -t
-66 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 11 --nsim 16 -t
+1 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 1 --nsim 512
+2 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 2 --nsim 512
+3 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 3 --nsim 512
+4 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 4 --nsim 512
+5 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 5 --nsim 512
+6 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 6 --nsim 512
+7 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 7 --nsim 512
+8 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 8 --nsim 512
+9 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 9 --nsim 512
+10 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 10 --nsim 512
+11 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 11 --nsim 512
+12 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 1 --nsim 256
+13 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 2 --nsim 256
+14 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 3 --nsim 256
+15 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 4 --nsim 256
+16 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 5 --nsim 256
+17 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 6 --nsim 256
+18 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 7 --nsim 256
+19 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 8 --nsim 256
+20 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 9 --nsim 256
+21 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 10 --nsim 256
+22 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 11 --nsim 256
+23 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 1 --nsim 128
+24 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 2 --nsim 128
+25 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 3 --nsim 128
+26 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 4 --nsim 128
+27 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 5 --nsim 128
+28 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 6 --nsim 128
+29 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 7 --nsim 128
+30 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 8 --nsim 128
+31 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 9 --nsim 128
+32 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 10 --nsim 128
+33 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 11 --nsim 128
+34 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 1 --nsim 64
+35 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 2 --nsim 64
+36 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 3 --nsim 64
+37 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 4 --nsim 64
+38 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 5 --nsim 64
+39 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 6 --nsim 64
+40 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 7 --nsim 64
+41 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 8 --nsim 64
+42 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 9 --nsim 64
+43 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 10 --nsim 64
+44 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 11 --nsim 64
+45 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 1 --nsim 32
+46 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 2 --nsim 32
+47 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 3 --nsim 32
+48 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 4 --nsim 32
+49 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 5 --nsim 32
+50 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 6 --nsim 32
+51 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 7 --nsim 32
+52 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 8 --nsim 32
+53 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 9 --nsim 32
+54 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 10 --nsim 32
+55 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 11 --nsim 32
+56 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 1 --nsim 16
+57 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 2 --nsim 16
+58 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 3 --nsim 16
+59 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 4 --nsim 16
+60 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 5 --nsim 16
+61 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 6 --nsim 16
+62 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 7 --nsim 16
+63 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 8 --nsim 16
+64 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 9 --nsim 16
+65 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 10 --nsim 16
+66 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 11 --nsim 16
