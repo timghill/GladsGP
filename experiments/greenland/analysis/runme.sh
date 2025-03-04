@@ -2,7 +2,7 @@
 #SBATCH --job-name=post-proc
 #SBATCH --account=def-gflowers
 #SBATCH --time=0-00:10
-#SBATCH --mem=8G
+#SBATCH --mem=32G
 #SBATCH --output=runme.out
 #SBATCH --error=runme.err
 

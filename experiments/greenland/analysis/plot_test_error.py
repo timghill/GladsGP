@@ -216,15 +216,15 @@ def plot_scatter(config, y_sim, ypred_mean):
     axs = np.array([fig.add_subplot(gs[2*i]) for i in range(3)])
     cax = fig.add_subplot(gs[-1])
     rng = np.random.default_rng()
-    rng_inds = rng.choice(np.arange(int(np.prod(y_sim.shape)/2)), size=int(1e6), replace=False)
-    y_sim_scatter = y_sim.flat[rng_inds]
-    y_pred_scatter = ypred_mean.flat[rng_inds]
+    # rng_inds = rng.choice(np.arange(int(np.prod(y_sim.shape)/2)), size=int(1e6), replace=False)
+    y_sim_scatter = y_sim.flatten()
+    y_pred_scatter = ypred_mean.flatten()
 
     # surf = 390 + 6*( (np.sqrt(nodexy[:, 0] + 5e3) - np.sqrt(5e3)))
     # bed = 350
     # thick = surf - bed
-    surf = np.load('../issm/data/geom/IS_surface.npy')
-    bed = np.load('../issm/data/geom/IS_bed.npy')
+    surf = np.load('../issm/data/geom/IS_surface.npy').astype(np.float32)
+    bed = np.load('../issm/data/geom/IS_bed.npy').astype(np.float32)
     thick = surf - bed
     thick[thick<10] = 10
 
@@ -233,20 +233,20 @@ def plot_scatter(config, y_sim, ypred_mean):
     g = 9.8
 
     p_i_spatial = g*rho_i*thick
-    p_i = np.tile(np.vstack(p_i_spatial), (1, 365))
+    p_i = np.tile(np.vstack(p_i_spatial, dtype=np.float32), (1, 365))
     p_i = np.tile(p_i, (config.m, 1, 1))
     p_i = p_i.reshape(y_sim.shape)
 
     bed = np.tile(np.vstack(bed), (1, 365))
     bed = np.tile(bed, (config.m, 1, 1))
     bed = bed.reshape(y_sim.shape)
-    bed_scatter = bed.flat[rng_inds]
+    bed_scatter = bed.flatten()
 
-    print('y_sim.shape:', y_sim.shape)
-    print('ypred_mean.shape:', ypred_mean.shape)
-    print('p_i.shape:', p_i.shape)
+    print('y_sim.shape:', y_sim.shape, y_sim.dtype)
+    print('ypred_mean.shape:', ypred_mean.shape, ypred_mean.dtype)
+    print('p_i.shape:', p_i.shape, p_i.dtype)
 
-    p_i_scatter = p_i.flat[rng_inds]
+    p_i_scatter = p_i.flatten()
     N_sim_scatter = p_i_scatter*(1 - y_sim_scatter)
     N_pred_scatter = p_i_scatter*(1 - y_pred_scatter)
 
@@ -266,7 +266,7 @@ def plot_scatter(config, y_sim, ypred_mean):
     phi_max = 2.5e7/1e6
     phi_ticks = [5, 10, 15, 20, 25]
 
-    countnorm = colors.LogNorm(vmin=1e0, vmax=1e4, clip=True)
+    countnorm = colors.LogNorm(vmin=1e0, vmax=1e6, clip=True)
 
     axs[0].hexbin(y_sim_scatter, y_pred_scatter, norm=countnorm,
         cmap=cmocean.cm.rain, gridsize=100, edgecolors='none',
@@ -314,7 +314,7 @@ def plot_scatter(config, y_sim, ypred_mean):
         fontweight='bold', ha='left', va='top')
 
     cbar = fig.colorbar(hb, cax=cax)
-    cbar.set_label('Count (n={})'.format(len(rng_inds)))
+    cbar.set_label('Count (n={:,})'.format(len(y_sim_scatter)))
 
     for ax in axs:
         ax.grid(linestyle=':', linewidth=0.5)
