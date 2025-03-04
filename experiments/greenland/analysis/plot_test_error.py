@@ -349,11 +349,10 @@ def main(config, test_config, dtype=np.float32):
         skiprows=1).astype(dtype)[:test_config.m, :]
     y_test_sim = np.load(test_config.Y_physical).T[:test_config.m, :].astype(dtype)
 
-    ypred_mean = np.load(cv_y_file, mmap_mode='r')[:test_config.m, :]
-    ypred_lq = np.load(cv_lq_file, mmap_mode='r')[:test_config.m :]
-    ypred_uq = np.load(cv_uq_file, mmap_mode='r')[:test_config.m, :]
-
-    print('ypred_mean.shape:', ypred_mean.shape)
+    ypred_mean = np.load('data/reference/pred_mean.npy', mmap_mode='r')[:test_config.m, :]
+    ypred_lq = np.load('data/reference/pred_lower.npy', mmap_mode='r')[:test_config.m :]
+    ypred_uq = np.load('data/reference/pred_upper.npy', mmap_mode='r')[:test_config.m, :]
+    
     rmse_ts, rmse_map = plot_error_samples(config, 
         sim_y=y_test_sim, ypred_mean=ypred_mean, cv_error=ypred_mean-y_test_sim, ypred_lq=ypred_lq, ypred_uq=ypred_uq)
     rmse_ts.savefig(os.path.join(

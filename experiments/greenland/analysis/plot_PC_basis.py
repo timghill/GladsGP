@@ -48,7 +48,8 @@ def plot_basis(config):
         cb = fig.colorbar(tpc, cax=cax, orientation='horizontal')
         cb.set_label('PC coefficient')
         plt.subplots_adjust(left=0, bottom=0, right=1, top=0.95)
-        fig.savefig('figures/IGS_2024/PC_basis_{:02d}.png'.format(i), dpi=400)
+        # fig.savefig('figures/IGS_2024/PC_basis_{:02d}.png'.format(i), dpi=400)
+    fig.savefig('figures/PC_basis.png', dpi=400)
 
 
 

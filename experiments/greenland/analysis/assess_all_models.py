@@ -61,7 +61,7 @@ def plot_marginal_loss(path, n_sims, n_pcs, m_ref, p_ref):
         upper = performance[:, 3]
         CI[i,:] = upper - lower
         # full_cis[i] = performance[0, 4]
-        cov[i,:] = performance[:,5]
+        cov[i,:] = performance[:,4]
         coverage[i] = np.mean(cov[i])
 
     metrics = (RMSE.T, 100*MAPE.T, CI.T, 100*cov.T)

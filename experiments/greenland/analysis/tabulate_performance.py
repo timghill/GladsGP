@@ -57,7 +57,7 @@ def main(train_config, test_config, m, p):
     ]
     mask_labels = ['All', 'Below 1100 m', 'Above 1100 m', 'DJF', 'JJA']
 
-    gp_pred = np.load('data/reference/cv_mean.npy', mmap_mode='r')
+    gp_pred = np.load('data/reference/pred_mean.npy', mmap_mode='r')
     y_test = np.load(test_config.Y_physical, mmap_mode='r').T
     gp_err = gp_pred - y_test
 

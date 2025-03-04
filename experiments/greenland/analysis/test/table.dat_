@@ -1,0 +1,2 @@
+65 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 10 --nsim 16
+66 python -u compute_test_preds.py ../train_config.py ../test_config.py --npc 11 --nsim 16
