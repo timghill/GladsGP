@@ -3,7 +3,7 @@
 Tim Hill, 2025 (tim_hill_2@sfu.ca)
 https://github.com/timghill/GladsGP
 
-Code corresponding to "Computationally efficient subglacial drainage modeling using Gaussian Process emulators: GlaDS-GP v1.0". This project emulates Glacier Drainage System (GlaDS) model ([Werder et al., 2013](https://doi.org/10.1002/jgrf.20146)) outputs. This repository consists of code to run the GlaDS simulation ensembles, fit and evaluate the GP emulators, and scripts to make the figures for the published paper.
+Code corresponding to "Computationally efficient subglacial drainage modeling using Gaussian Process emulators: GlaDS-GP v1.0". This project emulates Glacier Drainage System (GlaDS) model ([Werder et al., 2013](https://doi.org/10.1002/jgrf.20146)) outputs. This repository consists of code to run the GlaDS simulation ensembles, fit and evaluate the GP emulators, and scripts to make the figures for the published paper [(README)](experiments/synthetic/analysis/README.md).
 
 ## Description
 
