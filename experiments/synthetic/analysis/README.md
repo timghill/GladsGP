@@ -1,5 +1,7 @@
 # Analysis contents
 
+This directory contains the functions and scripts used to fit, evaluate, and analyze GP emulators, including putting together the final figures for the paper.
+
 ## Table of contents
 File | Description
 ---- | ---------------
@@ -19,6 +21,8 @@ File | Description
 `mean_response.py`          | Compute the mean effect of each model input on each scalar variable
 
 ## Workflow
+
+The following steps can be followed to re-fit the emulators and make figures. To make figures corresponding to the already fit emulators, run each python script without the `--recompute` flag.
 
 ### Fit flotation-fraction emulators and predict
 
