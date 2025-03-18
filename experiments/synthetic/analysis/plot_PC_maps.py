@@ -94,7 +94,10 @@ def main(train_config, test_config, p, m):
 
     diffargs = dict(
         cmap=cmocean.cm.balance,
-        vmin=-0.09, vmax=0.09)
+        vmin=-0.09, 
+        vmax=0.09,
+        rasterized=True,
+    )
 
     tstep = 210
     axs[0,0].tripcolor(mtri, Y_test[sim_num, tstep::365], **triargs)

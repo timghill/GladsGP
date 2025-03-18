@@ -66,9 +66,9 @@ axs[1,0].set_visible(False)
 ax3d = fig.add_subplot(projection='3d', computed_zorder=False, facecolor='none')
 ax3d.set_position(Bbox.from_extents(-0.2, -0.05, 0.75, 0.6))
 ax3d.plot_trisurf(mtri, bed, cmap=cmocean.cm.turbid, vmin=300, vmax=365,
-    edgecolor='none', linewidth=0., antialiased=False)
+    edgecolor='none', linewidth=0., antialiased=False, rasterized=True)
 tripc3d = ax3d.plot_trisurf(mtri, surf, cmap=cmocean.cm.ice, edgecolor='#444444', linewidth=0.025, alpha=1,
-    antialiased=True, vmin=0, vmax=2000, zorder=3)
+    antialiased=True, vmin=0, vmax=2000, zorder=3, rasterized=True)
 ax3d.view_init(elev=20, azim=-125) #Works!
 ax3d.set_box_aspect((4, 1, 1))
 ax3d.set_aspect('equalxy')

@@ -367,7 +367,7 @@ def plot_scatter(config, y_sim, test_y):
 
     hb = axs[2].hexbin(phi_sim_scatter/1e6, phi_pred_scatter/1e6, norm=countnorm,
         cmap=cmocean.cm.rain, gridsize=100, edgecolors='none',
-        extent=(phi_min, phi_max, phi_min, phi_max))
+        extent=(phi_min, phi_max, phi_min, phi_max), rasterized=True)
     axs[2].set_xlim([phi_min, phi_max])
     axs[2].set_ylim([phi_min, phi_max])
     RSS = np.sum((phi_sim_scatter - phi_pred_scatter)**2)
