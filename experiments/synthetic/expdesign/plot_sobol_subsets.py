@@ -61,7 +61,7 @@ def plot_subsets(design, bounds, para_names, figure=None):
     cbar.set_label('log$_2$ samples')
     cbar.set_ticks(ms[:-1] + 0.5)
     if figure:
-        fig.savefig(figure, dpi=800)
+        fig.savefig(figure, dpi=200)
     
     # Now individually: plot just first input pair to highlight iterative space-filling nature
     fig2, ax2 = plt.subplots()
@@ -78,7 +78,7 @@ def plot_subsets(design, bounds, para_names, figure=None):
     for k in k_vals:
         ax2.scatter(X[:2**k, 0], X[:2**k, 3], cmap=cmap, norm=norm,
             s=75, c=(np.ones(2**k)*k), edgecolor='#888888', linewidth=0.3, zorder=k_vals[-1]-k)
-        fig2.savefig('sobol_subsets_{:02d}.png'.format(k), dpi=400)
+        fig2.savefig('sobol_subsets_{:02d}.png'.format(k), dpi=200)
         
     return fig
 
