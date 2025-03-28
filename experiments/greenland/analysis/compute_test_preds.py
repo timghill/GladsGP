@@ -76,7 +76,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
 
     x_pred = np.loadtxt(test_config.X_standard, delimiter=',', skiprows=1,
         comments=None)[:test_config.m].astype(dtype)
-    y_test = np.load(test_config.Y_physical).T.astype(dtype)
+    y_test = np.load(test_config.Y_physical, mmap_mode='r').T.astype(dtype)
     
     data_dir = os.path.join(train_config.data_dir, 'architecture')
     if not os.path.exists(data_dir):
@@ -149,7 +149,12 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
 
             # Compute statistics and save results
             pred_resid = ypred_mean - y_test
-            pred_rmse = np.sqrt(np.mean(pred_resid**2, axis=1))
+
+            ymask = ones(y_test.shape)
+            ymask[:, np.min(y_test, axis=1)<0] = np.nan
+            pred_resid *= ymask
+
+            pred_rmse = np.sqrt(np.nanmean(pred_resid**2, axis=1))
 
             if p in target_p and m==train_config.m:
                 out_sp = 'data/architecture/rmse_spatial_n{}_p{}.npy'.format(m,p)
@@ -158,9 +163,9 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
                 nt = 365
                 nx = int(n/nt)
 
-                rmse = np.sqrt(np.mean(pred_resid**2, axis=0)).reshape((nx, nt))
-                rmse_ts = np.sqrt(np.mean(rmse**2, axis=0))
-                rmse_sp = np.sqrt(np.mean(rmse**2, axis=1))
+                rmse = np.sqrt(np.nanmean(pred_resid**2, axis=0)).reshape((nx, nt))
+                rmse_ts = np.sqrt(np.nanmean(rmse**2, axis=0))
+                rmse_sp = np.sqrt(np.nanmean(rmse**2, axis=1))
 
                 np.save(out_sp, rmse_sp)
                 np.save(out_ts, rmse_ts)
@@ -171,7 +176,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
             inner_mape = np.abs(pred_resid/y_test)
             inner_mape[y_test<lq] = np.nan
             pred_mape = np.nanmean(inner_mape, axis=1)
-
+            
             is_covered = np.logical_and(
                 y_test>=ypred_lq, y_test<=ypred_uq)
             frac_covered = is_covered.sum(axis=1)/is_covered.shape[1]
