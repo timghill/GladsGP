@@ -24,7 +24,10 @@ def plot_basis(config):
         mmap_mode='r').astype(np.float32)
     V = np.load('data/models/pca_greenland_n{:03d}_Vh.npy'.format(config.m), 
         mmap_mode='r').astype(np.float32)
-    pcvar = S**2/np.sum(S**2)
+    # pcvar = S**2/np.sum(S**2)
+    cvar = np.loadtxt('data/architecture/pca_cvar_n256.csv')[:, -1]
+    print('cvar:', cvar)
+    pcvar = np.diff(cvar, prepend=0)
     # K = np.diag(S[:p]) @ Vh[:p] / np.sqrt(y_sim.shape[0])
     K = np.diag(S[:nplot]) @ V[:nplot] / np.sqrt(U.shape[0])
     print(K.shape)
@@ -48,8 +51,8 @@ def plot_basis(config):
         cb = fig.colorbar(tpc, cax=cax, orientation='horizontal')
         cb.set_label('PC coefficient')
         plt.subplots_adjust(left=0, bottom=0, right=1, top=0.95)
-        # fig.savefig('figures/IGS_2024/PC_basis_{:02d}.png'.format(i), dpi=400)
-    fig.savefig('figures/PC_basis.png', dpi=400)
+        fig.savefig('figures/PC_basis_{:02d}.png'.format(i), dpi=400)
+    # fig.savefig('figures/PC_basis.png', dpi=400)
 
 
 

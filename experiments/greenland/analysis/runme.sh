@@ -13,6 +13,8 @@ source ~/SFU-code/GladsGP/pyenv/bin/activate
 
 set -x
 
+python -u plot_PC_RMSE.py ../train_config.py --nsim 16 32 64 128 256 512
+
 python -u plot_PC_basis.py ../train_config.py
 
 python -u plot_test_error.py ../train_config.py ../test_config.py
