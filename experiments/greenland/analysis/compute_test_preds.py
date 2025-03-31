@@ -77,6 +77,8 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
     x_pred = np.loadtxt(test_config.X_standard, delimiter=',', skiprows=1,
         comments=None)[:test_config.m].astype(dtype)
     y_test = np.load(test_config.Y_physical, mmap_mode='r').T.astype(dtype)
+    ymask = np.ones(y_test.shape)
+    ymask[:, np.median(y_test, axis=0)<0] = np.nan
     
     data_dir = os.path.join(train_config.data_dir, 'architecture')
     if not os.path.exists(data_dir):
@@ -149,9 +151,6 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
 
             # Compute statistics and save results
             pred_resid = ypred_mean - y_test
-
-            ymask = ones(y_test.shape)
-            ymask[:, np.min(y_test, axis=1)<0] = np.nan
             pred_resid *= ymask
 
             pred_rmse = np.sqrt(np.nanmean(pred_resid**2, axis=1))
