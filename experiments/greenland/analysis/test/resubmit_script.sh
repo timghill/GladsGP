@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH -t 0-02:00
-#SBATCH --mem=16G
+#SBATCH -t 0-04:00
+#SBATCH --mem=36G
 #  You have to replace Your_account_name below with the name of your account:
 #SBATCH -A def-gflowers
 

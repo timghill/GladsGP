@@ -78,6 +78,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
         comments=None)[:test_config.m].astype(dtype)
     y_test = np.load(test_config.Y_physical, mmap_mode='r').T.astype(dtype)
     ymask = np.ones(y_test.shape)
+    ymask[:, np.min(y_test, axis=0)<-1./3.] = np.nan
     ymask[:, np.median(y_test, axis=0)<0] = np.nan
     
     data_dir = os.path.join(train_config.data_dir, 'architecture')
