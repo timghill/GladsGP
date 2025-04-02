@@ -45,16 +45,16 @@ add_neg = 0
 # nticks_neg = logmin - logabsmin
 
 ylog_pos = np.nan*np.zeros(ymed.shape)
-ylog_pos[ymin>0] = np.log10(ymin[ymin>0])
+ylog_pos[ymed>0] = np.log10(ymed[ymed>0])
 
-ylog_neg = np.nan*np.zeros(ymin.shape)
-ylog_neg[ymin<0] = np.log10(-ymin[ymin<0])
+ylog_neg = np.nan*np.zeros(ymed.shape)
+ylog_neg[ymed<0] = np.log10(-ymed[ymed<0])
 
 # cticks = np.arange(-add_pos, 0.1)
 # cticklabels = [r'10$^{{{}}}$'.format(int(x)) for x in cticks]
 
 pc = ax.tripcolor(mtri, 10**ylog_pos, cmap='Reds', vmin=0, vmax=1)
-cbar_pos = fig.colorbar(pc, cax=cax1, label=r'Min winter flotation fraction $f_{\rm{w}}>0$',
+cbar_pos = fig.colorbar(pc, cax=cax1, label=r'Median winter flotation fraction $f_{\rm{w}}>0$',
     orientation='horizontal')
 # cax1.set_xticks(cticks, cticklabels)
 cax1.xaxis.tick_top()
@@ -65,12 +65,12 @@ cticks = np.arange(-1, 2)
 cticklabels = [r'10$^{{{}}}$'.format(x) for x in cticks]
 print(cticklabels)
 pc = ax.tripcolor(mtri, ylog_neg, cmap='Blues', vmin=-1, vmax=1)
-cbar_neg = fig.colorbar(pc, cax=cax2, label=r'Min winter flotation fraction $f_{\rm{w}}<0$',
+cbar_neg = fig.colorbar(pc, cax=cax2, label=r'Median winter flotation fraction $f_{\rm{w}}<0$',
     orientation='horizontal')
 cax2.set_xticks(cticks, cticklabels)
 
 # ax.tripcolor(mtri, ylog_neg, cmap=cmocean.cm.rain)
-ax.tricontour(mtri, ymin, levels=[-1./3.], colors='black', linestyles='solid')
+ax.tricontour(mtri, ymin, levels=[0], colors='black', linestyles='solid')
 ax.tricontour(mtri, ymed, levels=[0], colors='gray', linestyles='solid')
 ax.spines[['left', 'right', 'top', 'bottom']].set_visible(False)
 ax.set_xticks([])
@@ -103,7 +103,7 @@ print('ymin_element:', ymin_element.shape)
 
 A_combined = mesh['area'].copy()
 A_combined[ymed_element<0] = np.nan
-A_combined[ymin_element<-1./3.] = np.nan
+# A_combined[ymin_element<-1./3.] = np.nan
 
 A_neg = np.nansum(A_combined)
 A_tot = np.nansum(mesh['area'])
