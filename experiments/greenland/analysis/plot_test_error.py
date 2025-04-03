@@ -253,6 +253,9 @@ def plot_scatter(config, y_sim, ypred_mean):
     phi_sim_scatter = rho_w*g*bed_scatter + p_i_scatter*y_sim_scatter
     phi_pred_scatter = rho_w*g*bed_scatter + p_i_scatter*y_pred_scatter
 
+    pw_sim_scatter = p_i_scatter - N_sim_scatter
+    pw_pred_scatter = p_i_scatter - N_pred_scatter
+
     # Define bounds
     ff_min = -0.1
     ff_max = 1.6
@@ -266,6 +269,10 @@ def plot_scatter(config, y_sim, ypred_mean):
     phi_max = 2.5e7/1e6
     phi_ticks = [5, 10, 15, 20, 25]
 
+    pw_min = 0
+    pw_max = 2.5e7/1e6
+    pw_ticks = [0, 5, 10, 15, 20, 25]
+
     countnorm = colors.LogNorm(vmin=1e0, vmax=1e6, clip=True)
 
     axs[0].hexbin(y_sim_scatter, y_pred_scatter, norm=countnorm,
@@ -273,8 +280,9 @@ def plot_scatter(config, y_sim, ypred_mean):
         extent=(ff_min, ff_max, ff_min, ff_max))
     axs[0].set_xlim([ff_min, ff_max])
     axs[0].set_ylim([ff_min, ff_max])
-    R2 = np.corrcoef(y_sim_scatter.flatten(), y_pred_scatter.flatten())[0,1]**2
-    axs[0].text(0.95, 0.025, '$r^2={:.3f}$'.format(R2),
+    # R2 = np.corrcoef(y_sim_scatter.flatten(), y_pred_scatter.flatten())[0,1]**2
+    R2 = 1 - np.var(y_sim_scatter - y_pred_scatter)/np.var(y_pred_scatter)
+    axs[0].text(0.95, 0.025, '$R^2={:.3f}$'.format(R2),
         ha='right', va='bottom', transform=axs[0].transAxes)
     axs[0].set_aspect('equal')
     axs[0].set_xticks(ff_ticks)
@@ -288,7 +296,8 @@ def plot_scatter(config, y_sim, ypred_mean):
         extent=(N_min, N_max, N_min, N_max))
     axs[1].set_xlim([N_min, N_max])
     axs[1].set_ylim([N_min, N_max])
-    R2 = np.corrcoef(N_sim_scatter, N_pred_scatter)[0,1]**2
+    # R2 = np.corrcoef(N_sim_scatter, N_pred_scatter)[0,1]**2
+    R2 = 1 - np.var(N_sim_scatter - N_pred_scatter)
     axs[1].text(0.95, 0.025, '$r^2={:.3f}$'.format(R2),
         ha='right', va='bottom', transform=axs[1].transAxes)
     axs[1].set_aspect('equal')
@@ -303,7 +312,8 @@ def plot_scatter(config, y_sim, ypred_mean):
         extent=(phi_min, phi_max, phi_min, phi_max))
     axs[2].set_xlim([phi_min, phi_max])
     axs[2].set_ylim([phi_min, phi_max])
-    R2 = np.corrcoef(phi_sim_scatter, phi_pred_scatter)[0,1]**2
+    # R2 = np.corrcoef(phi_sim_scatter, phi_pred_scatter)[0,1]**2
+    R2 = 1 - np.var(phi_sim_scatter - phi_pred_scatter)
     axs[2].text(0.95, 0.025, '$r^2={:.3f}$'.format(R2),
         ha='right', va='bottom', transform=axs[2].transAxes)
     axs[2].set_aspect('equal')
@@ -312,6 +322,23 @@ def plot_scatter(config, y_sim, ypred_mean):
     axs[2].set_xlabel(r'$\phi$ (MPa)')
     axs[2].text(0.025, 0.95, 'c', transform=axs[2].transAxes,
         fontweight='bold', ha='left', va='top')
+
+    hb = axs[3].hexbin(pw_sim_scatter/1e6, pw_pred_scatter/1e6, norm=countnorm,
+        cmap=cmocean.cm.rain, gridsize=100, edgecolors='none',
+        extent=(pw_min, pw_max, pw_min, pw_max))
+    axs[3].set_xlim([pw_min, pw_max])
+    axs[3].set_ylim([pw_min, pw_max])
+    # R2 = np.corrcoef(phi_sim_scatter, phi_pred_scatter)[0,1]**2
+    R2 = 1 - np.var(pw_sim_scatter - pw_pred_scatter)
+    axs[3].text(0.95, 0.025, '$r^2={:.3f}$'.format(R2),
+        ha='right', va='bottom', transform=axs[2].transAxes)
+    axs[3].set_aspect('equal')
+    axs[3].set_xticks(pw_ticks)
+    axs[3].set_yticks(pw_ticks)
+    axs[3].set_xlabel(r'$p_{\rm{w}}$ (MPa)')
+    axs[3].text(0.025, 0.95, 'c', transform=axs[2].transAxes,
+        fontweight='bold', ha='left', va='top')
+
 
     cbar = fig.colorbar(hb, cax=cax)
     cbar.set_label('Count (n={:,})'.format(len(y_sim_scatter)))

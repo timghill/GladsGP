@@ -80,6 +80,7 @@ def compute_test_error(train_config, test_config, n_sims, n_pcs,
     ymask = np.ones(y_test.shape)
     ymask[:, np.min(y_test, axis=0)<-1./3.] = np.nan
     ymask[:, np.median(y_test, axis=0)<0] = np.nan
+    np.save('data/mask.npy', ymask)
     
     data_dir = os.path.join(train_config.data_dir, 'architecture')
     if not os.path.exists(data_dir):

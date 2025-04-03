@@ -10,24 +10,24 @@ import pandas as pd
 
 from src.utils import import_config
 
-def rmse(z1, z2):
-    dz = z2 - z1
-    return np.sqrt(np.mean(dz**2, axis=1))
+def rmse(z1, z2, mask):
+    dz = mask*(z2 - z1)
+    return np.sqrt(np.nanmean(dz**2, axis=1))
 
-def mape(z1, z2):
+def mape(z1, z2, mask):
     lq = np.quantile(z2, 0.1)
     z2 = z2.copy()
     z2[z2<lq] = np.nan
-    inner = (z2-z1)/z2
+    inner = mask*(z2-z1)/z2
     inner[z2<lq] = np.nan
     return np.nanmean(np.abs(inner), axis=1)
 
-def bias(z1, z2):
-    return np.mean(z2-z1, axis=1)
+def bias(z1, z2, mask):
+    return np.nanmean(mask*(z2-z1), axis=1)
 
-def coefdet(z1, z2):
-    SS_resid = np.sum((z2-z1)**2, axis=1)
-    SS_tot = np.sum((z1 - z1.mean(axis=1)[:,None])**2, axis=1)
+def coefdet(z1, z2, mask):
+    SS_resid = np.nansum(mask*(z2-z1)**2, axis=1)
+    SS_tot = np.nansum(mask*(z1 - np.nanmean(z1, axis=1)[:,None])**2, axis=1)
     R2 = 1 - SS_resid/SS_tot
     return R2
 
@@ -57,9 +57,10 @@ def main(train_config, test_config, m, p):
     ]
     mask_labels = ['All', 'Below 1100 m', 'Above 1100 m', 'DJF', 'JJA']
 
-    gp_pred = np.load('data/reference/pred_mean.npy', mmap_mode='r')
-    y_test = np.load(test_config.Y_physical, mmap_mode='r').T
+    gp_pred = np.load('data/reference/pred_mean.npy')
+    y_test = np.load(test_config.Y_physical).T
     gp_err = gp_pred - y_test
+    ymask = np.load('data/mask.npy')
 
     print(gp_pred.shape)
     print(y_test.shape)
@@ -79,12 +80,12 @@ def main(train_config, test_config, m, p):
 
     quantiles = [0.5, 0.05, 0.95]
     quantiles_labels = ['median', '0.05', '0.95']
-
+    
     for i,mask in enumerate(masks):
         print(mask_labels[i])
         print(len(mask))
         for j,statistic in enumerate(statistics_funs):
-            statval = statistic(y_test[:, mask], gp_pred[:, mask])
+            statval = statistic(y_test[:, mask], gp_pred[:, mask], ymask[:, mask])
             statq = np.quantile(statval, quantiles).round(decimals=3)
             print('\t' + statistics_labels[j] + '\t', statq)
             for k in range(len(statq)):
